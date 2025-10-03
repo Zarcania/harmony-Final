@@ -36,10 +36,10 @@ const Header: React.FC<HeaderProps> = ({ currentPage, onNavigate }) => {
       backgroundSize: 'cover',
       backgroundPosition: 'center',
       backgroundRepeat: 'no-repeat',
-      backgroundAttachment: 'fixed'
+      backgroundAttachment: 'scroll'
     }}>
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-28">
+        <div className="flex items-center justify-between h-20 md:h-28">
           {/* Logo */}
           <div
             className="cursor-pointer hover:opacity-80 transition-opacity duration-300 z-20"
@@ -48,7 +48,7 @@ const Header: React.FC<HeaderProps> = ({ currentPage, onNavigate }) => {
             <img
               src="/49ab398c-dcda-40f2-9ce7-bb89453e6e8d.png"
               alt="Harmonie Cils"
-              className="h-16 md:h-24 w-auto object-contain"
+              className="h-16 md:h-16 lg:h-24 w-auto object-contain"
             />
           </div>
 

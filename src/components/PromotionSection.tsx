@@ -126,7 +126,7 @@ const PromotionSection: React.FC<PromotionSectionProps> = ({ onNavigate }) => {
               {promotions.map((promo, index) => (
               <div
                 key={index}
-                className="flex-shrink-0 w-80 bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group border border-neutral-200"
+                className="flex-shrink-0 w-72 sm:w-80 bg-white rounded-2xl p-6 sm:p-8 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group border border-neutral-200"
                 onClick={() => onNavigate('contact')}
               >
                 <div className="flex items-center justify-between mb-6">
