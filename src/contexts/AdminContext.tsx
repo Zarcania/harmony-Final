@@ -26,6 +26,7 @@ interface ServiceSection {
 interface AdminContextType {
   isAdmin: boolean;
   setIsAdmin: (value: boolean) => void;
+  login: (email: string, password: string) => Promise<boolean>;
   portfolioImages: PortfolioImage[];
   updatePortfolioImage: (id: string, updates: Partial<PortfolioImage>) => void;
   addPortfolioImage: (image: Omit<PortfolioImage, 'id'>) => void;
@@ -245,10 +246,21 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     ));
   };
 
+  const login = async (email: string, password: string): Promise<boolean> => {
+    // Simple authentication for demo purposes
+    // In production, this would connect to your authentication service
+    if (email === 'admin@harmony.com' && password === 'harmony2024') {
+      setIsAdmin(true);
+      return true;
+    }
+    return false;
+  };
+
   return (
     <AdminContext.Provider value={{
       isAdmin,
       setIsAdmin,
+      login,
       portfolioImages,
       updatePortfolioImage,
       addPortfolioImage,
