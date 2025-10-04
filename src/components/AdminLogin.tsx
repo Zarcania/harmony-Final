@@ -7,7 +7,7 @@ interface AdminLoginProps {
 }
 
 const AdminLogin: React.FC<AdminLoginProps> = ({ onClose }) => {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -19,18 +19,17 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onClose }) => {
     setIsLoading(true);
     setError('');
 
-    const success = await login(email, password);
-    
+    const success = await login(username, password);
+
     if (success) {
       onClose();
-      // Scroll vers le haut avec un délai pour laisser le temps au state de se mettre à jour
       setTimeout(() => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }, 100);
     } else {
-      setError('Email ou mot de passe incorrect');
+      setError('Nom d\'utilisateur ou mot de passe incorrect');
     }
-    
+
     setIsLoading(false);
   };
 
@@ -67,19 +66,19 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onClose }) => {
           )}
 
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-harmonie-700 mb-2">
-              Email
+            <label htmlFor="username" className="block text-sm font-medium text-harmonie-700 mb-2">
+              Nom d'utilisateur
             </label>
             <div className="relative">
               <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-harmonie-400" size={20} />
               <input
-                type="email"
-                id="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                type="text"
+                id="username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 required
                 className="w-full pl-12 pr-4 py-3 border border-harmonie-200 rounded-xl focus:ring-2 focus:ring-harmonie-500 focus:border-transparent transition-colors"
-                placeholder="admin@harmoniecils.fr"
+                placeholder="admin"
               />
             </div>
           </div>

@@ -246,14 +246,32 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     ));
   };
 
-  const login = async (email: string, password: string): Promise<boolean> => {
-    // Simple authentication for demo purposes
-    // In production, this would connect to your authentication service
-    if (email === 'admin@harmony.com' && password === 'harmony2024') {
-      setIsAdmin(true);
-      return true;
+  const login = async (username: string, password: string): Promise<boolean> => {
+    try {
+      const { supabase } = await import('../lib/supabase');
+
+      const { data, error } = await supabase
+        .from('admin_users')
+        .select('*')
+        .eq('username', username)
+        .eq('password_hash', password)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Login error:', error);
+        return false;
+      }
+
+      if (data) {
+        setIsAdmin(true);
+        return true;
+      }
+
+      return false;
+    } catch (error) {
+      console.error('Login error:', error);
+      return false;
     }
-    return false;
   };
 
   return (

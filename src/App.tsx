@@ -13,6 +13,7 @@ import Footer from './components/Footer';
 import AdminWelcome from './components/AdminWelcome';
 import AdminPlanning from './components/AdminPlanning';
 import AdminPanel from './components/admin/AdminPanel';
+import AdminLogin from './components/AdminLogin';
 import { useAdmin } from './contexts/AdminContext';
 
 const AppContent: React.FC = () => {
@@ -21,6 +22,7 @@ const AppContent: React.FC = () => {
   const [currentPage, setCurrentPage] = useState('accueil');
   const [showPlanning, setShowPlanning] = useState(false);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
+  const [showAdminLogin, setShowAdminLogin] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -30,9 +32,10 @@ const AppContent: React.FC = () => {
   }, []);
 
   const handleAdminToggle = () => {
-    setIsAdmin(!isAdmin);
-    if (!isAdmin) {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (isAdmin) {
+      setIsAdmin(false);
+    } else {
+      setShowAdminLogin(true);
     }
   };
 
@@ -71,6 +74,9 @@ const AppContent: React.FC = () => {
       )}
       {showAdminPanel && (
         <AdminPanel onClose={() => setShowAdminPanel(false)} />
+      )}
+      {showAdminLogin && (
+        <AdminLogin onClose={() => setShowAdminLogin(false)} />
       )}
     </div>
   );
