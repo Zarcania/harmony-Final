@@ -2,6 +2,7 @@ import React from 'react';
 import { Eye, Scissors, Sparkles, Heart, CreditCard as Edit, Plus, Trash2, Image as ImageIcon } from 'lucide-react';
 import { useAdmin } from '../contexts/AdminContext';
 import AdminEditModal from './AdminEditModal';
+import ServiceDetailModal from './ServiceDetailModal';
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
 
 interface ServiceItem {
@@ -36,6 +37,7 @@ const Services: React.FC<ServicesProps> = ({ onNavigate }) => {
   } = useAdmin();
 
   const [editModal, setEditModal] = React.useState<{ type: string; data?: any; sectionId?: string } | null>(null);
+  const [selectedService, setSelectedService] = React.useState<{ service: ServiceItem; section: ServiceSection } | null>(null);
   const { elementRef: titleLeftRef, isVisible: titleLeftVisible } = useScrollAnimation();
   const { elementRef: titleRightRef, isVisible: titleRightVisible } = useScrollAnimation();
 
@@ -169,10 +171,11 @@ const Services: React.FC<ServicesProps> = ({ onNavigate }) => {
                   {section.items.map((item, itemIndex) => (
                     <div
                       key={itemIndex}
+                      onClick={() => !isAdmin && setSelectedService({ service: item, section })}
                       className={`relative flex justify-between items-center py-3.5 px-4 rounded-xl transition-all duration-300 group/item backdrop-blur-sm ${
                         isAdmin
                           ? 'hover:bg-blue-50/80 hover:shadow-sm'
-                          : 'hover:bg-neutral-100/60 hover:shadow-sm hover:translate-x-1'
+                          : 'hover:bg-neutral-100/60 hover:shadow-sm hover:translate-x-1 cursor-pointer'
                       } ${itemIndex !== section.items.length - 1 ? 'border-b border-neutral-200/50' : ''}`}
                     >
                       {/* Petit indicateur décoratif */}
@@ -268,6 +271,15 @@ const Services: React.FC<ServicesProps> = ({ onNavigate }) => {
             () => {}
           }
           onClose={() => setEditModal(null)}
+        />
+      )}
+
+      {/* Modal de détail du service */}
+      {selectedService && (
+        <ServiceDetailModal
+          service={selectedService.service}
+          section={selectedService.section}
+          onClose={() => setSelectedService(null)}
         />
       )}
     </section>

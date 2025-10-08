@@ -20,6 +20,9 @@ export interface ServiceItem {
   service_id: string;
   label: string;
   price: string;
+  description?: string;
+  duration?: string;
+  benefits?: string[];
   order_index: number;
 }
 
