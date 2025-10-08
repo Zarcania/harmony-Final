@@ -1,6 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, CreditCard as Edit, Trash2, Save, X, Upload, Eye, EyeOff } from 'lucide-react';
-import { PortfolioItem, getPortfolioItems, createPortfolioItem, updatePortfolioItem, deletePortfolioItem, uploadImage } from '../../services/contentService';
+import { PortfolioItem, getPortfolioItems, createPortfolioItem, updatePortfolioItem, deletePortfolioItem, uploadImage, getPortfolioCategories, createPortfolioCategory, updatePortfolioCategory, deletePortfolioCategory } from '../../services/contentService';
+import CategoryManager from './CategoryManager';
+
+interface Category {
+  id: string;
+  name: string;
+  order_index: number;
+}
 
 interface PortfolioEditorProps {
   onClose: () => void;
@@ -8,12 +15,14 @@ interface PortfolioEditorProps {
 
 const PortfolioEditor: React.FC<PortfolioEditorProps> = ({ onClose }) => {
   const [items, setItems] = useState<PortfolioItem[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [editingItem, setEditingItem] = useState<Partial<PortfolioItem> | null>(null);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     loadItems();
+    loadCategories();
   }, []);
 
   const loadItems = async () => {
@@ -23,6 +32,40 @@ const PortfolioEditor: React.FC<PortfolioEditorProps> = ({ onClose }) => {
     } catch (error) {
       console.error('Error loading portfolio items:', error);
       alert('Erreur lors du chargement');
+    }
+  };
+
+  const loadCategories = async () => {
+    try {
+      const data = await getPortfolioCategories();
+      setCategories(data);
+    } catch (error) {
+      console.error('Error loading categories:', error);
+      alert('Erreur lors du chargement des catégories');
+    }
+  };
+
+  const handleSaveCategory = async (id: string | null, name: string, orderIndex: number) => {
+    try {
+      if (id) {
+        await updatePortfolioCategory(id, name, orderIndex);
+      } else {
+        await createPortfolioCategory(name, orderIndex);
+      }
+      await loadCategories();
+    } catch (error) {
+      console.error('Error saving category:', error);
+      throw error;
+    }
+  };
+
+  const handleDeleteCategory = async (id: string) => {
+    try {
+      await deletePortfolioCategory(id);
+      await loadCategories();
+    } catch (error) {
+      console.error('Error deleting category:', error);
+      throw error;
     }
   };
 
@@ -119,8 +162,14 @@ const PortfolioEditor: React.FC<PortfolioEditorProps> = ({ onClose }) => {
         </div>
 
         <div className="p-6 overflow-y-auto max-h-[calc(90vh-80px)]">
+          <CategoryManager
+            categories={categories}
+            onSave={handleSaveCategory}
+            onDelete={handleDeleteCategory}
+          />
+
           <button
-            onClick={() => setEditingItem({ title: '', description: '', detailed_description: '', url: '', alt: '', category: 'Cils', show_on_home: false, order_index: items.length })}
+            onClick={() => setEditingItem({ title: '', description: '', detailed_description: '', url: '', alt: '', category: categories[0]?.name || '', show_on_home: false, order_index: items.length })}
             className="mb-6 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
           >
             <Plus size={20} />
@@ -184,14 +233,13 @@ const PortfolioEditor: React.FC<PortfolioEditorProps> = ({ onClose }) => {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Catégorie *</label>
                   <select
-                    value={editingItem.category || 'Cils'}
+                    value={editingItem.category || categories[0]?.name || ''}
                     onChange={(e) => setEditingItem({ ...editingItem, category: e.target.value })}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                   >
-                    <option value="Cils">Cils</option>
-                    <option value="Sourcils">Sourcils</option>
-                    <option value="Lèvres">Lèvres</option>
-                    <option value="Maquillage">Maquillage</option>
+                    {categories.map(cat => (
+                      <option key={cat.id} value={cat.name}>{cat.name}</option>
+                    ))}
                   </select>
                 </div>
                 <div>

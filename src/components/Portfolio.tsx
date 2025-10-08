@@ -1,8 +1,15 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Camera, ExternalLink, CreditCard as Edit, Plus, Trash2, Eye, EyeOff } from 'lucide-react';
 import { useAdmin } from '../contexts/AdminContext';
 import AdminEditModal from './AdminEditModal';
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
+import { getPortfolioCategories } from '../services/contentService';
+
+interface Category {
+  id: string;
+  name: string;
+  order_index: number;
+}
 
 interface PortfolioProps {
   onNavigate: (page: string) => void;
@@ -11,7 +18,26 @@ interface PortfolioProps {
 const Portfolio: React.FC<PortfolioProps> = ({ onNavigate }) => {
   const { isAdmin, portfolioImages, updatePortfolioImage, addPortfolioImage, deletePortfolioImage } = useAdmin();
   const [editModal, setEditModal] = React.useState<{ type: string; data?: any } | null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const { elementRef: titleRef, isVisible: titleVisible } = useScrollAnimation();
+
+  useEffect(() => {
+    loadCategories();
+  }, []);
+
+  const loadCategories = async () => {
+    try {
+      const data = await getPortfolioCategories();
+      setCategories(data);
+    } catch (error) {
+      console.error('Error loading categories:', error);
+    }
+  };
+
+  const filteredImages = selectedCategory === 'all'
+    ? portfolioImages
+    : portfolioImages.filter(img => img.category === selectedCategory);
 
   const handleToggleHome = (id: string, currentStatus: boolean) => {
     const homeImages = portfolioImages.filter(img => img.showOnHome);
@@ -64,6 +90,33 @@ const Portfolio: React.FC<PortfolioProps> = ({ onNavigate }) => {
             Découvrez nos créations
           </p>
 
+          {/* Filtres de catégories */}
+          <div className="flex flex-wrap justify-center gap-2 sm:gap-3 mt-8 mb-4">
+            <button
+              onClick={() => setSelectedCategory('all')}
+              className={`px-4 sm:px-6 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
+                selectedCategory === 'all'
+                  ? 'bg-harmonie-600 text-white shadow-lg scale-105'
+                  : 'bg-white text-gray-700 hover:bg-harmonie-50 border border-gray-200'
+              }`}
+            >
+              Toutes
+            </button>
+            {categories.map(cat => (
+              <button
+                key={cat.id}
+                onClick={() => setSelectedCategory(cat.name)}
+                className={`px-4 sm:px-6 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
+                  selectedCategory === cat.name
+                    ? 'bg-harmonie-600 text-white shadow-lg scale-105'
+                    : 'bg-white text-gray-700 hover:bg-harmonie-50 border border-gray-200'
+                }`}
+              >
+                {cat.name}
+              </button>
+            ))}
+          </div>
+
           {isAdmin && (
             <div className="mt-8">
               <button
@@ -79,7 +132,7 @@ const Portfolio: React.FC<PortfolioProps> = ({ onNavigate }) => {
 
         {/* Galerie masonry moderne */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 mb-12">
-          {portfolioImages.map((image, index) => (
+          {filteredImages.map((image, index) => (
             <div
               key={index}
               className={`group relative bg-white rounded-3xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-500 hover:-translate-y-3 ${
@@ -161,9 +214,14 @@ const Portfolio: React.FC<PortfolioProps> = ({ onNavigate }) => {
 
               {/* Info card en bas - Design moderne */}
               <div className="p-3 md:p-4 bg-gradient-to-b from-white to-neutral-50/50">
-                <h3 className="font-display text-sm md:text-base font-semibold text-neutral-900 mb-1 group-hover:text-harmonie-700 transition-colors duration-300 line-clamp-1">
-                  {image.title}
-                </h3>
+                <div className="flex items-center justify-between mb-1">
+                  <h3 className="font-display text-sm md:text-base font-semibold text-neutral-900 group-hover:text-harmonie-700 transition-colors duration-300 line-clamp-1 flex-1">
+                    {image.title}
+                  </h3>
+                  <span className="text-[10px] bg-harmonie-100 text-harmonie-700 px-2 py-0.5 rounded-full font-medium ml-2 shrink-0">
+                    {image.category}
+                  </span>
+                </div>
                 <p className="text-neutral-600 text-xs leading-snug line-clamp-2">
                   {image.description}
                 </p>

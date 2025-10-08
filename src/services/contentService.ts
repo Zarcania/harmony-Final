@@ -194,6 +194,49 @@ export const deleteServiceItem = async (id: string) => {
   if (error) throw error;
 };
 
+// Portfolio Categories
+export const getPortfolioCategories = async () => {
+  const { data, error } = await supabase
+    .from('portfolio_categories')
+    .select('*')
+    .order('order_index');
+
+  if (error) throw error;
+  return data || [];
+};
+
+export const createPortfolioCategory = async (name: string, orderIndex: number) => {
+  const { data, error } = await supabase
+    .from('portfolio_categories')
+    .insert({ name, order_index: orderIndex })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+};
+
+export const updatePortfolioCategory = async (id: string, name: string, orderIndex: number) => {
+  const { data, error } = await supabase
+    .from('portfolio_categories')
+    .update({ name, order_index: orderIndex, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+};
+
+export const deletePortfolioCategory = async (id: string) => {
+  const { error } = await supabase
+    .from('portfolio_categories')
+    .delete()
+    .eq('id', id);
+
+  if (error) throw error;
+};
+
 // Portfolio Items
 export const getPortfolioItems = async () => {
   const { data, error } = await supabase
