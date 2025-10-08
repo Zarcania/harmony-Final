@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase, checkIsAdmin } from '../lib/supabase';
+import { getServices, getServiceItems } from '../services/contentService';
 
 interface PortfolioImage {
   id: string;
@@ -15,6 +16,7 @@ interface ServiceItem {
   id: string;
   label: string;
   price: string;
+  duration?: string;
 }
 
 interface ServiceSection {
@@ -281,6 +283,37 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return () => {
       subscription.unsubscribe();
     };
+  }, []);
+
+  useEffect(() => {
+    const loadServices = async () => {
+      try {
+        const services = await getServices();
+        const sectionsWithItems: ServiceSection[] = await Promise.all(
+          services.map(async (service) => {
+            const items = await getServiceItems(service.id);
+            return {
+              id: service.id,
+              title: service.title,
+              icon: service.icon,
+              items: items.map((item) => ({
+                id: item.id,
+                label: item.label,
+                price: item.price,
+                duration: item.duration
+              }))
+            };
+          })
+        );
+        if (sectionsWithItems.length > 0) {
+          setServiceSections(sectionsWithItems);
+        }
+      } catch (error) {
+        console.error('Error loading services:', error);
+      }
+    };
+
+    loadServices();
   }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
