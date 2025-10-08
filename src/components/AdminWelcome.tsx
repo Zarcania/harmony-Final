@@ -40,19 +40,11 @@ const AdminWelcome: React.FC<AdminWelcomeProps> = ({ onDisableAdmin, onShowPlann
           {/* Actions admin */}
           <div className="flex items-center gap-2 flex-wrap justify-center">
             <button
-              onClick={onShowAdminPanel}
-              className="group relative flex items-center gap-2 bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-600 hover:to-rose-700 text-white rounded-lg px-5 py-2 transition-all duration-300 font-medium text-sm shadow-sm hover:shadow-md hover:scale-105"
-            >
-              <Edit3 size={16} />
-              <span>Gérer le Contenu</span>
-            </button>
-
-            <button
               onClick={onShowPlanning}
-              className="flex items-center gap-2 bg-white hover:bg-rose-50 rounded-lg px-4 py-2 transition-all duration-300 font-medium text-sm border border-rose-200 hover:border-rose-300 text-slate-700 hover:scale-105"
+              className="flex items-center gap-2 bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-600 hover:to-rose-700 text-white rounded-lg px-5 py-2 transition-all duration-300 font-medium text-sm shadow-sm hover:shadow-md hover:scale-105"
             >
               <Calendar size={16} />
-              <span className="hidden sm:inline">Planning</span>
+              <span>Planning</span>
             </button>
 
             <div className="hidden lg:flex items-center gap-2 bg-emerald-50 rounded-lg px-4 py-2 border border-emerald-200">

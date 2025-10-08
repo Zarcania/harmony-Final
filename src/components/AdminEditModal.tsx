@@ -150,6 +150,32 @@ const AdminEditModal: React.FC<AdminEditModalProps> = ({ type, data, onSave, onC
           placeholder="Ex: 25€"
         />
       </div>
+
+      <div>
+        <label className="block text-sm font-medium text-harmonie-700 mb-2">
+          Durée (optionnel)
+        </label>
+        <input
+          type="text"
+          value={formData.duration || ''}
+          onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
+          className="w-full p-3 border border-harmonie-200 rounded-lg focus:ring-2 focus:ring-harmonie-500"
+          placeholder="Ex: 1h30, 45min, 2h"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-harmonie-700 mb-2">
+          Description (optionnel)
+        </label>
+        <textarea
+          value={formData.description || ''}
+          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+          className="w-full p-3 border border-harmonie-200 rounded-lg focus:ring-2 focus:ring-harmonie-500"
+          rows={3}
+          placeholder="Description détaillée du service"
+        />
+      </div>
     </div>
   );
 
