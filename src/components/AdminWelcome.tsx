@@ -14,7 +14,7 @@ const AdminWelcome: React.FC<AdminWelcomeProps> = ({ onDisableAdmin, onShowPlann
   };
 
   return (
-    <div className="fixed top-20 left-0 right-0 z-40 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white shadow-2xl border-b-2 border-yellow-500/50">
+    <div className="fixed top-20 md:top-28 left-0 right-0 z-40 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white shadow-2xl border-b-2 border-yellow-500/50">
       {/* Effet de brillance animé */}
       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-pulse pointer-events-none"></div>
 
