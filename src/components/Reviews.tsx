@@ -159,39 +159,25 @@ const Reviews: React.FC<ReviewsProps> = ({ onNavigate }) => {
               key={index}
               className="group bg-white/90 backdrop-blur-sm rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 relative border border-white/50"
             >
-              {/* Image de fond */}
-              {review.image && (
-                <div className="relative h-48 overflow-hidden">
-                  <img
-                    src={review.image}
-                    alt={review.name}
-                    className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
-
-                  {/* Badge plateforme */}
-                  <div className="absolute top-4 right-4">
-                    {review.platform === 'google' ? (
-                      <div className="bg-white/95 backdrop-blur-sm text-gray-800 px-3 py-1.5 rounded-full font-medium text-xs shadow-lg">
-                        Google
-                      </div>
-                    ) : (
-                      <div className="bg-white/95 backdrop-blur-sm text-gray-800 px-3 py-1.5 rounded-full font-medium flex items-center gap-1.5 text-xs shadow-lg">
-                        <Instagram size={12} />
-                        Instagram
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Étoiles sur l'image */}
-                  <div className="absolute bottom-4 left-4 flex items-center gap-1 bg-white/95 backdrop-blur-sm px-3 py-2 rounded-full shadow-lg">
+              {/* Contenu de l'avis */}
+              <div className="p-8">
+                {/* Badge plateforme et étoiles en haut */}
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-1">
                     {renderStars(review.rating)}
                   </div>
+                  {review.platform === 'google' ? (
+                    <div className="bg-gray-100 text-gray-800 px-3 py-1.5 rounded-full font-medium text-xs">
+                      Google
+                    </div>
+                  ) : (
+                    <div className="bg-gray-100 text-gray-800 px-3 py-1.5 rounded-full font-medium flex items-center gap-1.5 text-xs">
+                      <Instagram size={12} />
+                      Instagram
+                    </div>
+                  )}
                 </div>
-              )}
 
-              {/* Contenu de l'avis */}
-              <div className="p-6">
                 <Quote className="w-8 h-8 text-rose-200 mb-4" />
 
                 <p className="text-gray-700 mb-6 leading-relaxed font-light text-base">
