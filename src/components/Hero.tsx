@@ -16,33 +16,33 @@ const Hero: React.FC<HeroProps> = ({ onNavigate }) => {
         }}
       ></div>
       <div className="absolute inset-0 bg-gradient-to-r from-white/85 via-white/50 to-transparent"></div>
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full">
-        <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-center max-w-7xl mx-auto">
+      <div className="container mx-auto px-3 sm:px-4 md:px-6 lg:px-8 relative z-10 w-full">
+        <div className="grid lg:grid-cols-2 gap-6 md:gap-8 lg:gap-16 items-center max-w-7xl mx-auto py-8 md:py-0">
           {/* Contenu textuel */}
-          <div className="text-center lg:text-left">
+          <div className="text-center lg:text-left max-w-full">
             {/* Titre principal */}
-            <h1 className="font-display text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold text-black mb-8 md:mb-12 leading-[1.1] tracking-[-0.02em] animate-slide-up pb-4 md:pb-8">
-              <span className="inline-block text-transparent bg-gradient-to-r from-gray-800 via-black to-gray-900 bg-clip-text animate-gradient bg-[length:200%_200%] whitespace-nowrap">
+            <h1 className="font-display text-3xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold text-black mb-6 md:mb-8 lg:mb-12 leading-[1.1] tracking-[-0.02em] animate-slide-up pb-2 md:pb-4 lg:pb-8">
+              <span className="inline-block text-transparent bg-gradient-to-r from-gray-800 via-black to-gray-900 bg-clip-text animate-gradient bg-[length:200%_200%]">
                 Harmonie'Cils
               </span>
             </h1>
 
             {/* Sous-titre */}
-            <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl text-gray-900 mb-8 md:mb-12 font-light max-w-3xl mx-auto lg:mx-0 leading-relaxed animate-slide-up">
+            <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-900 mb-6 md:mb-8 lg:mb-12 font-light max-w-3xl mx-auto lg:mx-0 leading-relaxed animate-slide-up px-2 sm:px-0">
               Extensions de cils, épilation au fil et soins haut de gamme pour révéler votre beauté naturelle
             </p>
 
             {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center lg:justify-start items-center mb-8 md:mb-16 animate-scale-in">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 md:gap-6 justify-center lg:justify-start items-center mb-8 md:mb-16 animate-scale-in px-2 sm:px-0">
               <button
                 onClick={() => onNavigate('prestations')}
-                className="bg-black text-white px-6 sm:px-10 py-4 sm:py-5 rounded-full font-accent font-semibold text-base sm:text-lg hover:bg-gray-900 transition-all duration-300 hover:shadow-2xl hover:scale-105 w-full sm:w-auto sm:min-w-[220px] shadow-lg"
+                className="bg-black text-white px-5 sm:px-8 md:px-10 py-3 sm:py-4 md:py-5 rounded-full font-accent font-semibold text-sm sm:text-base md:text-lg hover:bg-gray-900 transition-all duration-300 hover:shadow-2xl hover:scale-105 w-full sm:w-auto sm:min-w-[200px] md:min-w-[220px] shadow-lg"
               >
                 Voir les prestations
               </button>
               <button
                 onClick={() => onNavigate('contact')}
-                className="border-2 border-black text-black px-6 sm:px-10 py-4 sm:py-5 rounded-full font-accent font-semibold text-base sm:text-lg hover:bg-black hover:text-white transition-all duration-300 hover:shadow-2xl hover:scale-105 w-full sm:w-auto sm:min-w-[220px] bg-white/10 backdrop-blur-sm"
+                className="border-2 border-black text-black px-5 sm:px-8 md:px-10 py-3 sm:py-4 md:py-5 rounded-full font-accent font-semibold text-sm sm:text-base md:text-lg hover:bg-black hover:text-white transition-all duration-300 hover:shadow-2xl hover:scale-105 w-full sm:w-auto sm:min-w-[200px] md:min-w-[220px] bg-white/10 backdrop-blur-sm"
               >
                 Réserver maintenant
               </button>
