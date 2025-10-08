@@ -4,16 +4,18 @@ import { useBooking } from '../contexts/BookingContext';
 import { format, addDays, startOfWeek, isSameDay } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Booking } from '../types/booking';
+import BookingEditModal from './BookingEditModal';
 
 interface AdminPlanningProps {
   onClose: () => void;
 }
 
 const AdminPlanning: React.FC<AdminPlanningProps> = ({ onClose }) => {
-  const { bookings, deleteBooking, updateBooking, getAvailableSlots } = useBooking();
+  const { bookings, deleteBooking, updateBooking, getAvailableSlots, addBooking } = useBooking();
   const [currentWeek, setCurrentWeek] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
+  const [showAddModal, setShowAddModal] = useState(false);
 
   // Générer les 7 jours de la semaine
   const getWeekDays = () => {
@@ -64,6 +66,24 @@ const AdminPlanning: React.FC<AdminPlanningProps> = ({ onClose }) => {
     }
   };
 
+  const handleSaveBooking = (bookingData: Omit<Booking, 'id' | 'createdAt'>) => {
+    if (editingBooking) {
+      updateBooking(editingBooking.id, bookingData);
+    } else {
+      addBooking({
+        service: bookingData.service,
+        date: bookingData.date,
+        time: bookingData.time,
+        clientName: bookingData.clientName,
+        clientFirstName: bookingData.clientFirstName,
+        clientPhone: bookingData.clientPhone,
+        clientEmail: bookingData.clientEmail
+      });
+    }
+    setEditingBooking(null);
+    setShowAddModal(false);
+  };
+
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl max-w-7xl w-full max-h-[90vh] overflow-hidden shadow-2xl">
@@ -87,12 +107,21 @@ const AdminPlanning: React.FC<AdminPlanningProps> = ({ onClose }) => {
 
         {/* Navigation semaine */}
         <div className="flex items-center justify-between p-4 bg-harmonie-50 border-b border-harmonie-100">
-          <button
-            onClick={prevWeek}
-            className="px-4 py-2 bg-white border border-harmonie-200 rounded-lg hover:bg-harmonie-50 transition-colors"
-          >
-            ← Semaine précédente
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={prevWeek}
+              className="px-4 py-2 bg-white border border-harmonie-200 rounded-lg hover:bg-harmonie-50 transition-colors"
+            >
+              ← Semaine précédente
+            </button>
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-harmonie-600 text-white rounded-lg hover:bg-harmonie-700 transition-colors shadow-md hover:shadow-lg"
+            >
+              <Plus size={16} />
+              Nouveau rendez-vous
+            </button>
+          </div>
           <h4 className="font-semibold text-harmonie-800">
             Semaine du {format(weekDays[0], 'd MMMM', { locale: fr })} au {format(weekDays[6], 'd MMMM yyyy', { locale: fr })}
           </h4>
@@ -251,6 +280,18 @@ const AdminPlanning: React.FC<AdminPlanningProps> = ({ onClose }) => {
           </div>
         </div>
       </div>
+
+      {(showAddModal || editingBooking) && (
+        <BookingEditModal
+          booking={editingBooking || undefined}
+          selectedDate={selectedDate || undefined}
+          onClose={() => {
+            setShowAddModal(false);
+            setEditingBooking(null);
+          }}
+          onSave={handleSaveBooking}
+        />
+      )}
     </div>
   );
 };

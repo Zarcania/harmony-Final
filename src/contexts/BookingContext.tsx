@@ -1,7 +1,8 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Booking, BookingFormData, TimeSlot } from '../types/booking';
 import { format, addDays, isSameDay, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { supabase } from '../lib/supabase';
 
 interface BookingContextType {
   bookings: Booking[];
@@ -23,32 +24,52 @@ export const useBooking = () => {
 };
 
 export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [bookings, setBookings] = useState<Booking[]>([
-    {
-      id: '1',
-      date: format(new Date(), 'yyyy-MM-dd'),
-      time: '10:00',
-      service: 'Extensions volume russe',
-      clientName: 'Martin',
-      clientFirstName: 'Sophie',
-      clientPhone: '06 12 34 56 78',
-      clientEmail: 'sophie.martin@email.com',
-      status: 'confirmed',
-      createdAt: new Date().toISOString()
-    },
-    {
-      id: '2',
-      date: format(addDays(new Date(), 1), 'yyyy-MM-dd'),
-      time: '14:30',
-      service: 'Épilation sourcils',
-      clientName: 'Dubois',
-      clientFirstName: 'Marie',
-      clientPhone: '06 98 76 54 32',
-      clientEmail: 'marie.dubois@email.com',
-      status: 'confirmed',
-      createdAt: new Date().toISOString()
+  const [bookings, setBookings] = useState<Booking[]>([]);
+
+  useEffect(() => {
+    fetchBookings();
+
+    const channel = supabase
+      .channel('bookings_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, () => {
+        fetchBookings();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  const fetchBookings = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('bookings')
+        .select('*')
+        .order('preferred_date', { ascending: true })
+        .order('preferred_time', { ascending: true });
+
+      if (error) throw error;
+
+      if (data) {
+        const formattedBookings: Booking[] = data.map(booking => ({
+          id: booking.id,
+          date: booking.preferred_date,
+          time: booking.preferred_time,
+          service: booking.service_name,
+          clientName: booking.client_name,
+          clientFirstName: booking.client_first_name || '',
+          clientPhone: booking.client_phone,
+          clientEmail: booking.client_email,
+          status: booking.status as 'confirmed' | 'pending' | 'cancelled',
+          createdAt: booking.created_at
+        }));
+        setBookings(formattedBookings);
+      }
+    } catch (error) {
+      console.error('Error fetching bookings:', error);
     }
-  ]);
+  };
 
   // Créneaux disponibles par défaut
   const defaultTimeSlots = [
@@ -56,24 +77,68 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
     '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '17:30'
   ];
 
-  const addBooking = (bookingData: BookingFormData) => {
-    const newBooking: Booking = {
-      id: Date.now().toString(),
-      ...bookingData,
-      status: 'confirmed',
-      createdAt: new Date().toISOString()
-    };
-    setBookings(prev => [...prev, newBooking]);
+  const addBooking = async (bookingData: BookingFormData) => {
+    try {
+      const { error } = await supabase
+        .from('bookings')
+        .insert([{
+          client_name: bookingData.clientName,
+          client_first_name: bookingData.clientFirstName,
+          client_email: bookingData.clientEmail,
+          client_phone: bookingData.clientPhone,
+          service_name: bookingData.service,
+          preferred_date: bookingData.date,
+          preferred_time: bookingData.time,
+          status: 'confirmed'
+        }]);
+
+      if (error) throw error;
+      fetchBookings();
+    } catch (error) {
+      console.error('Error adding booking:', error);
+      alert('Erreur lors de l\'ajout du rendez-vous');
+    }
   };
 
-  const deleteBooking = (id: string) => {
-    setBookings(prev => prev.filter(booking => booking.id !== id));
+  const deleteBooking = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('bookings')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      fetchBookings();
+    } catch (error) {
+      console.error('Error deleting booking:', error);
+      alert('Erreur lors de la suppression du rendez-vous');
+    }
   };
 
-  const updateBooking = (id: string, updates: Partial<Booking>) => {
-    setBookings(prev => prev.map(booking => 
-      booking.id === id ? { ...booking, ...updates } : booking
-    ));
+  const updateBooking = async (id: string, updates: Partial<Booking>) => {
+    try {
+      const updateData: any = {};
+
+      if (updates.clientName !== undefined) updateData.client_name = updates.clientName;
+      if (updates.clientFirstName !== undefined) updateData.client_first_name = updates.clientFirstName;
+      if (updates.clientEmail !== undefined) updateData.client_email = updates.clientEmail;
+      if (updates.clientPhone !== undefined) updateData.client_phone = updates.clientPhone;
+      if (updates.service !== undefined) updateData.service_name = updates.service;
+      if (updates.date !== undefined) updateData.preferred_date = updates.date;
+      if (updates.time !== undefined) updateData.preferred_time = updates.time;
+      if (updates.status !== undefined) updateData.status = updates.status;
+
+      const { error } = await supabase
+        .from('bookings')
+        .update(updateData)
+        .eq('id', id);
+
+      if (error) throw error;
+      fetchBookings();
+    } catch (error) {
+      console.error('Error updating booking:', error);
+      alert('Erreur lors de la mise à jour du rendez-vous');
+    }
   };
 
   const getAvailableSlots = (date: string): TimeSlot[] => {
