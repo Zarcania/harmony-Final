@@ -1,5 +1,5 @@
 import React from 'react';
-import { Star, Quote, Instagram, ExternalLink } from 'lucide-react';
+import { Star, Quote, Instagram, ExternalLink, Heart, Sparkles } from 'lucide-react';
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
 
 interface Review {
@@ -8,6 +8,7 @@ interface Review {
   comment: string;
   service: string;
   platform: 'google' | 'instagram';
+  image?: string;
 }
 
 interface ReviewsProps {
@@ -17,6 +18,7 @@ interface ReviewsProps {
 const Reviews: React.FC<ReviewsProps> = ({ onNavigate }) => {
   const { elementRef: titleLeftRef, isVisible: titleLeftVisible } = useScrollAnimation();
   const { elementRef: titleRightRef, isVisible: titleRightVisible } = useScrollAnimation();
+  const { elementRef: statsRef, isVisible: statsVisible } = useScrollAnimation();
 
   const reviews: Review[] = [
     {
@@ -24,42 +26,48 @@ const Reviews: React.FC<ReviewsProps> = ({ onNavigate }) => {
       rating: 5,
       comment: "Absolument parfait ! Les extensions de cils sont magnifiques et tiennent parfaitement. L'accueil est chaleureux et professionnel. Je recommande vivement !",
       service: "Extensions volume russe",
-      platform: "google"
+      platform: "google",
+      image: "https://images.pexels.com/photos/3373746/pexels-photo-3373746.jpeg"
     },
     {
       name: "Sophie M.",
       rating: 5,
       comment: "Un travail d'une précision remarquable. Mes sourcils n'ont jamais été aussi bien dessinés. L'épilation au fil est vraiment un art chez Harmonie Cils !",
       service: "Épilation sourcils",
-      platform: "google"
+      platform: "google",
+      image: "https://images.pexels.com/photos/3373736/pexels-photo-3373736.jpeg"
     },
     {
       name: "Camille D.",
       rating: 5,
       comment: "Je ne peux plus me passer de mes cils ! Le volume mixte est exactement ce que je voulais. Bravo pour ce travail exceptionnel ! ✨",
       service: "Volume mixte",
-      platform: "instagram"
+      platform: "instagram",
+      image: "https://images.pexels.com/photos/3738386/pexels-photo-3738386.jpeg"
     },
     {
       name: "Émilie R.",
       rating: 5,
       comment: "Institut de qualité avec des produits haut de gamme. Le rehaussement de cils donne un effet naturel magnifique. Je reviendrai sans hésiter !",
       service: "Rehaussement cils",
-      platform: "google"
+      platform: "google",
+      image: "https://images.pexels.com/photos/3373745/pexels-photo-3373745.jpeg"
     },
     {
       name: "Laura V.",
       rating: 5,
       comment: "Professionnalisme et douceur au rendez-vous. Mes cils paraissent tellement naturels qu'on me demande toujours si c'est ma vraie couleur ! 😍",
       service: "Teinture cils",
-      platform: "instagram"
+      platform: "instagram",
+      image: "https://images.pexels.com/photos/3373743/pexels-photo-3373743.jpeg"
     },
     {
       name: "Julie K.",
       rating: 5,
       comment: "Un moment de détente absolue ! L'ambiance est apaisante et le résultat dépasse mes attentes. Mes cils sont parfaits depuis 3 semaines !",
       service: "Pose cil à cil",
-      platform: "google"
+      platform: "google",
+      image: "https://images.pexels.com/photos/3762800/pexels-photo-3762800.jpeg"
     }
   ];
 
@@ -74,10 +82,24 @@ const Reviews: React.FC<ReviewsProps> = ({ onNavigate }) => {
   };
 
   return (
-    <section id="avis" className="relative py-24 bg-gradient-to-br from-gray-50 to-white">
-      <div className="container mx-auto px-4">
-        {/* En-tête */}
+    <section id="avis" className="relative py-24 overflow-hidden">
+      {/* Background avec gradient et motifs */}
+      <div className="absolute inset-0 bg-gradient-to-br from-rose-50 via-white to-amber-50"></div>
+      <div className="absolute inset-0 opacity-30">
+        <div className="absolute top-20 left-10 w-72 h-72 bg-rose-200 rounded-full mix-blend-multiply filter blur-3xl animate-blob"></div>
+        <div className="absolute top-40 right-10 w-72 h-72 bg-amber-200 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-2000"></div>
+        <div className="absolute bottom-20 left-1/2 w-72 h-72 bg-pink-200 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-4000"></div>
+      </div>
+
+      <div className="container mx-auto px-4 relative z-10">
+        {/* En-tête avec hero image */}
         <div className="text-center mb-20">
+          <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm px-6 py-3 rounded-full mb-8 shadow-sm">
+            <Heart className="w-5 h-5 text-rose-500" />
+            <span className="text-sm font-medium text-gray-700">Témoignages authentiques</span>
+            <Sparkles className="w-5 h-5 text-amber-500" />
+          </div>
+
           <h2 className="font-display text-5xl md:text-6xl lg:text-7xl font-bold text-black mb-8 leading-tight">
             <span ref={titleLeftRef} className={`inline-block transition-all duration-[1200ms] ease-out ${
               titleLeftVisible
@@ -85,76 +107,110 @@ const Reviews: React.FC<ReviewsProps> = ({ onNavigate }) => {
                 : 'opacity-0 -translate-x-[120px]'
             }`}>Ce que disent</span>
             <span> </span>
-            <span ref={titleRightRef} className={`inline-block transition-all duration-[1200ms] ease-out ${
+            <span ref={titleRightRef} className={`inline-block transition-all duration-[1200ms] ease-out bg-gradient-to-r from-rose-600 to-amber-600 bg-clip-text text-transparent ${
               titleRightVisible
                 ? 'opacity-100 translate-x-0'
                 : 'opacity-0 translate-x-[120px]'
             }`}>nos clientes</span>
           </h2>
+
           <p className={`text-lg md:text-xl text-gray-700 max-w-2xl mx-auto mb-12 font-light transition-all duration-[1200ms] ease-out delay-300 ${
             titleLeftVisible
               ? 'opacity-100 translate-y-0'
               : 'opacity-0 translate-y-8'
           }`}>
-            Découvrez les témoignages de nos clientes satisfaites
+            Découvrez les témoignages de nos clientes satisfaites et rejoignez notre communauté
           </p>
 
-          {/* Statistiques */}
-          <div className="flex justify-center items-center gap-12 mb-8">
-            <div className="text-center">
+          {/* Statistiques améliorées */}
+          <div ref={statsRef} className={`flex flex-wrap justify-center items-center gap-8 mb-12 transition-all duration-[1200ms] ease-out delay-500 ${
+            statsVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
+          }`}>
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 min-w-[200px]">
               <div className="flex items-center justify-center gap-1 mb-3">
                 {renderStars(5)}
               </div>
-              <p className="text-3xl font-light text-black mb-1">4.9/5</p>
-              <p className="text-sm text-gray-600 font-light tracking-wide">Note moyenne</p>
+              <p className="text-4xl font-bold bg-gradient-to-r from-rose-600 to-amber-600 bg-clip-text text-transparent mb-2">4.9/5</p>
+              <p className="text-sm text-gray-600 font-medium tracking-wide">Note moyenne</p>
             </div>
-            <div className="w-px h-20 bg-gray-200"></div>
-            <div className="text-center">
-              <p className="text-3xl font-light text-black mb-1">150+</p>
-              <p className="text-sm text-gray-600 font-light tracking-wide">Avis clients</p>
+
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 min-w-[200px]">
+              <div className="flex items-center justify-center mb-3">
+                <Heart className="w-6 h-6 text-rose-500" />
+              </div>
+              <p className="text-4xl font-bold bg-gradient-to-r from-rose-600 to-amber-600 bg-clip-text text-transparent mb-2">150+</p>
+              <p className="text-sm text-gray-600 font-medium tracking-wide">Clientes satisfaites</p>
+            </div>
+
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 min-w-[200px]">
+              <div className="flex items-center justify-center mb-3">
+                <Sparkles className="w-6 h-6 text-amber-500" />
+              </div>
+              <p className="text-4xl font-bold bg-gradient-to-r from-rose-600 to-amber-600 bg-clip-text text-transparent mb-2">100%</p>
+              <p className="text-sm text-gray-600 font-medium tracking-wide">Recommandation</p>
             </div>
           </div>
         </div>
 
-        {/* Grille des avis */}
+        {/* Grille des avis redesignée */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
           {reviews.map((review, index) => (
             <div
               key={index}
-              className="bg-white rounded-xl p-8 shadow-sm hover:shadow-md transition-all duration-500 hover:-translate-y-1 relative border border-gray-100"
+              className="group bg-white/90 backdrop-blur-sm rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 relative border border-white/50"
             >
-              <div className="absolute top-6 right-6">
-                {review.platform === 'google' ? (
-                  <div className="text-xs bg-gray-100 text-gray-800 px-3 py-1.5 rounded-full font-light tracking-wide">
-                    Google
+              {/* Image de fond */}
+              {review.image && (
+                <div className="relative h-48 overflow-hidden">
+                  <img
+                    src={review.image}
+                    alt={review.name}
+                    className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
+
+                  {/* Badge plateforme */}
+                  <div className="absolute top-4 right-4">
+                    {review.platform === 'google' ? (
+                      <div className="bg-white/95 backdrop-blur-sm text-gray-800 px-3 py-1.5 rounded-full font-medium text-xs shadow-lg">
+                        Google
+                      </div>
+                    ) : (
+                      <div className="bg-white/95 backdrop-blur-sm text-gray-800 px-3 py-1.5 rounded-full font-medium flex items-center gap-1.5 text-xs shadow-lg">
+                        <Instagram size={12} />
+                        Instagram
+                      </div>
+                    )}
                   </div>
-                ) : (
-                  <div className="text-xs bg-gray-100 text-gray-800 px-3 py-1.5 rounded-full font-light flex items-center gap-1.5 tracking-wide">
-                    <Instagram size={12} />
-                    Instagram
+
+                  {/* Étoiles sur l'image */}
+                  <div className="absolute bottom-4 left-4 flex items-center gap-1 bg-white/95 backdrop-blur-sm px-3 py-2 rounded-full shadow-lg">
+                    {renderStars(review.rating)}
                   </div>
-                )}
-              </div>
+                </div>
+              )}
 
-              <Quote className="w-10 h-10 text-gray-200 mb-6" />
+              {/* Contenu de l'avis */}
+              <div className="p-6">
+                <Quote className="w-8 h-8 text-rose-200 mb-4" />
 
-              <div className="flex items-center gap-1 mb-4">
-                {renderStars(review.rating)}
-              </div>
+                <p className="text-gray-700 mb-6 leading-relaxed font-light text-base">
+                  "{review.comment}"
+                </p>
 
-              <p className="text-gray-700 mb-6 leading-relaxed font-light text-base">
-                "{review.comment}"
-              </p>
-
-              <div className="border-t border-gray-100 pt-5">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <p className="font-medium text-black text-sm">
-                      {review.name}
-                    </p>
-                    <p className="text-sm text-gray-500 font-light mt-1">
-                      {review.service}
-                    </p>
+                <div className="border-t border-gray-100 pt-5">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-rose-400 to-amber-400 flex items-center justify-center text-white font-semibold text-sm">
+                      {review.name.charAt(0)}
+                    </div>
+                    <div>
+                      <p className="font-semibold text-gray-900 text-sm">
+                        {review.name}
+                      </p>
+                      <p className="text-xs text-gray-500 font-medium mt-0.5">
+                        {review.service}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -162,30 +218,62 @@ const Reviews: React.FC<ReviewsProps> = ({ onNavigate }) => {
           ))}
         </div>
 
-        {/* CTA pour voir plus d'avis */}
-        <div className="text-center space-y-6">
-          <p className="text-gray-600 font-light tracking-wide">
-            Retrouvez tous nos avis sur nos plateformes
-          </p>
-          <div className="flex justify-center gap-6">
-            <a
-              href="https://google.com/business/harmoniecils"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 bg-black text-white px-8 py-4 rounded-full font-light tracking-wide border border-black hover:bg-gray-900 transition-all duration-300 hover:shadow-lg"
-            >
-              <ExternalLink size={18} />
-              Voir sur Google
-            </a>
-            <a
-              href="https://instagram.com/harmoniecils"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 bg-white text-black px-8 py-4 rounded-full font-light tracking-wide border border-gray-200 hover:border-black transition-all duration-300 hover:shadow-lg"
-            >
-              <Instagram size={18} />
-              Suivre sur Instagram
-            </a>
+        {/* CTA pour voir plus d'avis - Redesigné */}
+        <div className="text-center space-y-8 mt-20">
+          <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-12 shadow-xl max-w-4xl mx-auto border border-white/50">
+            <Heart className="w-12 h-12 text-rose-500 mx-auto mb-6" />
+            <h3 className="text-3xl font-bold text-gray-900 mb-4">
+              Rejoignez nos clientes satisfaites
+            </h3>
+            <p className="text-gray-600 font-light tracking-wide mb-8 text-lg">
+              Découvrez plus de témoignages et suivez-nous pour voir nos dernières réalisations
+            </p>
+            <div className="flex flex-wrap justify-center gap-4">
+              <a
+                href="https://google.com/business/harmoniecils"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group inline-flex items-center gap-3 bg-gradient-to-r from-gray-900 to-gray-800 text-white px-8 py-4 rounded-full font-medium tracking-wide hover:from-gray-800 hover:to-gray-700 transition-all duration-300 shadow-lg hover:shadow-2xl hover:-translate-y-1"
+              >
+                <ExternalLink size={20} className="group-hover:rotate-12 transition-transform duration-300" />
+                Voir nos avis Google
+                <div className="bg-white/20 px-2 py-1 rounded-full text-xs">150+</div>
+              </a>
+              <a
+                href="https://instagram.com/harmoniecils"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group inline-flex items-center gap-3 bg-gradient-to-r from-rose-500 to-amber-500 text-white px-8 py-4 rounded-full font-medium tracking-wide hover:from-rose-600 hover:to-amber-600 transition-all duration-300 shadow-lg hover:shadow-2xl hover:-translate-y-1"
+              >
+                <Instagram size={20} className="group-hover:scale-110 transition-transform duration-300" />
+                Suivre sur Instagram
+                <Sparkles size={16} className="group-hover:rotate-180 transition-transform duration-500" />
+              </a>
+            </div>
+          </div>
+
+          {/* Section d'images avant/après */}
+          <div className="mt-16">
+            <p className="text-gray-500 text-sm font-medium mb-6">Nos dernières réalisations</p>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-5xl mx-auto">
+              {[
+                "https://images.pexels.com/photos/3373746/pexels-photo-3373746.jpeg",
+                "https://images.pexels.com/photos/3373736/pexels-photo-3373736.jpeg",
+                "https://images.pexels.com/photos/3738386/pexels-photo-3738386.jpeg",
+                "https://images.pexels.com/photos/3373745/pexels-photo-3373745.jpeg"
+              ].map((img, idx) => (
+                <div key={idx} className="group relative aspect-square rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300">
+                  <img
+                    src={img}
+                    alt={`Réalisation ${idx + 1}`}
+                    className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
+                    <Instagram className="w-6 h-6 text-white" />
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
