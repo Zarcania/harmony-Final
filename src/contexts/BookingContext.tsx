@@ -49,9 +49,13 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
         .order('preferred_date', { ascending: true })
         .order('preferred_time', { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching bookings:', error);
+        return;
+      }
 
       if (data) {
+        console.log('Fetched bookings from DB:', data);
         const formattedBookings: Booking[] = data.map(booking => ({
           id: booking.id,
           date: booking.preferred_date,
@@ -64,6 +68,7 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
           status: booking.status as 'confirmed' | 'pending' | 'cancelled',
           createdAt: booking.created_at
         }));
+        console.log('Formatted bookings:', formattedBookings);
         setBookings(formattedBookings);
       }
     } catch (error) {
