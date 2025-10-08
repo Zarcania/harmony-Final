@@ -1,8 +1,9 @@
 import React from 'react';
-import { Eye, Scissors, Sparkles, Heart, CreditCard as Edit, Plus, Trash2, Image as ImageIcon } from 'lucide-react';
+import { Eye, Scissors, Sparkles, Heart, CreditCard as Edit, Plus, Trash2, Image as ImageIcon, Calendar } from 'lucide-react';
 import { useAdmin } from '../contexts/AdminContext';
 import AdminEditModal from './AdminEditModal';
 import ServiceDetailModal from './ServiceDetailModal';
+import BookingModal from './BookingModal';
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
 
 interface ServiceItem {
@@ -39,6 +40,8 @@ const Services: React.FC<ServicesProps> = ({ onNavigate }) => {
 
   const [editModal, setEditModal] = React.useState<{ type: string; data?: any; sectionId?: string } | null>(null);
   const [selectedService, setSelectedService] = React.useState<{ service: ServiceItem; section: ServiceSection } | null>(null);
+  const [showBookingModal, setShowBookingModal] = React.useState(false);
+  const [preselectedService, setPreselectedService] = React.useState<string | null>(null);
   const { elementRef: titleLeftRef, isVisible: titleLeftVisible } = useScrollAnimation();
   const { elementRef: titleRightRef, isVisible: titleRightVisible } = useScrollAnimation();
 
@@ -67,6 +70,11 @@ const Services: React.FC<ServicesProps> = ({ onNavigate }) => {
   const handleSaveBackground = (data: any) => {
     setPrestationsBackgroundImage(data.backgroundImage || '');
     setShowPrestationsBackground(data.showBackground || false);
+  };
+
+  const handleBookService = (serviceName: string) => {
+    setPreselectedService(serviceName);
+    setShowBookingModal(true);
   };
 
   return (
@@ -172,17 +180,19 @@ const Services: React.FC<ServicesProps> = ({ onNavigate }) => {
                   {section.items.map((item, itemIndex) => (
                     <div
                       key={itemIndex}
-                      onClick={() => !isAdmin && setSelectedService({ service: item, section })}
                       className={`relative flex justify-between items-center py-3.5 px-4 rounded-xl transition-all duration-300 group/item backdrop-blur-sm ${
                         isAdmin
                           ? 'hover:bg-blue-50/80 hover:shadow-sm'
-                          : 'hover:bg-neutral-100/60 hover:shadow-sm hover:translate-x-1 cursor-pointer'
+                          : 'hover:bg-neutral-100/60 hover:shadow-sm'
                       } ${itemIndex !== section.items.length - 1 ? 'border-b border-neutral-200/50' : ''}`}
                     >
                       {/* Petit indicateur décoratif */}
                       <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-0 bg-neutral-900 rounded-full group-hover/item:h-8 transition-all duration-300"></div>
 
-                      <div className="flex-1 flex justify-between items-center gap-4 pl-2">
+                      <div
+                        className="flex-1 flex justify-between items-center gap-4 pl-2 cursor-pointer"
+                        onClick={() => !isAdmin && setSelectedService({ service: item, section })}
+                      >
                         <div className="flex-1">
                           <span className="text-neutral-700 font-medium text-sm leading-tight group-hover/item:text-neutral-900 transition-colors">
                             {item.label}
@@ -201,6 +211,18 @@ const Services: React.FC<ServicesProps> = ({ onNavigate }) => {
                           <div className="w-1.5 h-1.5 rounded-full bg-neutral-300 group-hover/item:bg-neutral-900 transition-colors"></div>
                         </div>
                       </div>
+                      {!isAdmin && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleBookService(item.label);
+                          }}
+                          className="ml-3 bg-neutral-900 text-white px-4 py-2 rounded-lg hover:bg-neutral-800 transition-all flex items-center gap-2 text-sm font-medium shadow-md hover:shadow-lg opacity-0 group-hover/item:opacity-100"
+                        >
+                          <Calendar size={14} />
+                          RDV
+                        </button>
+                      )}
                       {isAdmin && (
                         <div className="flex gap-1 ml-2 opacity-0 group-hover/item:opacity-100 transition-opacity">
                           <button
@@ -288,6 +310,17 @@ const Services: React.FC<ServicesProps> = ({ onNavigate }) => {
           service={selectedService.service}
           section={selectedService.section}
           onClose={() => setSelectedService(null)}
+        />
+      )}
+
+      {/* Modal de réservation */}
+      {showBookingModal && (
+        <BookingModal
+          onClose={() => {
+            setShowBookingModal(false);
+            setPreselectedService(null);
+          }}
+          preselectedService={preselectedService}
         />
       )}
     </section>

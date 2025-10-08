@@ -7,15 +7,16 @@ import { fr } from 'date-fns/locale';
 
 interface BookingModalProps {
   onClose: () => void;
+  preselectedService?: string | null;
 }
 
-const BookingModal: React.FC<BookingModalProps> = ({ onClose }) => {
+const BookingModal: React.FC<BookingModalProps> = ({ onClose, preselectedService }) => {
   const { addBooking, getAvailableSlots } = useBooking();
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(preselectedService ? 2 : 1);
   const [isSubmitted, setIsSubmitted] = useState(false);
-  
+
   const [formData, setFormData] = useState<BookingFormData>({
-    service: '',
+    service: preselectedService || '',
     date: '',
     time: '',
     clientName: '',
@@ -132,6 +133,13 @@ const BookingModal: React.FC<BookingModalProps> = ({ onClose }) => {
               <h4 className="font-semibold text-harmonie-800 mb-4 text-lg">
                 Choisissez votre prestation
               </h4>
+              {preselectedService && (
+                <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <p className="text-sm text-green-800">
+                    <strong>Prestation sélectionnée :</strong> {preselectedService}
+                  </p>
+                </div>
+              )}
               <div className="grid gap-3">
                 {services.map((service) => (
                   <button
@@ -165,6 +173,13 @@ const BookingModal: React.FC<BookingModalProps> = ({ onClose }) => {
               <h4 className="font-semibold text-harmonie-800 mb-4 text-lg">
                 Choisissez votre créneau
               </h4>
+              {preselectedService && (
+                <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <p className="text-sm text-green-800">
+                    <strong>Prestation :</strong> {formData.service}
+                  </p>
+                </div>
+              )}
               
               {/* Sélection de date */}
               <div className="mb-6">
