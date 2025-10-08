@@ -250,6 +250,9 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     try {
       const { supabase } = await import('../lib/supabase');
 
+      console.log('Attempting login with username:', username);
+      console.log('Password length:', password.length);
+
       const { data, error } = await supabase
         .from('admin_users')
         .select('*')
@@ -257,19 +260,23 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         .eq('password_hash', password)
         .maybeSingle();
 
+      console.log('Login response:', { data, error });
+
       if (error) {
         console.error('Login error:', error);
         return false;
       }
 
       if (data) {
+        console.log('Login successful!', data);
         setIsAdmin(true);
         return true;
       }
 
+      console.warn('No matching user found');
       return false;
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('Login exception:', error);
       return false;
     }
   };
