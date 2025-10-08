@@ -21,15 +21,15 @@ const Hero: React.FC<HeroProps> = ({ onNavigate }) => {
           {/* Contenu textuel */}
           <div className="text-center lg:text-left max-w-full">
             {/* Titre principal */}
-            <h1 className="font-display text-3xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold text-black mb-6 md:mb-8 lg:mb-12 leading-[1.1] tracking-[-0.02em] animate-slide-up pb-2 md:pb-4 lg:pb-8">
+            <h1 className="font-display text-4xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-bold text-black mb-4 md:mb-6 lg:mb-8 leading-[1.05] tracking-[-0.02em] animate-slide-up">
               <span className="inline-block text-transparent bg-gradient-to-r from-gray-800 via-black to-gray-900 bg-clip-text animate-gradient bg-[length:200%_200%]">
                 Harmonie'Cils
               </span>
             </h1>
 
             {/* Sous-titre */}
-            <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-900 mb-6 md:mb-8 lg:mb-12 font-light max-w-3xl mx-auto lg:mx-0 leading-relaxed animate-slide-up px-2 sm:px-0">
-              Extensions de cils, épilation au fil et soins haut de gamme pour révéler votre beauté naturelle
+            <p className="text-sm sm:text-base md:text-lg lg:text-xl text-gray-800 mb-6 md:mb-8 lg:mb-10 font-light max-w-2xl mx-auto lg:mx-0 leading-snug animate-slide-up px-2 sm:px-0">
+              Extensions de cils, épilation au fil et soins haut de gamme
             </p>
 
             {/* CTA Buttons */}

@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Settings, Gift, Briefcase, Camera, User, X } from 'lucide-react';
+import { Settings, Gift, Briefcase, Camera, User, Star, X } from 'lucide-react';
 import PromotionEditor from './PromotionEditor';
 import ServiceEditor from './ServiceEditor';
 import PortfolioEditor from './PortfolioEditor';
 import AboutEditor from './AboutEditor';
+import ReviewEditor from './ReviewEditor';
 
 interface AdminPanelProps {
   onClose: () => void;
@@ -40,6 +41,13 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
       description: 'Gérer la section à propos',
       icon: <User className="w-6 h-6" />,
       color: 'bg-orange-500',
+    },
+    {
+      id: 'reviews',
+      title: 'Avis Clients',
+      description: 'Gérer les avis et témoignages',
+      icon: <Star className="w-6 h-6" />,
+      color: 'bg-yellow-500',
     },
   ];
 
@@ -106,6 +114,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
       {activeEditor === 'services' && <ServiceEditor onClose={() => setActiveEditor(null)} />}
       {activeEditor === 'portfolio' && <PortfolioEditor onClose={() => setActiveEditor(null)} />}
       {activeEditor === 'about' && <AboutEditor onClose={() => setActiveEditor(null)} />}
+      {activeEditor === 'reviews' && <ReviewEditor onClose={() => setActiveEditor(null)} />}
     </>
   );
 };

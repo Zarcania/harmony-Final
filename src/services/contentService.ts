@@ -33,6 +33,7 @@ export interface PortfolioItem {
   description: string;
   detailed_description: string;
   alt: string;
+  category: string;
   show_on_home: boolean;
   order_index: number;
 }
@@ -44,6 +45,18 @@ export interface AboutContent {
   content: string;
   image_url: string;
   order_index: number;
+}
+
+export interface Review {
+  id: string;
+  client_name: string;
+  rating: number;
+  comment: string;
+  service_type: string;
+  is_published: boolean;
+  order_index: number;
+  created_at?: string;
+  updated_at?: string;
 }
 
 // Promotions
@@ -244,6 +257,55 @@ export const upsertAboutContent = async (content: Omit<AboutContent, 'id'>) => {
 
   if (error) throw error;
   return data;
+};
+
+// Reviews
+export const getReviews = async (publishedOnly: boolean = true) => {
+  let query = supabase
+    .from('reviews')
+    .select('*')
+    .order('order_index');
+
+  if (publishedOnly) {
+    query = query.eq('is_published', true);
+  }
+
+  const { data, error } = await query;
+
+  if (error) throw error;
+  return data || [];
+};
+
+export const createReview = async (review: Omit<Review, 'id' | 'created_at' | 'updated_at'>) => {
+  const { data, error } = await supabase
+    .from('reviews')
+    .insert(review)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+};
+
+export const updateReview = async (id: string, review: Partial<Review>) => {
+  const { data, error } = await supabase
+    .from('reviews')
+    .update({ ...review, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+};
+
+export const deleteReview = async (id: string) => {
+  const { error } = await supabase
+    .from('reviews')
+    .delete()
+    .eq('id', id);
+
+  if (error) throw error;
 };
 
 // Image Upload

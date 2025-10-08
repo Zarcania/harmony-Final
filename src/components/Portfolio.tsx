@@ -42,31 +42,26 @@ const Portfolio: React.FC<PortfolioProps> = ({ onNavigate }) => {
 
       <div className="container mx-auto px-4 relative z-10">
         {/* En-tête moderne */}
-        <div className="text-center mb-20">
-          <div className="inline-flex items-center gap-3 mb-8">
-            <div className="w-16 h-px bg-gradient-to-r from-transparent via-harmonie-400 to-transparent"></div>
-            <Camera className="w-6 h-6 text-harmonie-600" />
-            <div className="w-16 h-px bg-gradient-to-r from-transparent via-harmonie-400 to-transparent"></div>
+        <div className="text-center mb-16">
+          <div className="inline-flex items-center gap-3 mb-6">
+            <div className="w-12 h-px bg-gradient-to-r from-transparent via-harmonie-400 to-transparent"></div>
+            <Camera className="w-5 h-5 text-harmonie-600" />
+            <div className="w-12 h-px bg-gradient-to-r from-transparent via-harmonie-400 to-transparent"></div>
           </div>
 
-          <h2 ref={titleRef} className={`font-display text-5xl md:text-6xl lg:text-7xl font-bold text-black mb-8 tracking-tight transition-all duration-[1200ms] ease-out ${
+          <h2 ref={titleRef} className={`font-display text-4xl md:text-5xl lg:text-6xl font-bold text-black mb-4 tracking-tight transition-all duration-[1200ms] ease-out ${
             titleVisible
               ? 'opacity-100 translate-x-0'
               : 'opacity-0 -translate-x-[120px]'
           }`}>
             Portfolio
-            <span className={`block font-bold text-gray-900 mt-2 transition-all duration-[1200ms] ease-out delay-200 ${
-              titleVisible
-                ? 'opacity-100 translate-x-0'
-                : 'opacity-0 -translate-x-[120px]'
-            }`}>Nos Réalisations</span>
           </h2>
-          <p className={`text-xl text-gray-900 max-w-3xl mx-auto leading-relaxed font-medium transition-all duration-[1200ms] ease-out delay-300 ${
+          <p className={`text-base md:text-lg text-gray-700 max-w-2xl mx-auto leading-snug transition-all duration-[1200ms] ease-out delay-300 ${
             titleVisible
               ? 'opacity-100 translate-y-0'
               : 'opacity-0 translate-y-8'
           }`}>
-            Chaque regard raconte une histoire. Découvrez nos créations et laissez-vous inspirer par la beauté de nos clientes
+            Découvrez nos créations
           </p>
 
           {isAdmin && (
@@ -83,7 +78,7 @@ const Portfolio: React.FC<PortfolioProps> = ({ onNavigate }) => {
         </div>
 
         {/* Galerie masonry moderne */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 mb-12">
           {portfolioImages.map((image, index) => (
             <div
               key={index}
@@ -165,11 +160,11 @@ const Portfolio: React.FC<PortfolioProps> = ({ onNavigate }) => {
               )}
 
               {/* Info card en bas - Design moderne */}
-              <div className="p-6 bg-gradient-to-b from-white to-neutral-50/50">
-                <h3 className="font-display text-xl font-semibold text-neutral-900 mb-2 group-hover:text-harmonie-700 transition-colors duration-300">
+              <div className="p-3 md:p-4 bg-gradient-to-b from-white to-neutral-50/50">
+                <h3 className="font-display text-sm md:text-base font-semibold text-neutral-900 mb-1 group-hover:text-harmonie-700 transition-colors duration-300 line-clamp-1">
                   {image.title}
                 </h3>
-                <p className="text-neutral-600 text-sm leading-relaxed">
+                <p className="text-neutral-600 text-xs leading-snug line-clamp-2">
                   {image.description}
                 </p>
               </div>
@@ -179,7 +174,7 @@ const Portfolio: React.FC<PortfolioProps> = ({ onNavigate }) => {
 
         {/* CTA Section moderne */}
         <div className="max-w-4xl mx-auto">
-          <div className="relative bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900 rounded-3xl p-12 md:p-16 overflow-hidden shadow-2xl">
+          <div className="relative bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900 rounded-2xl md:rounded-3xl p-8 md:p-12 overflow-hidden shadow-2xl">
             {/* Pattern de fond */}
             <div className="absolute inset-0 opacity-10">
               <div className="absolute inset-0" style={{
@@ -189,33 +184,28 @@ const Portfolio: React.FC<PortfolioProps> = ({ onNavigate }) => {
             </div>
 
             <div className="relative z-10 text-center">
-              <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 mb-6">
-                <Camera className="w-4 h-4 text-harmonie-300" />
-                <span className="text-white/80 text-sm font-medium">Instagram</span>
+              <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-3 py-1.5 mb-4">
+                <Camera className="w-3 h-3 text-harmonie-300" />
+                <span className="text-white/80 text-xs font-medium">Instagram</span>
               </div>
 
-              <h3 className="font-display text-3xl md:text-4xl font-light text-white mb-4">
-                Découvrez nos dernières
-                <span className="block font-bold mt-1">réalisations en direct</span>
+              <h3 className="font-display text-2xl md:text-3xl font-bold text-white mb-3">
+                Suivez nos créations
               </h3>
-              <p className="text-white/70 text-lg mb-10 max-w-2xl mx-auto leading-relaxed">
-                Suivez-nous sur Instagram pour voir nos créations du jour et inspirez-vous pour votre prochaine transformation
+              <p className="text-white/70 text-sm md:text-base mb-6 max-w-xl mx-auto leading-snug">
+                Retrouvez nos réalisations du jour sur Instagram
               </p>
 
               <a
                 href="https://instagram.com/harmoniecils"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-3 bg-white text-neutral-900 px-8 py-4 rounded-full font-medium text-base hover:bg-neutral-100 transition-all duration-300 hover:shadow-2xl hover:scale-105 shadow-lg"
+                className="inline-flex items-center gap-2 bg-white text-neutral-900 px-6 py-3 rounded-full font-medium text-sm hover:bg-neutral-100 transition-all duration-300 hover:shadow-2xl hover:scale-105 shadow-lg"
               >
-                <Camera size={20} />
+                <Camera size={18} />
                 <span>Suivre sur Instagram</span>
-                <ExternalLink size={16} />
+                <ExternalLink size={14} />
               </a>
-
-              <p className="text-white/50 text-xs mt-6 tracking-wide uppercase">
-                Plus de 500 clientes satisfaites
-              </p>
             </div>
           </div>
         </div>

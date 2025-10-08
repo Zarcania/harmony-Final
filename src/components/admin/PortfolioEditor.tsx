@@ -59,6 +59,7 @@ const PortfolioEditor: React.FC<PortfolioEditorProps> = ({ onClose }) => {
           description: editingItem.description,
           detailed_description: editingItem.detailed_description || '',
           alt: editingItem.alt || editingItem.title,
+          category: editingItem.category || 'Cils',
           show_on_home: editingItem.show_on_home || false,
           order_index: editingItem.order_index || 0,
         });
@@ -119,7 +120,7 @@ const PortfolioEditor: React.FC<PortfolioEditorProps> = ({ onClose }) => {
 
         <div className="p-6 overflow-y-auto max-h-[calc(90vh-80px)]">
           <button
-            onClick={() => setEditingItem({ title: '', description: '', detailed_description: '', url: '', alt: '', show_on_home: false, order_index: items.length })}
+            onClick={() => setEditingItem({ title: '', description: '', detailed_description: '', url: '', alt: '', category: 'Cils', show_on_home: false, order_index: items.length })}
             className="mb-6 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
           >
             <Plus size={20} />
@@ -181,6 +182,19 @@ const PortfolioEditor: React.FC<PortfolioEditorProps> = ({ onClose }) => {
                   />
                 </div>
                 <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Catégorie *</label>
+                  <select
+                    value={editingItem.category || 'Cils'}
+                    onChange={(e) => setEditingItem({ ...editingItem, category: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="Cils">Cils</option>
+                    <option value="Sourcils">Sourcils</option>
+                    <option value="Lèvres">Lèvres</option>
+                    <option value="Maquillage">Maquillage</option>
+                  </select>
+                </div>
+                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Texte alternatif</label>
                   <input
                     type="text"
@@ -226,7 +240,12 @@ const PortfolioEditor: React.FC<PortfolioEditorProps> = ({ onClose }) => {
               <div key={item.id} className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-md transition-shadow">
                 <img src={item.url} alt={item.alt} className="w-full h-48 object-cover" />
                 <div className="p-4">
-                  <h4 className="font-bold text-lg text-gray-900 mb-1">{item.title}</h4>
+                  <div className="flex items-start justify-between mb-2">
+                    <h4 className="font-bold text-lg text-gray-900">{item.title}</h4>
+                    <span className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
+                      {item.category}
+                    </span>
+                  </div>
                   <p className="text-gray-600 text-sm mb-3">{item.description}</p>
                   {item.show_on_home && (
                     <span className="inline-block bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full mb-3">
