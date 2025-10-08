@@ -91,6 +91,8 @@ const ServiceEditor: React.FC<ServiceEditorProps> = ({ onClose }) => {
           label: editingItem.label,
           price: editingItem.price,
           duration: editingItem.duration || '',
+          description: editingItem.description || '',
+          benefits: editingItem.benefits || [],
           order_index: editingItem.order_index || 0,
         });
       }
@@ -222,6 +224,27 @@ const ServiceEditor: React.FC<ServiceEditorProps> = ({ onClose }) => {
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
                   />
                 </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Description (optionnel)</label>
+                  <textarea
+                    placeholder="Description détaillée du service"
+                    value={editingItem.description || ''}
+                    onChange={(e) => setEditingItem({ ...editingItem, description: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                    rows={3}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Avantages (optionnel)</label>
+                  <textarea
+                    placeholder="Un avantage par ligne&#10;Ex:&#10;Résultat précis et net&#10;Technique douce&#10;Tenue jusqu'à 3 semaines"
+                    value={editingItem.benefits ? editingItem.benefits.join('\n') : ''}
+                    onChange={(e) => setEditingItem({ ...editingItem, benefits: e.target.value.split('\n').filter(b => b.trim()) })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                    rows={4}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Séparez chaque avantage par un retour à la ligne</p>
+                </div>
                 <div className="flex gap-3">
                   <button
                     onClick={handleSaveItem}
@@ -267,7 +290,7 @@ const ServiceEditor: React.FC<ServiceEditorProps> = ({ onClose }) => {
                 </div>
 
                 <button
-                  onClick={() => setEditingItem({ service_id: service.id, label: '', price: '', duration: '', order_index: serviceItems[service.id]?.length || 0 })}
+                  onClick={() => setEditingItem({ service_id: service.id, label: '', price: '', duration: '', description: '', benefits: [], order_index: serviceItems[service.id]?.length || 0 })}
                   className="mb-3 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-sm flex items-center gap-2"
                 >
                   <Plus size={16} />
@@ -276,27 +299,41 @@ const ServiceEditor: React.FC<ServiceEditorProps> = ({ onClose }) => {
 
                 <div className="space-y-2">
                   {serviceItems[service.id]?.map((item) => (
-                    <div key={item.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                      <div className="flex-1">
-                        <span className="font-medium">{item.label}</span>
-                        <span className="ml-4 text-blue-600 font-bold">{item.price}</span>
-                        {item.duration && (
-                          <span className="ml-3 text-gray-500 text-sm">⏱️ {item.duration}</span>
-                        )}
-                      </div>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => setEditingItem(item)}
-                          className="p-1 text-blue-600 hover:bg-blue-100 rounded"
-                        >
-                          <Edit size={16} />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteItem(item.id)}
-                          className="p-1 text-red-600 hover:bg-red-100 rounded"
-                        >
-                          <Trash2 size={16} />
-                        </button>
+                    <div key={item.id} className="p-3 bg-gray-50 rounded-lg">
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="font-medium">{item.label}</span>
+                            <span className="text-blue-600 font-bold">{item.price}</span>
+                            {item.duration && (
+                              <span className="text-gray-500 text-sm">⏱️ {item.duration}</span>
+                            )}
+                          </div>
+                          {item.description && (
+                            <p className="text-sm text-gray-600 mt-1">{item.description}</p>
+                          )}
+                          {item.benefits && item.benefits.length > 0 && (
+                            <ul className="text-xs text-gray-500 mt-1 ml-4 list-disc">
+                              {item.benefits.map((benefit, i) => (
+                                <li key={i}>{benefit}</li>
+                              ))}
+                            </ul>
+                          )}
+                        </div>
+                        <div className="flex gap-2 ml-4">
+                          <button
+                            onClick={() => setEditingItem(item)}
+                            className="p-1 text-blue-600 hover:bg-blue-100 rounded"
+                          >
+                            <Edit size={16} />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteItem(item.id)}
+                            className="p-1 text-red-600 hover:bg-red-100 rounded"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
                       </div>
                     </div>
                   ))}
