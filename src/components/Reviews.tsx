@@ -18,7 +18,6 @@ interface ReviewsProps {
 const Reviews: React.FC<ReviewsProps> = ({ onNavigate }) => {
   const { elementRef: titleLeftRef, isVisible: titleLeftVisible } = useScrollAnimation();
   const { elementRef: titleRightRef, isVisible: titleRightVisible } = useScrollAnimation();
-  const { elementRef: statsRef, isVisible: statsVisible } = useScrollAnimation();
 
   const reviews: Review[] = [
     {
@@ -122,34 +121,6 @@ const Reviews: React.FC<ReviewsProps> = ({ onNavigate }) => {
             Découvrez les témoignages de nos clientes satisfaites et rejoignez notre communauté
           </p>
 
-          {/* Statistiques améliorées */}
-          <div ref={statsRef} className={`flex flex-wrap justify-center items-center gap-8 mb-12 transition-all duration-[1200ms] ease-out delay-500 ${
-            statsVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
-          }`}>
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 min-w-[200px]">
-              <div className="flex items-center justify-center gap-1 mb-3">
-                {renderStars(5)}
-              </div>
-              <p className="text-4xl font-bold text-black mb-2">4.9/5</p>
-              <p className="text-sm text-gray-600 font-medium tracking-wide">Note moyenne</p>
-            </div>
-
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 min-w-[200px]">
-              <div className="flex items-center justify-center mb-3">
-                <Heart className="w-6 h-6 text-black" />
-              </div>
-              <p className="text-4xl font-bold text-black mb-2">150+</p>
-              <p className="text-sm text-gray-600 font-medium tracking-wide">Clientes satisfaites</p>
-            </div>
-
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 min-w-[200px]">
-              <div className="flex items-center justify-center mb-3">
-                <Sparkles className="w-6 h-6 text-black" />
-              </div>
-              <p className="text-4xl font-bold text-black mb-2">100%</p>
-              <p className="text-sm text-gray-600 font-medium tracking-wide">Recommandation</p>
-            </div>
-          </div>
         </div>
 
         {/* Grille des avis redesignée */}
