@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { supabase, checkIsAdmin } from '../lib/supabase';
 
 interface PortfolioImage {
   id: string;
@@ -27,6 +28,8 @@ interface AdminContextType {
   isAdmin: boolean;
   setIsAdmin: (value: boolean) => void;
   login: (email: string, password: string) => Promise<boolean>;
+  logout: () => Promise<void>;
+  isLoading: boolean;
   portfolioImages: PortfolioImage[];
   updatePortfolioImage: (id: string, updates: Partial<PortfolioImage>) => void;
   addPortfolioImage: (image: Omit<PortfolioImage, 'id'>) => void;
@@ -54,6 +57,7 @@ export const useAdmin = () => {
 
 export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [prestationsBackgroundImage, setPrestationsBackgroundImage] = useState('');
   const [showPrestationsBackground, setShowPrestationsBackground] = useState(false);
 
@@ -246,38 +250,76 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     ));
   };
 
-  const login = async (username: string, password: string): Promise<boolean> => {
+  useEffect(() => {
+    const initAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          const isAdminUser = await checkIsAdmin();
+          setIsAdmin(isAdminUser);
+        }
+      } catch (error) {
+        console.error('Auth initialization error:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (event === 'SIGNED_IN' && session) {
+          const isAdminUser = await checkIsAdmin();
+          setIsAdmin(isAdminUser);
+        } else if (event === 'SIGNED_OUT') {
+          setIsAdmin(false);
+        }
+      }
+    );
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      const { supabase } = await import('../lib/supabase');
-
-      console.log('Attempting login with username:', username);
-      console.log('Password length:', password.length);
-
-      const { data, error } = await supabase
-        .from('admin_users')
-        .select('*')
-        .eq('username', username)
-        .eq('password_hash', password)
-        .maybeSingle();
-
-      console.log('Login response:', { data, error });
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
       if (error) {
-        console.error('Login error:', error);
+        console.error('Login error:', error.message);
         return false;
       }
 
-      if (data) {
-        console.log('Login successful!', data);
-        setIsAdmin(true);
-        return true;
+      if (data.user) {
+        const isAdminUser = await checkIsAdmin();
+        if (isAdminUser) {
+          setIsAdmin(true);
+          return true;
+        } else {
+          await supabase.auth.signOut();
+          console.error('User does not have admin privileges');
+          return false;
+        }
       }
 
-      console.warn('No matching user found');
       return false;
     } catch (error) {
       console.error('Login exception:', error);
       return false;
+    }
+  };
+
+  const logout = async () => {
+    try {
+      await supabase.auth.signOut();
+      setIsAdmin(false);
+    } catch (error) {
+      console.error('Logout error:', error);
     }
   };
 
@@ -286,6 +328,8 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       isAdmin,
       setIsAdmin,
       login,
+      logout,
+      isLoading,
       portfolioImages,
       updatePortfolioImage,
       addPortfolioImage,

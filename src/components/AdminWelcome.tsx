@@ -1,5 +1,6 @@
 import React from 'react';
 import { Crown, Settings, CreditCard as Edit3, LogOut, Calendar, Sparkles } from 'lucide-react';
+import { useAdmin } from '../contexts/AdminContext';
 
 interface AdminWelcomeProps {
   onDisableAdmin: () => void;
@@ -8,7 +9,10 @@ interface AdminWelcomeProps {
 }
 
 const AdminWelcome: React.FC<AdminWelcomeProps> = ({ onDisableAdmin, onShowPlanning, onShowAdminPanel }) => {
-  const handleDisableAdmin = () => {
+  const { logout } = useAdmin();
+
+  const handleDisableAdmin = async () => {
+    await logout();
     onDisableAdmin();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };

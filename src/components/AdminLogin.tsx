@@ -7,7 +7,7 @@ interface AdminLoginProps {
 }
 
 const AdminLogin: React.FC<AdminLoginProps> = ({ onClose }) => {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -19,7 +19,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onClose }) => {
     setIsLoading(true);
     setError('');
 
-    const success = await login(username, password);
+    const success = await login(email, password);
 
     if (success) {
       onClose();
@@ -27,7 +27,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onClose }) => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }, 100);
     } else {
-      setError('Nom d\'utilisateur ou mot de passe incorrect');
+      setError('Email ou mot de passe incorrect. Veuillez vérifier vos identifiants.');
     }
 
     setIsLoading(false);
@@ -66,19 +66,19 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onClose }) => {
           )}
 
           <div>
-            <label htmlFor="username" className="block text-sm font-medium text-harmonie-700 mb-2">
-              Nom d'utilisateur
+            <label htmlFor="email" className="block text-sm font-medium text-harmonie-700 mb-2">
+              Email
             </label>
             <div className="relative">
               <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-harmonie-400" size={20} />
               <input
-                type="text"
-                id="username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                type="email"
+                id="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
                 className="w-full pl-12 pr-4 py-3 border border-harmonie-200 rounded-xl focus:ring-2 focus:ring-harmonie-500 focus:border-transparent transition-colors"
-                placeholder="admin"
+                placeholder="admin@example.com"
               />
             </div>
           </div>
