@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Camera, ExternalLink, CreditCard as Edit, Plus, Trash2, Eye, EyeOff } from 'lucide-react';
+import { Camera, ExternalLink, CreditCard as Edit, Plus, Trash2, Eye, EyeOff, Settings, ArrowUp, ArrowDown } from 'lucide-react';
 import { useAdmin } from '../contexts/AdminContext';
 import AdminEditModal from './AdminEditModal';
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
-import { getPortfolioCategories } from '../services/contentService';
+import { getPortfolioCategories, createPortfolioCategory, updatePortfolioCategory, deletePortfolioCategory } from '../services/contentService';
 
 interface Category {
   id: string;
@@ -20,6 +20,7 @@ const Portfolio: React.FC<PortfolioProps> = ({ onNavigate }) => {
   const [editModal, setEditModal] = React.useState<{ type: string; data?: any } | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [showCategoryManager, setShowCategoryManager] = useState(false);
   const { elementRef: titleRef, isVisible: titleVisible } = useScrollAnimation();
 
   useEffect(() => {
@@ -55,6 +56,55 @@ const Portfolio: React.FC<PortfolioProps> = ({ onNavigate }) => {
       updatePortfolioImage(data.id, data);
     } else {
       addPortfolioImage(data);
+    }
+  };
+
+  const handleAddCategory = async (name: string) => {
+    try {
+      const newCategory = await createPortfolioCategory(name, categories.length);
+      setCategories([...categories, newCategory]);
+    } catch (error) {
+      console.error('Error adding category:', error);
+      alert('Erreur lors de l\'ajout de la catégorie');
+    }
+  };
+
+  const handleUpdateCategory = async (id: string, name: string, orderIndex: number) => {
+    try {
+      await updatePortfolioCategory(id, name, orderIndex);
+      await loadCategories();
+    } catch (error) {
+      console.error('Error updating category:', error);
+      alert('Erreur lors de la mise à jour de la catégorie');
+    }
+  };
+
+  const handleDeleteCategory = async (id: string) => {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer cette catégorie ?')) return;
+    try {
+      await deletePortfolioCategory(id);
+      setCategories(categories.filter(cat => cat.id !== id));
+    } catch (error) {
+      console.error('Error deleting category:', error);
+      alert('Erreur lors de la suppression de la catégorie');
+    }
+  };
+
+  const handleMoveCategory = async (index: number, direction: 'up' | 'down') => {
+    const newCategories = [...categories];
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= newCategories.length) return;
+
+    [newCategories[index], newCategories[targetIndex]] = [newCategories[targetIndex], newCategories[index]];
+
+    try {
+      for (let i = 0; i < newCategories.length; i++) {
+        await updatePortfolioCategory(newCategories[i].id, newCategories[i].name, i);
+      }
+      setCategories(newCategories);
+    } catch (error) {
+      console.error('Error moving category:', error);
+      alert('Erreur lors du déplacement de la catégorie');
     }
   };
 
@@ -118,13 +168,20 @@ const Portfolio: React.FC<PortfolioProps> = ({ onNavigate }) => {
           </div>
 
           {isAdmin && (
-            <div className="mt-8">
+            <div className="mt-8 flex gap-3 justify-center">
               <button
                 onClick={() => setEditModal({ type: 'portfolio' })}
-                className="bg-harmonie-600 text-white px-6 py-3 rounded-full hover:bg-harmonie-700 transition-all duration-300 flex items-center gap-2 mx-auto shadow-lg hover:shadow-xl hover:scale-105"
+                className="bg-harmonie-600 text-white px-6 py-3 rounded-full hover:bg-harmonie-700 transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-xl hover:scale-105"
               >
                 <Plus size={18} />
                 Ajouter une image
+              </button>
+              <button
+                onClick={() => setShowCategoryManager(!showCategoryManager)}
+                className="bg-blue-600 text-white px-6 py-3 rounded-full hover:bg-blue-700 transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-xl hover:scale-105"
+              >
+                <Settings size={18} />
+                Gérer les catégories
               </button>
             </div>
           )}
@@ -277,6 +334,93 @@ const Portfolio: React.FC<PortfolioProps> = ({ onNavigate }) => {
           onSave={handleSaveImage}
           onClose={() => setEditModal(null)}
         />
+      )}
+
+      {/* Modal de gestion des catégories */}
+      {showCategoryManager && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl max-h-[80vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="font-display text-2xl font-bold text-harmonie-800">
+                Gérer les catégories
+              </h3>
+              <button
+                onClick={() => setShowCategoryManager(false)}
+                className="p-2 text-harmonie-400 hover:text-harmonie-600 hover:bg-harmonie-50 rounded-lg transition-colors"
+              >
+                <Trash2 size={20} />
+              </button>
+            </div>
+
+            <div className="mb-6">
+              <div className="flex gap-3">
+                <input
+                  type="text"
+                  id="newCategoryInput"
+                  placeholder="Nom de la nouvelle catégorie"
+                  className="flex-1 p-3 border border-harmonie-200 rounded-lg focus:ring-2 focus:ring-harmonie-500"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      const input = e.currentTarget;
+                      if (input.value.trim()) {
+                        handleAddCategory(input.value.trim());
+                        input.value = '';
+                      }
+                    }
+                  }}
+                />
+                <button
+                  onClick={() => {
+                    const input = document.getElementById('newCategoryInput') as HTMLInputElement;
+                    if (input.value.trim()) {
+                      handleAddCategory(input.value.trim());
+                      input.value = '';
+                    }
+                  }}
+                  className="bg-harmonie-600 text-white px-6 py-3 rounded-lg hover:bg-harmonie-700 transition-colors flex items-center gap-2"
+                >
+                  <Plus size={18} />
+                  Ajouter
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              {categories.map((cat, index) => (
+                <div key={cat.id} className="flex items-center gap-3 p-4 bg-harmonie-50 rounded-lg">
+                  <div className="flex flex-col gap-1">
+                    <button
+                      onClick={() => handleMoveCategory(index, 'up')}
+                      disabled={index === 0}
+                      className="p-1 text-harmonie-600 hover:bg-harmonie-100 rounded disabled:opacity-30 disabled:cursor-not-allowed"
+                    >
+                      <ArrowUp size={16} />
+                    </button>
+                    <button
+                      onClick={() => handleMoveCategory(index, 'down')}
+                      disabled={index === categories.length - 1}
+                      className="p-1 text-harmonie-600 hover:bg-harmonie-100 rounded disabled:opacity-30 disabled:cursor-not-allowed"
+                    >
+                      <ArrowDown size={16} />
+                    </button>
+                  </div>
+                  <input
+                    type="text"
+                    value={cat.name}
+                    onChange={(e) => handleUpdateCategory(cat.id, e.target.value, cat.order_index)}
+                    className="flex-1 p-2 border border-harmonie-200 rounded-lg focus:ring-2 focus:ring-harmonie-500"
+                  />
+                  <button
+                    onClick={() => handleDeleteCategory(cat.id)}
+                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       )}
     </section>
   );
