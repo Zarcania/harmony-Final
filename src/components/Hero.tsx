@@ -23,7 +23,7 @@ const Hero: React.FC<HeroProps> = ({ onNavigate }) => {
             {/* Titre principal */}
             <h1 className="font-display text-4xl sm:text-6xl md:text-8xl lg:text-9xl font-bold text-black mb-8 md:mb-12 leading-[1.1] tracking-[-0.02em] animate-slide-up pb-4 md:pb-8">
               <span className="block text-transparent bg-gradient-to-r from-gray-800 via-black to-gray-900 bg-clip-text animate-gradient bg-[length:200%_200%]">
-                Harmonie Cils
+                Harmonie'Cils
               </span>
             </h1>
 
