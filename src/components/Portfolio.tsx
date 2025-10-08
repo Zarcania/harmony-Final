@@ -97,14 +97,18 @@ const Portfolio: React.FC<PortfolioProps> = ({ onNavigate }) => {
 
     [newCategories[index], newCategories[targetIndex]] = [newCategories[targetIndex], newCategories[index]];
 
+    setCategories(newCategories);
+
     try {
-      for (let i = 0; i < newCategories.length; i++) {
-        await updatePortfolioCategory(newCategories[i].id, newCategories[i].name, i);
-      }
-      setCategories(newCategories);
+      await Promise.all(
+        newCategories.map((cat, i) =>
+          updatePortfolioCategory(cat.id, cat.name, i)
+        )
+      );
     } catch (error) {
       console.error('Error moving category:', error);
       alert('Erreur lors du déplacement de la catégorie');
+      await loadCategories();
     }
   };
 
