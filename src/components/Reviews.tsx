@@ -83,21 +83,21 @@ const Reviews: React.FC<ReviewsProps> = ({ onNavigate }) => {
 
   return (
     <section id="avis" className="relative py-24 overflow-hidden">
-      {/* Background avec gradient et motifs */}
-      <div className="absolute inset-0 bg-gradient-to-br from-rose-50 via-white to-amber-50"></div>
-      <div className="absolute inset-0 opacity-30">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-rose-200 rounded-full mix-blend-multiply filter blur-3xl animate-blob"></div>
-        <div className="absolute top-40 right-10 w-72 h-72 bg-amber-200 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-2000"></div>
-        <div className="absolute bottom-20 left-1/2 w-72 h-72 bg-pink-200 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-4000"></div>
+      {/* Background avec gradient neutre */}
+      <div className="absolute inset-0 bg-gradient-to-br from-gray-50 via-white to-gray-50"></div>
+      <div className="absolute inset-0 opacity-20">
+        <div className="absolute top-20 left-10 w-72 h-72 bg-gray-200 rounded-full mix-blend-multiply filter blur-3xl animate-blob"></div>
+        <div className="absolute top-40 right-10 w-72 h-72 bg-gray-300 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-2000"></div>
+        <div className="absolute bottom-20 left-1/2 w-72 h-72 bg-gray-200 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-4000"></div>
       </div>
 
       <div className="container mx-auto px-4 relative z-10">
-        {/* En-tête avec hero image */}
+        {/* En-tête */}
         <div className="text-center mb-20">
           <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm px-6 py-3 rounded-full mb-8 shadow-sm">
-            <Heart className="w-5 h-5 text-rose-500" />
+            <Heart className="w-5 h-5 text-black" />
             <span className="text-sm font-medium text-gray-700">Témoignages authentiques</span>
-            <Sparkles className="w-5 h-5 text-amber-500" />
+            <Sparkles className="w-5 h-5 text-black" />
           </div>
 
           <h2 className="font-display text-5xl md:text-6xl lg:text-7xl font-bold text-black mb-8 leading-tight">
@@ -107,7 +107,7 @@ const Reviews: React.FC<ReviewsProps> = ({ onNavigate }) => {
                 : 'opacity-0 -translate-x-[120px]'
             }`}>Ce que disent</span>
             <span> </span>
-            <span ref={titleRightRef} className={`inline-block transition-all duration-[1200ms] ease-out bg-gradient-to-r from-rose-600 to-amber-600 bg-clip-text text-transparent ${
+            <span ref={titleRightRef} className={`inline-block transition-all duration-[1200ms] ease-out ${
               titleRightVisible
                 ? 'opacity-100 translate-x-0'
                 : 'opacity-0 translate-x-[120px]'
@@ -130,23 +130,23 @@ const Reviews: React.FC<ReviewsProps> = ({ onNavigate }) => {
               <div className="flex items-center justify-center gap-1 mb-3">
                 {renderStars(5)}
               </div>
-              <p className="text-4xl font-bold bg-gradient-to-r from-rose-600 to-amber-600 bg-clip-text text-transparent mb-2">4.9/5</p>
+              <p className="text-4xl font-bold text-black mb-2">4.9/5</p>
               <p className="text-sm text-gray-600 font-medium tracking-wide">Note moyenne</p>
             </div>
 
             <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 min-w-[200px]">
               <div className="flex items-center justify-center mb-3">
-                <Heart className="w-6 h-6 text-rose-500" />
+                <Heart className="w-6 h-6 text-black" />
               </div>
-              <p className="text-4xl font-bold bg-gradient-to-r from-rose-600 to-amber-600 bg-clip-text text-transparent mb-2">150+</p>
+              <p className="text-4xl font-bold text-black mb-2">150+</p>
               <p className="text-sm text-gray-600 font-medium tracking-wide">Clientes satisfaites</p>
             </div>
 
             <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 min-w-[200px]">
               <div className="flex items-center justify-center mb-3">
-                <Sparkles className="w-6 h-6 text-amber-500" />
+                <Sparkles className="w-6 h-6 text-black" />
               </div>
-              <p className="text-4xl font-bold bg-gradient-to-r from-rose-600 to-amber-600 bg-clip-text text-transparent mb-2">100%</p>
+              <p className="text-4xl font-bold text-black mb-2">100%</p>
               <p className="text-sm text-gray-600 font-medium tracking-wide">Recommandation</p>
             </div>
           </div>
@@ -178,7 +178,7 @@ const Reviews: React.FC<ReviewsProps> = ({ onNavigate }) => {
                   )}
                 </div>
 
-                <Quote className="w-8 h-8 text-rose-200 mb-4" />
+                <Quote className="w-8 h-8 text-gray-200 mb-4" />
 
                 <p className="text-gray-700 mb-6 leading-relaxed font-light text-base">
                   "{review.comment}"
@@ -186,7 +186,7 @@ const Reviews: React.FC<ReviewsProps> = ({ onNavigate }) => {
 
                 <div className="border-t border-gray-100 pt-5">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-rose-400 to-amber-400 flex items-center justify-center text-white font-semibold text-sm">
+                    <div className="w-10 h-10 rounded-full bg-black flex items-center justify-center text-white font-semibold text-sm">
                       {review.name.charAt(0)}
                     </div>
                     <div>
@@ -207,7 +207,7 @@ const Reviews: React.FC<ReviewsProps> = ({ onNavigate }) => {
         {/* CTA pour voir plus d'avis - Redesigné */}
         <div className="text-center space-y-8 mt-20">
           <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-12 shadow-xl max-w-4xl mx-auto border border-white/50">
-            <Heart className="w-12 h-12 text-rose-500 mx-auto mb-6" />
+            <Heart className="w-12 h-12 text-black mx-auto mb-6" />
             <h3 className="text-3xl font-bold text-gray-900 mb-4">
               Rejoignez nos clientes satisfaites
             </h3>
@@ -219,7 +219,7 @@ const Reviews: React.FC<ReviewsProps> = ({ onNavigate }) => {
                 href="https://google.com/business/harmoniecils"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group inline-flex items-center gap-3 bg-gradient-to-r from-gray-900 to-gray-800 text-white px-8 py-4 rounded-full font-medium tracking-wide hover:from-gray-800 hover:to-gray-700 transition-all duration-300 shadow-lg hover:shadow-2xl hover:-translate-y-1"
+                className="group inline-flex items-center gap-3 bg-black text-white px-8 py-4 rounded-full font-medium tracking-wide hover:bg-gray-800 transition-all duration-300 shadow-lg hover:shadow-2xl hover:-translate-y-1"
               >
                 <ExternalLink size={20} className="group-hover:rotate-12 transition-transform duration-300" />
                 Voir nos avis Google
@@ -229,7 +229,7 @@ const Reviews: React.FC<ReviewsProps> = ({ onNavigate }) => {
                 href="https://instagram.com/harmoniecils"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group inline-flex items-center gap-3 bg-gradient-to-r from-rose-500 to-amber-500 text-white px-8 py-4 rounded-full font-medium tracking-wide hover:from-rose-600 hover:to-amber-600 transition-all duration-300 shadow-lg hover:shadow-2xl hover:-translate-y-1"
+                className="group inline-flex items-center gap-3 bg-white text-black px-8 py-4 rounded-full font-medium tracking-wide border border-gray-200 hover:border-black transition-all duration-300 shadow-lg hover:shadow-2xl hover:-translate-y-1"
               >
                 <Instagram size={20} className="group-hover:scale-110 transition-transform duration-300" />
                 Suivre sur Instagram
