@@ -11,6 +11,7 @@ interface ServiceItem {
   label: string;
   price: string;
   duration?: string;
+  description?: string;
 }
 
 interface ServiceSection {
@@ -45,10 +46,30 @@ const Services: React.FC<ServicesProps> = ({ onNavigate }) => {
   const { elementRef: titleLeftRef, isVisible: titleLeftVisible } = useScrollAnimation();
   const { elementRef: titleRightRef, isVisible: titleRightVisible } = useScrollAnimation();
 
+  const [isNavSticky, setIsNavSticky] = React.useState(false);
+
+  React.useEffect(() => {
+    const handleScroll = () => {
+      const navElement = document.getElementById('quick-nav');
+      if (navElement) {
+        const navOffset = navElement.offsetTop;
+        setIsNavSticky(window.scrollY > navOffset - 20);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(`section-${sectionId}`);
     if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const offset = isNavSticky ? 100 : 20;
+      const elementPosition = element.getBoundingClientRect().top + window.scrollY;
+      window.scrollTo({
+        top: elementPosition - offset,
+        behavior: 'smooth'
+      });
     }
   };
 
@@ -141,16 +162,26 @@ const Services: React.FC<ServicesProps> = ({ onNavigate }) => {
         </div>
 
         {/* Navigation rapide */}
-        <div className="mb-12 flex flex-wrap gap-3 justify-center">
-          {serviceSections.map((section) => (
-            <button
-              key={section.id}
-              onClick={() => scrollToSection(section.id)}
-              className="px-6 py-3 bg-white border-2 border-neutral-300 text-neutral-900 rounded-full font-medium hover:bg-neutral-900 hover:text-white hover:border-neutral-900 transition-all duration-300 shadow-sm hover:shadow-lg"
-            >
-              {section.title}
-            </button>
-          ))}
+        <div id="quick-nav" className="mb-12">
+          <div className={`transition-all duration-300 ${
+            isNavSticky
+              ? 'fixed top-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md shadow-lg py-4'
+              : 'relative'
+          }`}>
+            <div className="container mx-auto px-4">
+              <div className="flex flex-wrap gap-3 justify-center">
+                {serviceSections.map((section) => (
+                  <button
+                    key={section.id}
+                    onClick={() => scrollToSection(section.id)}
+                    className="px-6 py-3 bg-white border-2 border-neutral-300 text-neutral-900 rounded-full font-medium hover:bg-neutral-900 hover:text-white hover:border-neutral-900 transition-all duration-300 shadow-sm hover:shadow-lg transform hover:scale-105"
+                  >
+                    {section.title}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Liste horizontale des services */}
@@ -214,25 +245,34 @@ const Services: React.FC<ServicesProps> = ({ onNavigate }) => {
                       <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-0 bg-neutral-900 rounded-full group-hover/item:h-8 transition-all duration-300"></div>
 
                       <div
-                        className="flex-1 flex justify-between items-center gap-4 pl-2 cursor-pointer"
+                        className="flex-1 flex flex-col gap-2 pl-2 cursor-pointer"
                         onClick={() => !isAdmin && setSelectedService({ service: item, section })}
                       >
-                        <div className="flex-1">
-                          <span className="text-neutral-700 font-medium text-sm leading-tight group-hover/item:text-neutral-900 transition-colors">
-                            {item.label}
-                          </span>
-                          {item.duration && (
-                            <span className="ml-2 text-xs text-gray-500">
-                              ({item.duration})
+                        <div className="flex justify-between items-start gap-4">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-1">
+                              <span className="text-neutral-900 font-semibold text-base leading-tight group-hover/item:text-neutral-700 transition-colors">
+                                {item.label}
+                              </span>
+                              {item.duration && (
+                                <span className="px-2 py-1 bg-neutral-100 text-neutral-600 text-xs rounded-full font-medium border border-neutral-200">
+                                  ⏱ {item.duration}
+                                </span>
+                              )}
+                            </div>
+                            {item.description && (
+                              <p className="text-neutral-600 text-sm leading-relaxed">
+                                {item.description}
+                              </p>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-neutral-900 text-xl tracking-tight whitespace-nowrap group-hover/item:scale-105 transition-transform">
+                              {item.price}
                             </span>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold text-neutral-900 text-xl tracking-tight whitespace-nowrap group-hover/item:scale-105 transition-transform">
-                            {item.price}
-                          </span>
-                          {/* Petit badge décoratif */}
-                          <div className="w-1.5 h-1.5 rounded-full bg-neutral-300 group-hover/item:bg-neutral-900 transition-colors"></div>
+                            {/* Petit badge décoratif */}
+                            <div className="w-1.5 h-1.5 rounded-full bg-neutral-300 group-hover/item:bg-neutral-900 transition-colors"></div>
+                          </div>
                         </div>
                       </div>
                       {!isAdmin && (
@@ -241,10 +281,10 @@ const Services: React.FC<ServicesProps> = ({ onNavigate }) => {
                             e.stopPropagation();
                             handleBookService(item.label);
                           }}
-                          className="ml-3 bg-neutral-900 text-white px-4 py-2 rounded-lg hover:bg-neutral-800 transition-all flex items-center gap-2 text-sm font-medium shadow-md hover:shadow-lg opacity-0 group-hover/item:opacity-100"
+                          className="ml-3 bg-neutral-900 text-white px-5 py-2.5 rounded-lg hover:bg-neutral-800 transition-all flex items-center gap-2 text-sm font-medium shadow-md hover:shadow-xl transform hover:scale-105"
                         >
-                          <Calendar size={14} />
-                          RDV
+                          <Calendar size={16} />
+                          Prendre RDV
                         </button>
                       )}
                       {isAdmin && (

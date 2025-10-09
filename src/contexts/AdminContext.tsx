@@ -17,6 +17,7 @@ interface ServiceItem {
   label: string;
   price: string;
   duration?: string;
+  description?: string;
 }
 
 interface ServiceSection {
@@ -300,7 +301,8 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 id: item.id,
                 label: item.label,
                 price: item.price,
-                duration: item.duration
+                duration: item.duration,
+                description: item.description
               }))
             };
           })
