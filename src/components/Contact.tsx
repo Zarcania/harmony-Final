@@ -47,18 +47,18 @@ const Contact: React.FC<ContactProps> = ({ onNavigate, preselectedService }) => 
   };
 
   return (
-    <section id="contact" className="relative py-20 bg-gradient-to-b from-white via-neutral-50 to-white">
+    <section id="contact" className="relative py-16 md:py-20 bg-gradient-to-b from-white via-neutral-50 to-white">
       <div className="container mx-auto px-4">
         {/* En-tête */}
-        <div className="text-center mb-20">
-          <h2 ref={titleRef} className={`font-display text-5xl md:text-6xl lg:text-7xl font-bold text-black mb-8 leading-tight transition-all duration-[1200ms] ease-out ${
+        <div className="text-center mb-12 md:mb-20">
+          <h2 ref={titleRef} className={`font-display text-4xl md:text-6xl lg:text-7xl font-bold text-black mb-6 md:mb-8 leading-tight px-4 transition-all duration-[1200ms] ease-out ${
             titleVisible
               ? 'opacity-100 translate-x-0'
               : 'opacity-0 translate-x-[120px]'
           }`}>
             Contact
           </h2>
-          <p className={`text-xl md:text-2xl text-gray-900 max-w-3xl mx-auto font-medium leading-relaxed transition-all duration-[1200ms] ease-out delay-300 ${
+          <p className={`text-base md:text-2xl text-gray-900 max-w-3xl mx-auto font-medium leading-relaxed px-4 transition-all duration-[1200ms] ease-out delay-300 ${
             titleVisible
               ? 'opacity-100 translate-y-0'
               : 'opacity-0 translate-y-8'
@@ -68,8 +68,8 @@ const Contact: React.FC<ContactProps> = ({ onNavigate, preselectedService }) => 
         </div>
 
         {/* Section Calendly */}
-        <div className="mb-20">
-          <div className="relative bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900 rounded-[2rem] p-10 md:p-16 text-white text-center shadow-[0_20px_60px_rgba(0,0,0,0.3)] overflow-hidden group">
+        <div className="mb-12 md:mb-20">
+          <div className="relative bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900 rounded-2xl md:rounded-[2rem] p-8 md:p-16 text-white text-center shadow-[0_20px_60px_rgba(0,0,0,0.3)] overflow-hidden group">
             {/* Décorations d'arrière-plan */}
             <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl opacity-40 group-hover:opacity-60 transition-opacity duration-700"></div>
             <div className="absolute bottom-0 left-0 w-80 h-80 bg-white/5 rounded-full blur-3xl opacity-30 group-hover:opacity-50 transition-opacity duration-700"></div>
@@ -81,17 +81,17 @@ const Contact: React.FC<ContactProps> = ({ onNavigate, preselectedService }) => 
               <div className="inline-flex items-center justify-center w-20 h-20 bg-white/10 backdrop-blur-sm rounded-2xl mb-6 group-hover:scale-110 transition-transform duration-500">
                 <Calendar size={32} />
               </div>
-              <h3 className="font-display text-4xl md:text-5xl font-bold mb-6 leading-tight">
+              <h3 className="font-display text-3xl md:text-5xl font-bold mb-5 md:mb-6 leading-tight">
                 Réservez votre rendez-vous
               </h3>
-              <p className="text-xl md:text-2xl mb-10 text-white/80 font-light max-w-2xl mx-auto leading-relaxed">
+              <p className="text-base md:text-2xl mb-8 md:mb-10 text-white/80 font-light max-w-2xl mx-auto leading-relaxed">
                 Choisissez votre créneau directement dans notre agenda en ligne.
                 Simple, rapide et disponible 24h/24 !
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <div className="flex flex-col gap-4 justify-center items-stretch max-w-sm mx-auto md:max-w-none md:flex-row md:items-center">
                 <button
                   onClick={() => setShowBookingModal(true)}
-                  className="bg-white text-neutral-900 px-12 py-5 rounded-full font-semibold text-lg hover:bg-neutral-100 transition-all duration-300 hover:shadow-2xl hover:scale-105 shadow-lg inline-flex items-center gap-3"
+                  className="bg-white text-neutral-900 px-10 py-5 rounded-xl md:rounded-full font-bold text-base md:text-lg hover:bg-neutral-100 transition-all duration-300 hover:shadow-2xl active:scale-95 shadow-lg inline-flex items-center justify-center gap-3 w-full md:w-auto"
                 >
                   <Calendar size={20} />
                   Prendre rendez-vous

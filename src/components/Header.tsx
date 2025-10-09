@@ -138,92 +138,103 @@ const Header: React.FC<HeaderProps> = ({ currentPage, onNavigate }) => {
           </button>
         </div>
 
+        {/* Overlay */}
+        <div
+          className={`lg:hidden fixed inset-0 bg-black/40 backdrop-blur-sm transition-all duration-300 z-30 ${
+            isMobileMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible'
+          }`}
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+
         {/* Navigation Mobile */}
-        <div className={`lg:hidden transition-all duration-300 ease-in-out overflow-hidden ${
-          isMobileMenuOpen 
-            ? 'max-h-screen opacity-100 pb-6' 
-            : 'max-h-0 opacity-0 pb-0'
+        <div className={`lg:hidden fixed top-20 left-0 right-0 transition-all duration-300 ease-out z-40 ${
+          isMobileMenuOpen
+            ? 'translate-y-0 opacity-100'
+            : '-translate-y-full opacity-0'
         }`}>
-          <div className="bg-white/95 backdrop-blur-md rounded-2xl mt-4 p-6 shadow-2xl border border-harmonie-100/50">
-            <nav className="flex flex-col space-y-1">
-              <button 
+          <div className="mx-4 bg-white rounded-2xl shadow-2xl border border-gray-100">
+            <nav className="flex flex-col space-y-1 p-4">
+              <button
                 onClick={() => handleNavigation('accueil')}
-                className={`font-accent font-medium text-left py-3 px-4 rounded-xl transition-all duration-300 ${
+                className={`font-accent font-semibold text-left py-4 px-5 rounded-xl transition-all duration-200 text-base ${
                   isActivePage('accueil')
-                    ? 'bg-harmonie-100 text-black font-bold'
-                    : 'text-gray-900 hover:text-gray-700 hover:bg-harmonie-50'
+                    ? 'bg-black text-white'
+                    : 'text-gray-900 hover:bg-gray-100 active:bg-gray-200'
                 }`}
               >
                 Accueil
               </button>
-              <button 
+              <button
                 onClick={() => handleNavigation('prestations')}
-                className={`font-accent font-medium text-left py-3 px-4 rounded-xl transition-all duration-300 ${
+                className={`font-accent font-semibold text-left py-4 px-5 rounded-xl transition-all duration-200 text-base ${
                   isActivePage('prestations')
-                    ? 'bg-harmonie-100 text-black font-bold'
-                    : 'text-gray-900 hover:text-gray-700 hover:bg-harmonie-50'
+                    ? 'bg-black text-white'
+                    : 'text-gray-900 hover:bg-gray-100 active:bg-gray-200'
                 }`}
               >
                 Prestations
               </button>
-              <button 
+              <button
                 onClick={() => handleNavigation('portfolio')}
-                className={`font-accent font-medium text-left py-3 px-4 rounded-xl transition-all duration-300 ${
+                className={`font-accent font-semibold text-left py-4 px-5 rounded-xl transition-all duration-200 text-base ${
                   isActivePage('portfolio')
-                    ? 'bg-harmonie-100 text-black font-bold'
-                    : 'text-gray-900 hover:text-gray-700 hover:bg-harmonie-50'
+                    ? 'bg-black text-white'
+                    : 'text-gray-900 hover:bg-gray-100 active:bg-gray-200'
                 }`}
               >
                 Portfolio
               </button>
-              <button 
+              <button
                 onClick={() => handleNavigation('about')}
-                className={`font-accent font-medium text-left py-3 px-4 rounded-xl transition-all duration-300 ${
+                className={`font-accent font-semibold text-left py-4 px-5 rounded-xl transition-all duration-200 text-base ${
                   isActivePage('about')
-                    ? 'bg-harmonie-100 text-black font-bold'
-                    : 'text-gray-900 hover:text-gray-700 hover:bg-harmonie-50'
+                    ? 'bg-black text-white'
+                    : 'text-gray-900 hover:bg-gray-100 active:bg-gray-200'
                 }`}
               >
                 À propos
               </button>
-              <button 
+              <button
                 onClick={() => handleNavigation('contact')}
-                className={`font-accent font-medium text-left py-3 px-4 rounded-xl transition-all duration-300 ${
+                className={`font-accent font-semibold text-left py-4 px-5 rounded-xl transition-all duration-200 text-base ${
                   isActivePage('contact')
-                    ? 'bg-harmonie-100 text-black font-bold'
-                    : 'text-gray-900 hover:text-gray-700 hover:bg-harmonie-50'
+                    ? 'bg-black text-white'
+                    : 'text-gray-900 hover:bg-gray-100 active:bg-gray-200'
                 }`}
               >
                 Contact
               </button>
               
               {/* Séparateur */}
-              <div className="border-t border-harmonie-200 my-4"></div>
-              
+              <div className="border-t border-gray-200 my-4"></div>
+
               {/* Actions */}
-              <div className="flex items-center justify-between pt-2">
-                <div className="flex items-center space-x-2">
-                  <a 
-                    href="https://instagram.com/harmoniecils" 
-                    target="_blank" 
+              <div className="space-y-3 pt-2">
+                <button
+                  onClick={() => handleNavigation('contact')}
+                  className="w-full bg-black text-white py-4 rounded-xl font-accent font-semibold text-base shadow-lg hover:bg-gray-900 active:bg-gray-800 transition-all duration-200"
+                >
+                  Réserver maintenant
+                </button>
+                <div className="flex items-center justify-center gap-4 pt-2">
+                  <a
+                    href="https://instagram.com/harmoniecils"
+                    target="_blank"
                     rel="noopener noreferrer"
-                    className="p-3 text-harmonie-600 hover:text-harmonie-800 hover:bg-harmonie-100 rounded-full transition-all duration-300"
+                    className="flex items-center gap-2 text-gray-600 hover:text-black transition-colors duration-200"
                   >
-                    <Instagram size={20} />
+                    <Instagram size={22} />
+                    <span className="text-sm font-medium">Instagram</span>
                   </a>
-                  <a 
+                  <div className="w-px h-5 bg-gray-300"></div>
+                  <a
                     href="tel:0600000000"
-                    className="p-3 text-harmonie-600 hover:text-harmonie-800 hover:bg-harmonie-100 rounded-full transition-all duration-300"
+                    className="flex items-center gap-2 text-gray-600 hover:text-black transition-colors duration-200"
                   >
-                    <Phone size={20} />
+                    <Phone size={22} />
+                    <span className="text-sm font-medium">Appeler</span>
                   </a>
                 </div>
-                <button 
-                  onClick={() => handleNavigation('contact')}
-                  className="bg-gradient-to-r from-harmonie-600 to-harmonie-700 text-white px-6 py-3 rounded-full hover:from-harmonie-700 hover:to-harmonie-800 transition-all duration-300 font-accent font-semibold shadow-lg hover:shadow-xl"
-                >
-                  Réserver
-                </button>
               </div>
             </nav>
           </div>

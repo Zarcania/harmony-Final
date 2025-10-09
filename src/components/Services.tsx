@@ -96,9 +96,9 @@ const Services: React.FC<ServicesProps> = ({ onNavigate }) => {
   };
 
   return (
-    <section 
+    <section
       id="prestations"
-      className="relative py-12 md:py-20"
+      className="relative py-16 md:py-20"
       style={{
         background: showPrestationsBackground && prestationsBackgroundImage
           ? `linear-gradient(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.9)), url(${prestationsBackgroundImage})`
@@ -110,8 +110,8 @@ const Services: React.FC<ServicesProps> = ({ onNavigate }) => {
     >
       <div className="container mx-auto px-4">
         {/* En-tête */}
-        <div id="services-title" className="text-center mb-8 md:mb-16">
-          <h2 className="font-display text-3xl md:text-5xl lg:text-6xl font-bold text-black mb-3 md:mb-4 leading-tight">
+        <div id="services-title" className="text-center mb-10 md:mb-16">
+          <h2 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold text-black mb-4 md:mb-4 leading-tight">
             <span ref={titleLeftRef} className={`inline-block transition-all duration-[1200ms] ease-out ${
               titleLeftVisible
                 ? 'opacity-100 translate-x-0'
@@ -124,7 +124,7 @@ const Services: React.FC<ServicesProps> = ({ onNavigate }) => {
                 : 'opacity-0 translate-x-[120px]'
             }`}>Tarifs</span>
           </h2>
-          <p className={`text-sm md:text-lg text-gray-700 max-w-2xl mx-auto leading-snug transition-all duration-[1200ms] ease-out delay-300 ${
+          <p className={`text-base md:text-lg text-gray-700 max-w-2xl mx-auto leading-relaxed px-4 transition-all duration-[1200ms] ease-out delay-300 ${
             titleLeftVisible
               ? 'opacity-100 translate-y-0'
               : 'opacity-0 translate-y-8'
@@ -152,19 +152,19 @@ const Services: React.FC<ServicesProps> = ({ onNavigate }) => {
         </div>
 
         {/* Navigation rapide */}
-        <div id="quick-nav" className="mb-6 md:mb-12">
+        <div id="quick-nav" className="mb-8 md:mb-12">
           <div className={`transition-all duration-300 ${
             isNavSticky
-              ? 'fixed top-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md shadow-lg py-4'
+              ? 'fixed top-20 left-0 right-0 z-40 bg-white/98 backdrop-blur-md shadow-lg py-4'
               : 'relative'
           }`}>
             <div className="container mx-auto px-4">
-              <div className="flex flex-wrap gap-2 md:gap-3 justify-center">
+              <div className="flex overflow-x-auto gap-3 md:gap-3 md:justify-center pb-2 md:pb-0 -mx-4 px-4 md:mx-0 md:px-0 scrollbar-hide">
                 {serviceSections.map((section) => (
                   <button
                     key={section.id}
                     onClick={() => scrollToSection(section.id)}
-                    className="px-3 py-2 md:px-6 md:py-3 bg-white border-2 border-neutral-300 text-neutral-900 rounded-full text-sm md:text-base font-medium hover:bg-neutral-900 hover:text-white hover:border-neutral-900 transition-all duration-300 shadow-sm hover:shadow-lg transform hover:scale-105"
+                    className="flex-shrink-0 px-5 py-3 md:px-6 md:py-3 bg-white border-2 border-neutral-300 text-neutral-900 rounded-full text-sm md:text-base font-semibold hover:bg-neutral-900 hover:text-white hover:border-neutral-900 transition-all duration-200 shadow-sm hover:shadow-lg active:scale-95 whitespace-nowrap"
                   >
                     {section.title}
                   </button>
@@ -175,7 +175,7 @@ const Services: React.FC<ServicesProps> = ({ onNavigate }) => {
         </div>
 
         {/* Liste horizontale des services */}
-        <div className="space-y-8 md:space-y-16 mb-12 md:mb-20">
+        <div className="space-y-6 md:space-y-16 mb-12 md:mb-20">
           {serviceSections.map((section, index) => (
             <div
               key={index}
@@ -183,7 +183,7 @@ const Services: React.FC<ServicesProps> = ({ onNavigate }) => {
               className="scroll-mt-24"
             >
               <div
-                className={`bg-gradient-to-br from-white via-neutral-50 to-white backdrop-blur-lg rounded-2xl md:rounded-[2rem] p-4 md:p-8 shadow-[0_8px_32px_rgba(0,0,0,0.12)] hover:shadow-[0_20px_48px_rgba(0,0,0,0.18)] transition-all duration-500 border border-neutral-200/60 group relative overflow-hidden ${
+                className={`bg-gradient-to-br from-white via-neutral-50 to-white backdrop-blur-lg rounded-xl md:rounded-[2rem] p-5 md:p-8 shadow-[0_8px_32px_rgba(0,0,0,0.12)] hover:shadow-[0_20px_48px_rgba(0,0,0,0.18)] transition-all duration-500 border border-neutral-200/60 group relative overflow-hidden ${
                   isAdmin ? 'ring-2 ring-dashed ring-harmonie-300 ring-offset-4 hover:ring-harmonie-500' : ''
                 }`}
               >
