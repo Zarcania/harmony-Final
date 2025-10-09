@@ -101,17 +101,6 @@ const Header: React.FC<HeaderProps> = ({ currentPage, onNavigate }) => {
               <span className="absolute -inset-2 bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-200 opacity-0 group-hover:opacity-50 rounded-lg blur-md transition-all duration-300"></span>
             </button>
             <button
-              onClick={() => handleNavigation('avis')}
-              className={`font-accent font-medium transition-all duration-300 text-lg relative group ${
-                isActivePage('avis')
-                  ? 'text-black font-bold'
-                  : 'text-gray-900'
-              }`}
-            >
-              <span className="relative z-10 group-hover:text-black transition-colors duration-300">Avis</span>
-              <span className="absolute -inset-2 bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-200 opacity-0 group-hover:opacity-50 rounded-lg blur-md transition-all duration-300"></span>
-            </button>
-            <button
               onClick={() => handleNavigation('contact')}
               className={`font-accent font-medium transition-all duration-300 text-lg relative group ${
                 isActivePage('contact')
@@ -196,16 +185,6 @@ const Header: React.FC<HeaderProps> = ({ currentPage, onNavigate }) => {
                 }`}
               >
                 À propos
-              </button>
-              <button 
-                onClick={() => handleNavigation('avis')}
-                className={`font-accent font-medium text-left py-3 px-4 rounded-xl transition-all duration-300 ${
-                  isActivePage('avis')
-                    ? 'bg-harmonie-100 text-black font-bold'
-                    : 'text-gray-900 hover:text-gray-700 hover:bg-harmonie-50'
-                }`}
-              >
-                Avis
               </button>
               <button 
                 onClick={() => handleNavigation('contact')}

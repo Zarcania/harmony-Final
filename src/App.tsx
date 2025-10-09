@@ -6,7 +6,6 @@ import HomePage from './pages/HomePage';
 import PrestationsPage from './pages/PrestationsPage';
 import PortfolioPage from './pages/PortfolioPage';
 import AboutPage from './pages/AboutPage';
-import AvisPage from './pages/AvisPage';
 import ContactPage from './pages/ContactPage';
 import PromotionPopup from './components/PromotionPopup';
 import Footer from './components/Footer';
@@ -59,8 +58,6 @@ const AppContent: React.FC = () => {
         return <PortfolioPage onNavigate={handleNavigate} />;
       case 'about':
         return <AboutPage onNavigate={handleNavigate} />;
-      case 'avis':
-        return <AvisPage onNavigate={handleNavigate} />;
       case 'contact':
         return <ContactPage onNavigate={handleNavigate} preselectedService={preselectedService} />;
       default:

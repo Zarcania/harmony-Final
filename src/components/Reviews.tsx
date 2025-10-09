@@ -43,30 +43,6 @@ const Reviews: React.FC<ReviewsProps> = ({ onNavigate }) => {
       service: "Volume mixte",
       platform: "instagram",
       image: "https://images.pexels.com/photos/3738386/pexels-photo-3738386.jpeg"
-    },
-    {
-      name: "Émilie R.",
-      rating: 5,
-      comment: "Institut de qualité avec des produits haut de gamme. Le rehaussement de cils donne un effet naturel magnifique. Je reviendrai sans hésiter !",
-      service: "Rehaussement cils",
-      platform: "google",
-      image: "https://images.pexels.com/photos/3373745/pexels-photo-3373745.jpeg"
-    },
-    {
-      name: "Laura V.",
-      rating: 5,
-      comment: "Professionnalisme et douceur au rendez-vous. Mes cils paraissent tellement naturels qu'on me demande toujours si c'est ma vraie couleur ! 😍",
-      service: "Teinture cils",
-      platform: "instagram",
-      image: "https://images.pexels.com/photos/3373743/pexels-photo-3373743.jpeg"
-    },
-    {
-      name: "Julie K.",
-      rating: 5,
-      comment: "Un moment de détente absolue ! L'ambiance est apaisante et le résultat dépasse mes attentes. Mes cils sont parfaits depuis 3 semaines !",
-      service: "Pose cil à cil",
-      platform: "google",
-      image: "https://images.pexels.com/photos/3762800/pexels-photo-3762800.jpeg"
     }
   ];
 
