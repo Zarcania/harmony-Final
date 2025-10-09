@@ -3,7 +3,7 @@ import { Gift, Sparkles, Clock, Star, Heart, Crown, Calendar } from 'lucide-reac
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
 
 interface PromotionSectionProps {
-  onNavigate: (page: string) => void;
+  onNavigate: (page: string, service?: string) => void;
 }
 
 const PromotionSection: React.FC<PromotionSectionProps> = ({ onNavigate }) => {
@@ -78,7 +78,7 @@ const PromotionSection: React.FC<PromotionSectionProps> = ({ onNavigate }) => {
               <div
                 key={index}
                 className="bg-white rounded-xl p-4 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group border border-neutral-200"
-                onClick={() => onNavigate('contact')}
+                onClick={() => onNavigate('contact', promo.title)}
               >
                 <div className="flex flex-col h-full">
                   <div className="flex items-center justify-between mb-3">
@@ -108,7 +108,13 @@ const PromotionSection: React.FC<PromotionSectionProps> = ({ onNavigate }) => {
                       </span>
                     </div>
                     
-                    <button className="w-full bg-harmonie-100 text-harmonie-700 py-2 rounded-lg text-xs font-medium hover:bg-harmonie-600 hover:text-white transition-colors flex items-center justify-center gap-1">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onNavigate('contact', promo.title);
+                      }}
+                      className="w-full bg-harmonie-100 text-harmonie-700 py-2 rounded-lg text-xs font-medium hover:bg-harmonie-600 hover:text-white transition-colors flex items-center justify-center gap-1"
+                    >
                       <Calendar size={12} />
                       Réserver
                     </button>
@@ -127,7 +133,7 @@ const PromotionSection: React.FC<PromotionSectionProps> = ({ onNavigate }) => {
               <div
                 key={index}
                 className="flex-shrink-0 w-72 sm:w-80 bg-white rounded-2xl p-6 sm:p-8 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group border border-neutral-200"
-                onClick={() => onNavigate('contact')}
+                onClick={() => onNavigate('contact', promo.title)}
               >
                 <div className="flex items-center justify-between mb-6">
                   <div className="w-14 h-14 bg-harmonie-100 rounded-xl flex items-center justify-center text-harmonie-700 group-hover:scale-110 transition-transform">
@@ -156,7 +162,13 @@ const PromotionSection: React.FC<PromotionSectionProps> = ({ onNavigate }) => {
                     </span>
                   </div>
                   
-                  <button className="w-full bg-harmonie-100 text-harmonie-700 py-3 rounded-xl font-medium hover:bg-harmonie-600 hover:text-white transition-colors flex items-center justify-center gap-2">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onNavigate('contact', promo.title);
+                    }}
+                    className="w-full bg-harmonie-100 text-harmonie-700 py-3 rounded-xl font-medium hover:bg-harmonie-600 hover:text-white transition-colors flex items-center justify-center gap-2"
+                  >
                     <Calendar size={16} />
                     Réserver maintenant
                   </button>
