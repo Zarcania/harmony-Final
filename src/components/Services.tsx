@@ -48,7 +48,7 @@ const Services: React.FC<ServicesProps> = ({ onNavigate }) => {
       const navElement = document.getElementById('quick-nav');
       if (navElement) {
         const navOffset = navElement.offsetTop;
-        setIsNavSticky(window.scrollY > navOffset - 20);
+        setIsNavSticky(window.scrollY > navOffset - 80);
       }
     };
 
@@ -59,7 +59,7 @@ const Services: React.FC<ServicesProps> = ({ onNavigate }) => {
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(`section-${sectionId}`);
     if (element) {
-      const offset = isNavSticky ? 100 : 20;
+      const offset = isNavSticky ? 140 : 20;
       const elementPosition = element.getBoundingClientRect().top + window.scrollY;
       window.scrollTo({
         top: elementPosition - offset,
@@ -155,7 +155,7 @@ const Services: React.FC<ServicesProps> = ({ onNavigate }) => {
         <div id="quick-nav" className="mb-6 md:mb-12">
           <div className={`transition-all duration-300 ${
             isNavSticky
-              ? 'fixed top-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md shadow-lg py-4'
+              ? 'fixed top-20 left-0 right-0 z-40 bg-white/95 backdrop-blur-md shadow-lg py-4'
               : 'relative'
           }`}>
             <div className="container mx-auto px-4">
