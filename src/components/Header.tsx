@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Phone, Instagram } from 'lucide-react';
 
 interface HeaderProps {
@@ -7,16 +7,7 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ currentPage, onNavigate }) => {
-  const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
   const handleNavigation = (page: string) => {
     onNavigate(page);
@@ -42,11 +33,7 @@ const Header: React.FC<HeaderProps> = ({ currentPage, onNavigate }) => {
   const isActivePage = (page: string) => currentPage === page;
 
   return (
-    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-      isScrolled
-        ? 'bg-white/95 backdrop-blur-md shadow-lg'
-        : 'bg-transparent'
-    }`} style={{
+    <header className="fixed top-0 left-0 right-0 z-50" style={{
       backgroundImage: 'url(/h-co-tqu0IOMaiU8-unsplash.jpg)',
       backgroundSize: 'cover',
       backgroundPosition: 'center',
