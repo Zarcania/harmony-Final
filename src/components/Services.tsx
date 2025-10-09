@@ -48,7 +48,7 @@ const Services: React.FC<ServicesProps> = ({ onNavigate }) => {
       const navElement = document.getElementById('quick-nav');
       if (navElement) {
         const navOffset = navElement.offsetTop;
-        setIsNavSticky(window.scrollY > navOffset - 80);
+        setIsNavSticky(window.scrollY > navOffset - 20);
       }
     };
 
@@ -59,7 +59,7 @@ const Services: React.FC<ServicesProps> = ({ onNavigate }) => {
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(`section-${sectionId}`);
     if (element) {
-      const offset = isNavSticky ? 140 : 20;
+      const offset = isNavSticky ? 100 : 20;
       const elementPosition = element.getBoundingClientRect().top + window.scrollY;
       window.scrollTo({
         top: elementPosition - offset,
@@ -155,23 +155,16 @@ const Services: React.FC<ServicesProps> = ({ onNavigate }) => {
         <div id="quick-nav" className="mb-6 md:mb-12">
           <div className={`transition-all duration-300 ${
             isNavSticky
-              ? 'fixed top-20 left-0 right-0 z-40 bg-white/95 backdrop-blur-md shadow-lg py-4'
+              ? 'fixed top-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md shadow-lg py-4'
               : 'relative'
           }`}>
             <div className="container mx-auto px-4">
               <div className="flex flex-wrap gap-2 md:gap-3 justify-center">
-                {serviceSections.map((section, index) => (
+                {serviceSections.map((section) => (
                   <button
                     key={section.id}
                     onClick={() => scrollToSection(section.id)}
-                    className="px-3 py-2 md:px-6 md:py-3 bg-white border-2 border-neutral-300 text-neutral-900 rounded-full text-sm md:text-base font-medium hover:bg-neutral-900 hover:text-white hover:border-neutral-900 transition-all duration-500 shadow-sm hover:shadow-lg transform hover:scale-105"
-                    style={{
-                      opacity: isNavSticky ? 1 : 0,
-                      transform: isNavSticky
-                        ? 'translateY(0)'
-                        : `translateY(-${20 + index * 5}px)`,
-                      transitionDelay: `${index * 50}ms`
-                    }}
+                    className="px-3 py-2 md:px-6 md:py-3 bg-white border-2 border-neutral-300 text-neutral-900 rounded-full text-sm md:text-base font-medium hover:bg-neutral-900 hover:text-white hover:border-neutral-900 transition-all duration-300 shadow-sm hover:shadow-lg transform hover:scale-105"
                   >
                     {section.title}
                   </button>
