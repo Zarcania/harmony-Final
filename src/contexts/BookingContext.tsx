@@ -84,7 +84,7 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const addBooking = async (bookingData: BookingFormData) => {
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('bookings')
         .insert([{
           client_name: bookingData.clientName,
@@ -95,9 +95,34 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
           preferred_date: bookingData.date,
           preferred_time: bookingData.time,
           status: 'confirmed'
-        }]);
+        }])
+        .select()
+        .single();
 
       if (error) throw error;
+
+      if (data) {
+        try {
+          const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+          const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+          const response = await fetch(`${supabaseUrl}/functions/v1/send-booking-confirmation`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${supabaseAnonKey}`,
+            },
+            body: JSON.stringify({ bookingId: data.id }),
+          });
+
+          if (!response.ok) {
+            console.error('Failed to send confirmation email:', await response.text());
+          }
+        } catch (emailError) {
+          console.error('Error sending confirmation email:', emailError);
+        }
+      }
+
       fetchBookings();
     } catch (error) {
       console.error('Error adding booking:', error);

@@ -7,6 +7,7 @@ import PrestationsPage from './pages/PrestationsPage';
 import PortfolioPage from './pages/PortfolioPage';
 import AboutPage from './pages/AboutPage';
 import ContactPage from './pages/ContactPage';
+import CancelBookingPage from './pages/CancelBookingPage';
 import PromotionPopup from './components/PromotionPopup';
 import Footer from './components/Footer';
 import AdminWelcome from './components/AdminWelcome';
@@ -48,6 +49,13 @@ const AppContent: React.FC = () => {
     }
   };
 
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('token')) {
+      setCurrentPage('cancel-booking');
+    }
+  }, []);
+
   const renderCurrentPage = () => {
     switch (currentPage) {
       case 'accueil':
@@ -60,6 +68,8 @@ const AppContent: React.FC = () => {
         return <AboutPage onNavigate={handleNavigate} />;
       case 'contact':
         return <ContactPage onNavigate={handleNavigate} preselectedService={preselectedService} />;
+      case 'cancel-booking':
+        return <CancelBookingPage onNavigate={handleNavigate} />;
       default:
         return <HomePage onNavigate={handleNavigate} />;
     }
