@@ -245,8 +245,7 @@ const Services: React.FC<ServicesProps> = ({ onNavigate }) => {
                       <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-0 bg-neutral-900 rounded-full group-hover/item:h-8 transition-all duration-300"></div>
 
                       <div
-                        className="flex-1 flex flex-col gap-2 pl-2 cursor-pointer"
-                        onClick={() => !isAdmin && setSelectedService({ service: item, section })}
+                        className="flex-1 flex flex-col gap-2 pl-2"
                       >
                         <div className="flex justify-between items-start gap-4">
                           <div className="flex-1">
