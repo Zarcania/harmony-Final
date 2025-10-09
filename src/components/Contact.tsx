@@ -4,10 +4,11 @@ import BookingModal from './BookingModal';
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
 
 interface ContactProps {
-  onNavigate: (page: string) => void;
+  onNavigate: (page: string, service?: string) => void;
+  preselectedService?: string | null;
 }
 
-const Contact: React.FC<ContactProps> = ({ onNavigate }) => {
+const Contact: React.FC<ContactProps> = ({ onNavigate, preselectedService }) => {
   const [formData, setFormData] = useState({
     nom: '',
     email: '',
@@ -17,6 +18,13 @@ const Contact: React.FC<ContactProps> = ({ onNavigate }) => {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [showBookingModal, setShowBookingModal] = useState(false);
   const { elementRef: titleRef, isVisible: titleVisible } = useScrollAnimation();
+
+  // Ouvrir le modal automatiquement si un service est présélectionné
+  React.useEffect(() => {
+    if (preselectedService) {
+      setShowBookingModal(true);
+    }
+  }, [preselectedService]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({
@@ -342,7 +350,10 @@ const Contact: React.FC<ContactProps> = ({ onNavigate }) => {
 
       {/* Modal de réservation */}
       {showBookingModal && (
-        <BookingModal onClose={() => setShowBookingModal(false)} />
+        <BookingModal
+          onClose={() => setShowBookingModal(false)}
+          preselectedService={preselectedService || undefined}
+        />
       )}
     </section>
   );

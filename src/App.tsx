@@ -20,6 +20,7 @@ const AppContent: React.FC = () => {
   const { isAdmin, setIsAdmin } = useAdmin();
   const [showPopup, setShowPopup] = useState(false);
   const [currentPage, setCurrentPage] = useState('accueil');
+  const [preselectedService, setPreselectedService] = useState<string | null>(null);
   const [showPlanning, setShowPlanning] = useState(false);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [showAdminLogin, setShowAdminLogin] = useState(false);
@@ -39,35 +40,44 @@ const AppContent: React.FC = () => {
     }
   };
 
+  const handleNavigate = (page: string, service?: string) => {
+    setCurrentPage(page);
+    if (service) {
+      setPreselectedService(service);
+    } else {
+      setPreselectedService(null);
+    }
+  };
+
   const renderCurrentPage = () => {
     switch (currentPage) {
       case 'accueil':
-        return <HomePage onNavigate={setCurrentPage} />;
+        return <HomePage onNavigate={handleNavigate} />;
       case 'prestations':
-        return <PrestationsPage onNavigate={setCurrentPage} />;
+        return <PrestationsPage onNavigate={handleNavigate} />;
       case 'portfolio':
-        return <PortfolioPage onNavigate={setCurrentPage} />;
+        return <PortfolioPage onNavigate={handleNavigate} />;
       case 'about':
-        return <AboutPage onNavigate={setCurrentPage} />;
+        return <AboutPage onNavigate={handleNavigate} />;
       case 'avis':
-        return <AvisPage onNavigate={setCurrentPage} />;
+        return <AvisPage onNavigate={handleNavigate} />;
       case 'contact':
-        return <ContactPage onNavigate={setCurrentPage} />;
+        return <ContactPage onNavigate={handleNavigate} preselectedService={preselectedService} />;
       default:
-        return <HomePage onNavigate={setCurrentPage} />;
+        return <HomePage onNavigate={handleNavigate} />;
     }
   };
 
   return (
     <div className="relative min-h-screen font-body" style={{ paddingTop: isAdmin ? '80px' : '0' }}>
       {isAdmin && <AdminWelcome onDisableAdmin={() => setIsAdmin(false)} onShowPlanning={() => setShowPlanning(true)} onShowAdminPanel={() => setShowAdminPanel(true)} />}
-      <Header currentPage={currentPage} onNavigate={setCurrentPage} />
+      <Header currentPage={currentPage} onNavigate={handleNavigate} />
       <main className="relative z-10 pt-20">
         {renderCurrentPage()}
       </main>
-      <Footer onNavigate={setCurrentPage} onAdminToggle={handleAdminToggle} />
+      <Footer onNavigate={handleNavigate} onAdminToggle={handleAdminToggle} />
       {showPopup && (
-        <PromotionPopup onClose={() => setShowPopup(false)} onNavigate={setCurrentPage} />
+        <PromotionPopup onClose={() => setShowPopup(false)} onNavigate={handleNavigate} />
       )}
       {showPlanning && (
         <AdminPlanning onClose={() => setShowPlanning(false)} />

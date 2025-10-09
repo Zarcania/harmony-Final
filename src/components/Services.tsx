@@ -20,7 +20,7 @@ interface ServiceSection {
 }
 
 interface ServicesProps {
-  onNavigate: (page: string) => void;
+  onNavigate: (page: string, service?: string) => void;
 }
 
 const Services: React.FC<ServicesProps> = ({ onNavigate }) => {
@@ -268,7 +268,7 @@ const Services: React.FC<ServicesProps> = ({ onNavigate }) => {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            onNavigate('contact');
+                            onNavigate('contact', item.label);
                           }}
                           className="w-full sm:w-auto sm:ml-3 bg-neutral-900 text-white px-3 py-2 md:px-4 md:py-2.5 rounded-lg hover:bg-neutral-800 transition-all flex items-center justify-center gap-1.5 text-xs md:text-sm font-medium shadow-md hover:shadow-xl transform hover:scale-105"
                         >
