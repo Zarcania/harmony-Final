@@ -160,11 +160,18 @@ const Services: React.FC<ServicesProps> = ({ onNavigate }) => {
           }`}>
             <div className="container mx-auto px-4">
               <div className="flex flex-wrap gap-2 md:gap-3 justify-center">
-                {serviceSections.map((section) => (
+                {serviceSections.map((section, index) => (
                   <button
                     key={section.id}
                     onClick={() => scrollToSection(section.id)}
-                    className="px-3 py-2 md:px-6 md:py-3 bg-white border-2 border-neutral-300 text-neutral-900 rounded-full text-sm md:text-base font-medium hover:bg-neutral-900 hover:text-white hover:border-neutral-900 transition-all duration-300 shadow-sm hover:shadow-lg transform hover:scale-105"
+                    className="px-3 py-2 md:px-6 md:py-3 bg-white border-2 border-neutral-300 text-neutral-900 rounded-full text-sm md:text-base font-medium hover:bg-neutral-900 hover:text-white hover:border-neutral-900 transition-all duration-500 shadow-sm hover:shadow-lg transform hover:scale-105"
+                    style={{
+                      opacity: isNavSticky ? 1 : 0,
+                      transform: isNavSticky
+                        ? 'translateY(0)'
+                        : `translateY(-${20 + index * 5}px)`,
+                      transitionDelay: `${index * 50}ms`
+                    }}
                   >
                     {section.title}
                   </button>
