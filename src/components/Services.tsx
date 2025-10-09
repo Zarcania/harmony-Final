@@ -107,8 +107,8 @@ const Services: React.FC<ServicesProps> = ({ onNavigate }) => {
 
   return (
     <section 
-      id="prestations" 
-      className="relative py-20"
+      id="prestations"
+      className="relative py-12 md:py-20"
       style={{
         background: showPrestationsBackground && prestationsBackgroundImage
           ? `linear-gradient(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.9)), url(${prestationsBackgroundImage})`
@@ -120,8 +120,8 @@ const Services: React.FC<ServicesProps> = ({ onNavigate }) => {
     >
       <div className="container mx-auto px-4">
         {/* En-tête */}
-        <div id="services-title" className="text-center mb-16">
-          <h2 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold text-black mb-4 leading-tight">
+        <div id="services-title" className="text-center mb-8 md:mb-16">
+          <h2 className="font-display text-3xl md:text-5xl lg:text-6xl font-bold text-black mb-3 md:mb-4 leading-tight">
             <span ref={titleLeftRef} className={`inline-block transition-all duration-[1200ms] ease-out ${
               titleLeftVisible
                 ? 'opacity-100 translate-x-0'
@@ -134,7 +134,7 @@ const Services: React.FC<ServicesProps> = ({ onNavigate }) => {
                 : 'opacity-0 translate-x-[120px]'
             }`}>Tarifs</span>
           </h2>
-          <p className={`text-base md:text-lg text-gray-700 max-w-2xl mx-auto leading-snug transition-all duration-[1200ms] ease-out delay-300 ${
+          <p className={`text-sm md:text-lg text-gray-700 max-w-2xl mx-auto leading-snug transition-all duration-[1200ms] ease-out delay-300 ${
             titleLeftVisible
               ? 'opacity-100 translate-y-0'
               : 'opacity-0 translate-y-8'
@@ -162,19 +162,19 @@ const Services: React.FC<ServicesProps> = ({ onNavigate }) => {
         </div>
 
         {/* Navigation rapide */}
-        <div id="quick-nav" className="mb-12">
+        <div id="quick-nav" className="mb-6 md:mb-12">
           <div className={`transition-all duration-300 ${
             isNavSticky
               ? 'fixed top-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md shadow-lg py-4'
               : 'relative'
           }`}>
             <div className="container mx-auto px-4">
-              <div className="flex flex-wrap gap-3 justify-center">
+              <div className="flex flex-wrap gap-2 md:gap-3 justify-center">
                 {serviceSections.map((section) => (
                   <button
                     key={section.id}
                     onClick={() => scrollToSection(section.id)}
-                    className="px-6 py-3 bg-white border-2 border-neutral-300 text-neutral-900 rounded-full font-medium hover:bg-neutral-900 hover:text-white hover:border-neutral-900 transition-all duration-300 shadow-sm hover:shadow-lg transform hover:scale-105"
+                    className="px-3 py-2 md:px-6 md:py-3 bg-white border-2 border-neutral-300 text-neutral-900 rounded-full text-sm md:text-base font-medium hover:bg-neutral-900 hover:text-white hover:border-neutral-900 transition-all duration-300 shadow-sm hover:shadow-lg transform hover:scale-105"
                   >
                     {section.title}
                   </button>
@@ -185,7 +185,7 @@ const Services: React.FC<ServicesProps> = ({ onNavigate }) => {
         </div>
 
         {/* Liste horizontale des services */}
-        <div className="space-y-16 mb-20">
+        <div className="space-y-8 md:space-y-16 mb-12 md:mb-20">
           {serviceSections.map((section, index) => (
             <div
               key={index}
@@ -193,7 +193,7 @@ const Services: React.FC<ServicesProps> = ({ onNavigate }) => {
               className="scroll-mt-24"
             >
               <div
-                className={`bg-gradient-to-br from-white via-neutral-50 to-white backdrop-blur-lg rounded-[2rem] p-8 shadow-[0_8px_32px_rgba(0,0,0,0.12)] hover:shadow-[0_20px_48px_rgba(0,0,0,0.18)] transition-all duration-500 border border-neutral-200/60 group relative overflow-hidden ${
+                className={`bg-gradient-to-br from-white via-neutral-50 to-white backdrop-blur-lg rounded-2xl md:rounded-[2rem] p-4 md:p-8 shadow-[0_8px_32px_rgba(0,0,0,0.12)] hover:shadow-[0_20px_48px_rgba(0,0,0,0.18)] transition-all duration-500 border border-neutral-200/60 group relative overflow-hidden ${
                   isAdmin ? 'ring-2 ring-dashed ring-harmonie-300 ring-offset-4 hover:ring-harmonie-500' : ''
                 }`}
               >
@@ -206,16 +206,16 @@ const Services: React.FC<ServicesProps> = ({ onNavigate }) => {
 
               <div className="relative z-10">
                 {/* En-tête de la carte avec icône */}
-                <div className="flex items-start gap-4 mb-8 pb-6 border-b-2 border-neutral-200/60 group-hover:border-neutral-300/80 transition-colors duration-500">
+                <div className="flex items-start gap-3 md:gap-4 mb-4 md:mb-8 pb-4 md:pb-6 border-b-2 border-neutral-200/60 group-hover:border-neutral-300/80 transition-colors duration-500">
                   <div className="relative">
-                    <div className="p-4 bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-700 text-white rounded-2xl group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-[0_4px_16px_rgba(0,0,0,0.25)]">
+                    <div className="p-3 md:p-4 bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-700 text-white rounded-xl md:rounded-2xl group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-[0_4px_16px_rgba(0,0,0,0.25)]">
                       {getIcon(section.icon)}
                     </div>
                     {/* Point décoratif */}
                     <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-neutral-900 rounded-full border-2 border-white shadow-sm"></div>
                   </div>
                   <div className="flex-1 pt-1">
-                    <h3 className="font-display text-2xl font-bold text-neutral-900 mb-0.5 tracking-tight leading-tight">
+                    <h3 className="font-display text-xl md:text-2xl font-bold text-neutral-900 mb-0.5 tracking-tight leading-tight">
                       {section.title}
                     </h3>
                     {isAdmin && (
@@ -231,11 +231,11 @@ const Services: React.FC<ServicesProps> = ({ onNavigate }) => {
                 </div>
 
                 {/* Liste des services */}
-                <div className="space-y-3">
+                <div className="space-y-2 md:space-y-3">
                   {section.items.map((item, itemIndex) => (
                     <div
                       key={itemIndex}
-                      className={`relative flex justify-between items-center py-3.5 px-4 rounded-xl transition-all duration-300 group/item backdrop-blur-sm ${
+                      className={`relative flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0 py-3 px-3 md:px-4 rounded-xl transition-all duration-300 group/item backdrop-blur-sm ${
                         isAdmin
                           ? 'hover:bg-blue-50/80 hover:shadow-sm'
                           : 'hover:bg-neutral-100/60 hover:shadow-sm'
@@ -245,28 +245,28 @@ const Services: React.FC<ServicesProps> = ({ onNavigate }) => {
                       <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-0 bg-neutral-900 rounded-full group-hover/item:h-8 transition-all duration-300"></div>
 
                       <div
-                        className="flex-1 flex flex-col gap-2 pl-2"
+                        className="flex-1 flex flex-col gap-2 pl-0 sm:pl-2 w-full sm:w-auto"
                       >
-                        <div className="flex justify-between items-start gap-4">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-1">
-                              <span className="text-neutral-900 font-semibold text-base leading-tight group-hover/item:text-neutral-700 transition-colors">
+                        <div className="flex flex-col sm:flex-row justify-between items-start gap-2 sm:gap-4 w-full">
+                          <div className="flex-1 w-full">
+                            <div className="flex flex-wrap items-center gap-2 mb-1">
+                              <span className="text-neutral-900 font-semibold text-sm md:text-base leading-tight group-hover/item:text-neutral-700 transition-colors">
                                 {item.label}
                               </span>
                               {item.duration && (
-                                <span className="px-2 py-1 bg-neutral-100 text-neutral-600 text-xs rounded-full font-medium border border-neutral-200">
+                                <span className="px-2 py-0.5 bg-neutral-100 text-neutral-600 text-xs rounded-full font-medium border border-neutral-200">
                                   ⏱ {item.duration}
                                 </span>
                               )}
                             </div>
                             {item.description && (
-                              <p className="text-neutral-600 text-sm leading-relaxed">
+                              <p className="text-neutral-600 text-xs md:text-sm leading-relaxed">
                                 {item.description}
                               </p>
                             )}
                           </div>
                           <div className="flex items-center gap-2">
-                            <span className="font-bold text-neutral-900 text-xl tracking-tight whitespace-nowrap group-hover/item:scale-105 transition-transform">
+                            <span className="font-bold text-neutral-900 text-lg md:text-xl tracking-tight whitespace-nowrap group-hover/item:scale-105 transition-transform">
                               {item.price}
                             </span>
                             {/* Petit badge décoratif */}
@@ -280,10 +280,10 @@ const Services: React.FC<ServicesProps> = ({ onNavigate }) => {
                             e.stopPropagation();
                             handleBookService(item.label);
                           }}
-                          className="ml-3 bg-neutral-900 text-white px-5 py-2.5 rounded-lg hover:bg-neutral-800 transition-all flex items-center gap-2 text-sm font-medium shadow-md hover:shadow-xl transform hover:scale-105"
+                          className="w-full sm:w-auto sm:ml-3 bg-neutral-900 text-white px-3 py-2 md:px-4 md:py-2.5 rounded-lg hover:bg-neutral-800 transition-all flex items-center justify-center gap-1.5 text-xs md:text-sm font-medium shadow-md hover:shadow-xl transform hover:scale-105"
                         >
-                          <Calendar size={16} />
-                          Prendre RDV
+                          <Calendar size={14} className="md:w-4 md:h-4" />
+                          <span className="whitespace-nowrap">Prendre RDV</span>
                         </button>
                       )}
                       {isAdmin && (
@@ -331,23 +331,23 @@ const Services: React.FC<ServicesProps> = ({ onNavigate }) => {
         </div>
 
         {/* CTA Section */}
-        <div className="text-center bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900 rounded-2xl md:rounded-3xl p-10 md:p-16 text-white shadow-2xl relative overflow-hidden group">
+        <div className="text-center bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900 rounded-2xl md:rounded-3xl p-6 md:p-16 text-white shadow-2xl relative overflow-hidden group">
           {/* Effet de lueur subtile */}
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
 
           <div className="relative z-10">
-            <h3 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold mb-4 leading-tight">
+            <h3 className="font-display text-2xl md:text-4xl lg:text-5xl font-bold mb-3 md:mb-4 leading-tight">
               Prête à transformer votre regard ?
             </h3>
-            <p className="text-base md:text-lg mb-8 text-white/80 font-light max-w-xl mx-auto leading-snug">
+            <p className="text-sm md:text-lg mb-6 md:mb-8 text-white/80 font-light max-w-xl mx-auto leading-snug">
               Prenez rendez-vous dès maintenant
             </p>
             <button
               onClick={() => onNavigate('contact')}
-              className="bg-white text-neutral-900 px-8 md:px-12 py-3 md:py-4 rounded-full font-semibold text-base md:text-lg hover:bg-neutral-100 transition-all duration-300 hover:shadow-2xl hover:scale-105 shadow-lg inline-flex items-center gap-2"
+              className="bg-white text-neutral-900 px-6 md:px-12 py-3 md:py-4 rounded-full font-semibold text-sm md:text-lg hover:bg-neutral-100 transition-all duration-300 hover:shadow-2xl hover:scale-105 shadow-lg inline-flex items-center gap-2"
             >
               Prendre rendez-vous
-              <span className="text-xl">→</span>
+              <span className="text-lg md:text-xl">→</span>
             </button>
           </div>
         </div>
