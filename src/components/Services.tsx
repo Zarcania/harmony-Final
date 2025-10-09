@@ -2,8 +2,6 @@ import React from 'react';
 import { Eye, Scissors, Sparkles, Heart, CreditCard as Edit, Plus, Trash2, Image as ImageIcon, Calendar } from 'lucide-react';
 import { useAdmin } from '../contexts/AdminContext';
 import AdminEditModal from './AdminEditModal';
-import ServiceDetailModal from './ServiceDetailModal';
-import BookingModal from './BookingModal';
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
 
 interface ServiceItem {
@@ -40,9 +38,6 @@ const Services: React.FC<ServicesProps> = ({ onNavigate }) => {
   } = useAdmin();
 
   const [editModal, setEditModal] = React.useState<{ type: string; data?: any; sectionId?: string } | null>(null);
-  const [selectedService, setSelectedService] = React.useState<{ service: ServiceItem; section: ServiceSection } | null>(null);
-  const [showBookingModal, setShowBookingModal] = React.useState(false);
-  const [preselectedService, setPreselectedService] = React.useState<string | null>(null);
   const { elementRef: titleLeftRef, isVisible: titleLeftVisible } = useScrollAnimation();
   const { elementRef: titleRightRef, isVisible: titleRightVisible } = useScrollAnimation();
 
@@ -98,11 +93,6 @@ const Services: React.FC<ServicesProps> = ({ onNavigate }) => {
   const handleSaveBackground = (data: any) => {
     setPrestationsBackgroundImage(data.backgroundImage || '');
     setShowPrestationsBackground(data.showBackground || false);
-  };
-
-  const handleBookService = (serviceName: string) => {
-    setPreselectedService(serviceName);
-    setShowBookingModal(true);
   };
 
   return (
@@ -278,7 +268,7 @@ const Services: React.FC<ServicesProps> = ({ onNavigate }) => {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleBookService(item.label);
+                            onNavigate('contact');
                           }}
                           className="w-full sm:w-auto sm:ml-3 bg-neutral-900 text-white px-3 py-2 md:px-4 md:py-2.5 rounded-lg hover:bg-neutral-800 transition-all flex items-center justify-center gap-1.5 text-xs md:text-sm font-medium shadow-md hover:shadow-xl transform hover:scale-105"
                         >
@@ -368,25 +358,6 @@ const Services: React.FC<ServicesProps> = ({ onNavigate }) => {
         />
       )}
 
-      {/* Modal de détail du service */}
-      {selectedService && (
-        <ServiceDetailModal
-          service={selectedService.service}
-          section={selectedService.section}
-          onClose={() => setSelectedService(null)}
-        />
-      )}
-
-      {/* Modal de réservation */}
-      {showBookingModal && (
-        <BookingModal
-          onClose={() => {
-            setShowBookingModal(false);
-            setPreselectedService(null);
-          }}
-          preselectedService={preselectedService}
-        />
-      )}
     </section>
   );
 };
