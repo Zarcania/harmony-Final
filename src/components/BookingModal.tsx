@@ -64,8 +64,8 @@ const BookingModal: React.FC<BookingModalProps> = ({ onClose, preselectedService
 
   if (isSubmitted) {
     return (
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl max-w-md w-full p-8 text-center shadow-2xl">
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+        <div className="bg-white rounded-2xl max-w-md w-full p-6 md:p-8 text-center shadow-2xl my-auto">
           <CheckCircle size={64} className="text-green-500 mx-auto mb-4" />
           <h3 className="font-display text-2xl font-bold text-harmonie-800 mb-2">
             Réservation confirmée !
@@ -86,15 +86,15 @@ const BookingModal: React.FC<BookingModalProps> = ({ onClose, preselectedService
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+      <div className="bg-white rounded-xl md:rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl my-auto">
         {/* En-tête */}
-        <div className="flex items-center justify-between p-6 border-b border-harmonie-100">
+        <div className="flex items-center justify-between p-4 md:p-6 border-b border-harmonie-100">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-harmonie-100 text-harmonie-600 rounded-lg">
               <Calendar size={20} />
             </div>
-            <h3 className="font-display text-xl font-bold text-harmonie-800">
+            <h3 className="font-display text-lg md:text-xl font-bold text-harmonie-800">
               Prendre rendez-vous
             </h3>
           </div>
@@ -126,11 +126,11 @@ const BookingModal: React.FC<BookingModalProps> = ({ onClose, preselectedService
           ))}
         </div>
 
-        <div className="p-6">
+        <div className="p-4 md:p-6">
           {/* Étape 1: Service */}
           {step === 1 && (
             <div>
-              <h4 className="font-semibold text-harmonie-800 mb-4 text-lg">
+              <h4 className="font-semibold text-harmonie-800 mb-4 text-base md:text-lg">
                 Choisissez votre prestation
               </h4>
               {preselectedService && (
@@ -145,7 +145,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ onClose, preselectedService
                   <button
                     key={service}
                     onClick={() => setFormData({ ...formData, service })}
-                    className={`p-4 rounded-xl border-2 text-left transition-all ${
+                    className={`p-3 md:p-4 rounded-xl border-2 text-left text-sm md:text-base transition-all ${
                       formData.service === service
                         ? 'border-harmonie-500 bg-harmonie-50'
                         : 'border-harmonie-200 hover:border-harmonie-300'
@@ -159,7 +159,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ onClose, preselectedService
                 <button
                   onClick={() => setStep(2)}
                   disabled={!formData.service}
-                  className="bg-harmonie-600 text-white px-6 py-3 rounded-lg hover:bg-harmonie-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="bg-harmonie-600 text-white px-4 md:px-6 py-2.5 md:py-3 text-sm md:text-base rounded-lg hover:bg-harmonie-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Suivant
                 </button>
@@ -170,7 +170,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ onClose, preselectedService
           {/* Étape 2: Date et heure */}
           {step === 2 && (
             <div>
-              <h4 className="font-semibold text-harmonie-800 mb-4 text-lg">
+              <h4 className="font-semibold text-harmonie-800 mb-4 text-base md:text-lg">
                 Choisissez votre créneau
               </h4>
               {preselectedService && (
@@ -186,12 +186,12 @@ const BookingModal: React.FC<BookingModalProps> = ({ onClose, preselectedService
                 <label className="block text-sm font-medium text-harmonie-700 mb-3">
                   Date
                 </label>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {getAvailableDates().map((date) => (
                     <button
                       key={date.toISOString()}
                       onClick={() => setFormData({ ...formData, date: format(date, 'yyyy-MM-dd'), time: '' })}
-                      className={`p-3 rounded-lg border text-sm transition-all ${
+                      className={`p-2 md:p-3 rounded-lg border text-xs md:text-sm transition-all ${
                         formData.date === format(date, 'yyyy-MM-dd')
                           ? 'border-harmonie-500 bg-harmonie-50'
                           : 'border-harmonie-200 hover:border-harmonie-300'
@@ -214,13 +214,13 @@ const BookingModal: React.FC<BookingModalProps> = ({ onClose, preselectedService
                   <label className="block text-sm font-medium text-harmonie-700 mb-3">
                     Heure
                   </label>
-                  <div className="grid grid-cols-3 md:grid-cols-4 gap-2">
+                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                     {availableSlots.map((slot) => (
                       <button
                         key={slot.id}
                         onClick={() => setFormData({ ...formData, time: slot.time })}
                         disabled={!slot.available}
-                        className={`p-3 rounded-lg border text-sm transition-all ${
+                        className={`p-2 md:p-3 rounded-lg border text-xs md:text-sm transition-all ${
                           !slot.available
                             ? 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
                             : formData.time === slot.time
@@ -238,14 +238,14 @@ const BookingModal: React.FC<BookingModalProps> = ({ onClose, preselectedService
               <div className="flex justify-between mt-6">
                 <button
                   onClick={() => setStep(1)}
-                  className="border border-harmonie-200 text-harmonie-600 px-6 py-3 rounded-lg hover:bg-harmonie-50 transition-colors"
+                  className="border border-harmonie-200 text-harmonie-600 px-4 md:px-6 py-2.5 md:py-3 text-sm md:text-base rounded-lg hover:bg-harmonie-50 transition-colors"
                 >
                   Précédent
                 </button>
                 <button
                   onClick={() => setStep(3)}
                   disabled={!formData.date || !formData.time}
-                  className="bg-harmonie-600 text-white px-6 py-3 rounded-lg hover:bg-harmonie-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="bg-harmonie-600 text-white px-4 md:px-6 py-2.5 md:py-3 text-sm md:text-base rounded-lg hover:bg-harmonie-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Suivant
                 </button>
@@ -256,11 +256,11 @@ const BookingModal: React.FC<BookingModalProps> = ({ onClose, preselectedService
           {/* Étape 3: Informations client */}
           {step === 3 && (
             <div>
-              <h4 className="font-semibold text-harmonie-800 mb-4 text-lg">
+              <h4 className="font-semibold text-harmonie-800 mb-4 text-base md:text-lg">
                 Vos coordonnées
               </h4>
               
-              <div className="grid md:grid-cols-2 gap-4 mb-6">
+              <div className="grid sm:grid-cols-2 gap-4 mb-6">
                 <div>
                   <label className="block text-sm font-medium text-harmonie-700 mb-2">
                     Nom *
@@ -271,7 +271,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ onClose, preselectedService
                       type="text"
                       value={formData.clientName}
                       onChange={(e) => setFormData({ ...formData, clientName: e.target.value })}
-                      className="w-full pl-10 pr-4 py-3 border border-harmonie-200 rounded-lg focus:ring-2 focus:ring-harmonie-500 focus:border-transparent"
+                      className="w-full pl-10 pr-4 py-2.5 md:py-3 text-sm md:text-base border border-harmonie-200 rounded-lg focus:ring-2 focus:ring-harmonie-500 focus:border-transparent"
                       placeholder="Votre nom"
                     />
                   </div>
@@ -287,14 +287,14 @@ const BookingModal: React.FC<BookingModalProps> = ({ onClose, preselectedService
                       type="text"
                       value={formData.clientFirstName}
                       onChange={(e) => setFormData({ ...formData, clientFirstName: e.target.value })}
-                      className="w-full pl-10 pr-4 py-3 border border-harmonie-200 rounded-lg focus:ring-2 focus:ring-harmonie-500 focus:border-transparent"
+                      className="w-full pl-10 pr-4 py-2.5 md:py-3 text-sm md:text-base border border-harmonie-200 rounded-lg focus:ring-2 focus:ring-harmonie-500 focus:border-transparent"
                       placeholder="Votre prénom"
                     />
                   </div>
                 </div>
               </div>
 
-              <div className="grid md:grid-cols-2 gap-4 mb-6">
+              <div className="grid sm:grid-cols-2 gap-4 mb-6">
                 <div>
                   <label className="block text-sm font-medium text-harmonie-700 mb-2">
                     Téléphone *
@@ -305,7 +305,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ onClose, preselectedService
                       type="tel"
                       value={formData.clientPhone}
                       onChange={(e) => setFormData({ ...formData, clientPhone: e.target.value })}
-                      className="w-full pl-10 pr-4 py-3 border border-harmonie-200 rounded-lg focus:ring-2 focus:ring-harmonie-500 focus:border-transparent"
+                      className="w-full pl-10 pr-4 py-2.5 md:py-3 text-sm md:text-base border border-harmonie-200 rounded-lg focus:ring-2 focus:ring-harmonie-500 focus:border-transparent"
                       placeholder="06 12 34 56 78"
                     />
                   </div>
@@ -321,7 +321,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ onClose, preselectedService
                       type="email"
                       value={formData.clientEmail}
                       onChange={(e) => setFormData({ ...formData, clientEmail: e.target.value })}
-                      className="w-full pl-10 pr-4 py-3 border border-harmonie-200 rounded-lg focus:ring-2 focus:ring-harmonie-500 focus:border-transparent"
+                      className="w-full pl-10 pr-4 py-2.5 md:py-3 text-sm md:text-base border border-harmonie-200 rounded-lg focus:ring-2 focus:ring-harmonie-500 focus:border-transparent"
                       placeholder="votre@email.com"
                     />
                   </div>
@@ -341,14 +341,14 @@ const BookingModal: React.FC<BookingModalProps> = ({ onClose, preselectedService
               <div className="flex justify-between">
                 <button
                   onClick={() => setStep(2)}
-                  className="border border-harmonie-200 text-harmonie-600 px-6 py-3 rounded-lg hover:bg-harmonie-50 transition-colors"
+                  className="border border-harmonie-200 text-harmonie-600 px-4 md:px-6 py-2.5 md:py-3 text-sm md:text-base rounded-lg hover:bg-harmonie-50 transition-colors"
                 >
                   Précédent
                 </button>
                 <button
                   onClick={handleSubmit}
                   disabled={!formData.clientName || !formData.clientFirstName || !formData.clientPhone || !formData.clientEmail}
-                  className="bg-harmonie-600 text-white px-6 py-3 rounded-lg hover:bg-harmonie-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="bg-harmonie-600 text-white px-4 md:px-6 py-2.5 md:py-3 text-sm md:text-base rounded-lg hover:bg-harmonie-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Confirmer le rendez-vous
                 </button>
