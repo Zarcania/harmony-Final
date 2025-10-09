@@ -45,6 +45,13 @@ const Services: React.FC<ServicesProps> = ({ onNavigate }) => {
   const { elementRef: titleLeftRef, isVisible: titleLeftVisible } = useScrollAnimation();
   const { elementRef: titleRightRef, isVisible: titleRightVisible } = useScrollAnimation();
 
+  const scrollToSection = (sectionId: string) => {
+    const element = document.getElementById(`section-${sectionId}`);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   const getIcon = (iconName: string) => {
     const icons: { [key: string]: React.ReactNode } = {
       'Scissors': <Scissors className="w-6 h-6" />,
@@ -113,16 +120,16 @@ const Services: React.FC<ServicesProps> = ({ onNavigate }) => {
           }`}>
             Nos soins pour sublimer votre beauté
           </p>
-          
+
           {isAdmin && (
             <div className="mt-6 flex gap-4 justify-center">
               <button
-                onClick={() => setEditModal({ 
-                  type: 'background', 
-                  data: { 
-                    backgroundImage: prestationsBackgroundImage, 
-                    showBackground: showPrestationsBackground 
-                  } 
+                onClick={() => setEditModal({
+                  type: 'background',
+                  data: {
+                    backgroundImage: prestationsBackgroundImage,
+                    showBackground: showPrestationsBackground
+                  }
                 })}
                 className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
               >
@@ -133,15 +140,32 @@ const Services: React.FC<ServicesProps> = ({ onNavigate }) => {
           )}
         </div>
 
-        {/* Grille des services */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-20">
+        {/* Navigation rapide */}
+        <div className="mb-12 flex flex-wrap gap-3 justify-center">
+          {serviceSections.map((section) => (
+            <button
+              key={section.id}
+              onClick={() => scrollToSection(section.id)}
+              className="px-6 py-3 bg-white border-2 border-neutral-300 text-neutral-900 rounded-full font-medium hover:bg-neutral-900 hover:text-white hover:border-neutral-900 transition-all duration-300 shadow-sm hover:shadow-lg"
+            >
+              {section.title}
+            </button>
+          ))}
+        </div>
+
+        {/* Liste horizontale des services */}
+        <div className="space-y-16 mb-20">
           {serviceSections.map((section, index) => (
             <div
               key={index}
-              className={`bg-gradient-to-br from-white via-neutral-50 to-white backdrop-blur-lg rounded-[2rem] p-8 shadow-[0_8px_32px_rgba(0,0,0,0.12)] hover:shadow-[0_20px_48px_rgba(0,0,0,0.18)] transition-all duration-500 hover:-translate-y-2 border border-neutral-200/60 group relative overflow-hidden ${
-                isAdmin ? 'ring-2 ring-dashed ring-harmonie-300 ring-offset-4 hover:ring-harmonie-500' : ''
-              }`}
+              id={`section-${section.id}`}
+              className="scroll-mt-24"
             >
+              <div
+                className={`bg-gradient-to-br from-white via-neutral-50 to-white backdrop-blur-lg rounded-[2rem] p-8 shadow-[0_8px_32px_rgba(0,0,0,0.12)] hover:shadow-[0_20px_48px_rgba(0,0,0,0.18)] transition-all duration-500 border border-neutral-200/60 group relative overflow-hidden ${
+                  isAdmin ? 'ring-2 ring-dashed ring-harmonie-300 ring-offset-4 hover:ring-harmonie-500' : ''
+                }`}
+              >
               {/* Décorations d'arrière-plan subtiles */}
               <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-neutral-100/40 to-transparent rounded-full blur-3xl opacity-60 group-hover:opacity-80 transition-opacity duration-700"></div>
               <div className="absolute bottom-0 left-0 w-40 h-40 bg-gradient-to-tr from-neutral-100/30 to-transparent rounded-full blur-3xl opacity-50 group-hover:opacity-70 transition-opacity duration-700"></div>
@@ -262,6 +286,7 @@ const Services: React.FC<ServicesProps> = ({ onNavigate }) => {
                   )}
                 </div>
               </div>
+            </div>
             </div>
           ))}
         </div>
