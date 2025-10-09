@@ -113,7 +113,7 @@ const Portfolio: React.FC<PortfolioProps> = ({ onNavigate }) => {
   };
 
   return (
-    <section id="portfolio" className="relative py-16 md:py-24 bg-gradient-to-b from-white via-harmonie-50/30 to-white overflow-hidden">
+    <section id="portfolio" className="relative py-24 bg-gradient-to-b from-white via-harmonie-50/30 to-white overflow-hidden">
       {/* Éléments décoratifs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-40 -right-20 w-96 h-96 bg-harmonie-200/20 rounded-full blur-3xl"></div>
@@ -122,7 +122,7 @@ const Portfolio: React.FC<PortfolioProps> = ({ onNavigate }) => {
 
       <div className="container mx-auto px-4 relative z-10">
         {/* En-tête moderne */}
-        <div className="text-center mb-10 md:mb-16">
+        <div className="text-center mb-16">
           <div className="inline-flex items-center gap-3 mb-6">
             <div className="w-12 h-px bg-gradient-to-r from-transparent via-harmonie-400 to-transparent"></div>
             <Camera className="w-5 h-5 text-harmonie-600" />
@@ -136,7 +136,7 @@ const Portfolio: React.FC<PortfolioProps> = ({ onNavigate }) => {
           }`}>
             Portfolio
           </h2>
-          <p className={`text-base md:text-lg text-gray-700 max-w-2xl mx-auto leading-relaxed px-4 transition-all duration-[1200ms] ease-out delay-300 ${
+          <p className={`text-base md:text-lg text-gray-700 max-w-2xl mx-auto leading-snug transition-all duration-[1200ms] ease-out delay-300 ${
             titleVisible
               ? 'opacity-100 translate-y-0'
               : 'opacity-0 translate-y-8'
@@ -145,13 +145,13 @@ const Portfolio: React.FC<PortfolioProps> = ({ onNavigate }) => {
           </p>
 
           {/* Filtres de catégories */}
-          <div className="flex overflow-x-auto gap-3 mt-8 mb-4 -mx-4 px-4 md:mx-0 md:px-0 md:flex-wrap md:justify-center pb-2 md:pb-0 scrollbar-hide">
+          <div className="flex flex-wrap justify-center gap-2 sm:gap-3 mt-8 mb-4">
             <button
               onClick={() => setSelectedCategory('all')}
-              className={`flex-shrink-0 px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-200 whitespace-nowrap ${
+              className={`px-4 sm:px-6 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
                 selectedCategory === 'all'
-                  ? 'bg-harmonie-600 text-white shadow-lg'
-                  : 'bg-white text-gray-700 hover:bg-harmonie-50 border border-gray-200 active:scale-95'
+                  ? 'bg-harmonie-600 text-white shadow-lg scale-105'
+                  : 'bg-white text-gray-700 hover:bg-harmonie-50 border border-gray-200'
               }`}
             >
               Toutes
@@ -160,10 +160,10 @@ const Portfolio: React.FC<PortfolioProps> = ({ onNavigate }) => {
               <button
                 key={cat.id}
                 onClick={() => setSelectedCategory(cat.name)}
-                className={`flex-shrink-0 px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-200 whitespace-nowrap ${
+                className={`px-4 sm:px-6 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
                   selectedCategory === cat.name
-                    ? 'bg-harmonie-600 text-white shadow-lg'
-                    : 'bg-white text-gray-700 hover:bg-harmonie-50 border border-gray-200 active:scale-95'
+                    ? 'bg-harmonie-600 text-white shadow-lg scale-105'
+                    : 'bg-white text-gray-700 hover:bg-harmonie-50 border border-gray-200'
                 }`}
               >
                 {cat.name}
@@ -192,7 +192,7 @@ const Portfolio: React.FC<PortfolioProps> = ({ onNavigate }) => {
         </div>
 
         {/* Galerie masonry moderne */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6 mb-12">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 mb-12">
           {filteredImages.map((image, index) => (
             <div
               key={index}

@@ -57,7 +57,7 @@ const Reviews: React.FC<ReviewsProps> = ({ onNavigate }) => {
   };
 
   return (
-    <section id="avis" className="relative py-16 md:py-24 overflow-hidden">
+    <section id="avis" className="relative py-24 overflow-hidden">
       {/* Background avec gradient neutre */}
       <div className="absolute inset-0 bg-gradient-to-br from-gray-50 via-white to-gray-50"></div>
       <div className="absolute inset-0 opacity-20">
@@ -68,14 +68,14 @@ const Reviews: React.FC<ReviewsProps> = ({ onNavigate }) => {
 
       <div className="container mx-auto px-4 relative z-10">
         {/* En-tête */}
-        <div className="text-center mb-12 md:mb-20">
+        <div className="text-center mb-20">
           <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm px-6 py-3 rounded-full mb-8 shadow-sm">
             <Heart className="w-5 h-5 text-black" />
             <span className="text-sm font-medium text-gray-700">Témoignages authentiques</span>
             <Sparkles className="w-5 h-5 text-black" />
           </div>
 
-          <h2 className="font-display text-4xl md:text-6xl lg:text-7xl font-bold text-black mb-6 md:mb-8 leading-tight px-4">
+          <h2 className="font-display text-5xl md:text-6xl lg:text-7xl font-bold text-black mb-8 leading-tight">
             <span ref={titleLeftRef} className={`inline-block transition-all duration-[1200ms] ease-out ${
               titleLeftVisible
                 ? 'opacity-100 translate-x-0'
@@ -89,7 +89,7 @@ const Reviews: React.FC<ReviewsProps> = ({ onNavigate }) => {
             }`}>nos clientes</span>
           </h2>
 
-          <p className={`text-base md:text-xl text-gray-700 max-w-2xl mx-auto mb-8 md:mb-12 font-light px-4 leading-relaxed transition-all duration-[1200ms] ease-out delay-300 ${
+          <p className={`text-lg md:text-xl text-gray-700 max-w-2xl mx-auto mb-12 font-light transition-all duration-[1200ms] ease-out delay-300 ${
             titleLeftVisible
               ? 'opacity-100 translate-y-0'
               : 'opacity-0 translate-y-8'
@@ -100,14 +100,14 @@ const Reviews: React.FC<ReviewsProps> = ({ onNavigate }) => {
         </div>
 
         {/* Grille des avis redesignée */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-8 mb-12 md:mb-16">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
           {reviews.map((review, index) => (
             <div
               key={index}
               className="group bg-white/90 backdrop-blur-sm rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 relative border border-white/50"
             >
               {/* Contenu de l'avis */}
-              <div className="p-6 md:p-8">
+              <div className="p-8">
                 {/* Badge plateforme et étoiles en haut */}
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-1">
