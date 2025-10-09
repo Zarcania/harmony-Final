@@ -120,7 +120,7 @@ const Services: React.FC<ServicesProps> = ({ onNavigate }) => {
     >
       <div className="container mx-auto px-4">
         {/* En-tête */}
-        <div className="text-center mb-16">
+        <div id="services-title" className="text-center mb-16">
           <h2 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold text-black mb-4 leading-tight">
             <span ref={titleLeftRef} className={`inline-block transition-all duration-[1200ms] ease-out ${
               titleLeftVisible

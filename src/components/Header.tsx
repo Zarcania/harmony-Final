@@ -21,7 +21,22 @@ const Header: React.FC<HeaderProps> = ({ currentPage, onNavigate }) => {
   const handleNavigation = (page: string) => {
     onNavigate(page);
     setIsMobileMenuOpen(false);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    if (page === 'prestations') {
+      setTimeout(() => {
+        const servicesTitle = document.getElementById('services-title');
+        if (servicesTitle) {
+          const offset = 120;
+          const elementPosition = servicesTitle.getBoundingClientRect().top + window.scrollY;
+          window.scrollTo({
+            top: elementPosition - offset,
+            behavior: 'smooth'
+          });
+        }
+      }, 100);
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   const isActivePage = (page: string) => currentPage === page;
