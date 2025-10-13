@@ -15,8 +15,10 @@ interface PortfolioProps {
   onNavigate: (page: string) => void;
 }
 
-const Portfolio: React.FC<PortfolioProps> = ({ onNavigate }) => {
+const Portfolio: React.FC<PortfolioProps> = ({ onNavigate: _onNavigate }) => {
+  void _onNavigate; // mark as used to satisfy no-unused-vars
   const { isAdmin, portfolioImages, updatePortfolioImage, addPortfolioImage, deletePortfolioImage } = useAdmin();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [editModal, setEditModal] = React.useState<{ type: string; data?: any } | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -51,6 +53,7 @@ const Portfolio: React.FC<PortfolioProps> = ({ onNavigate }) => {
     updatePortfolioImage(id, { showOnHome: !currentStatus });
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleSaveImage = (data: any) => {
     if (data.id) {
       updatePortfolioImage(data.id, data);
@@ -129,14 +132,14 @@ const Portfolio: React.FC<PortfolioProps> = ({ onNavigate }) => {
             <div className="w-12 h-px bg-gradient-to-r from-transparent via-harmonie-400 to-transparent"></div>
           </div>
 
-          <h2 ref={titleRef} className={`font-display text-4xl md:text-5xl lg:text-6xl font-bold text-black mb-4 tracking-tight transition-all duration-[1200ms] ease-out ${
+          <h2 ref={titleRef} className={`font-display text-5xl md:text-7xl lg:text-8xl font-bold text-black mb-5 tracking-tight transition-all duration-[1200ms] ease-out ${
             titleVisible
               ? 'opacity-100 translate-x-0'
               : 'opacity-0 -translate-x-[120px]'
           }`}>
             Portfolio
           </h2>
-          <p className={`text-base md:text-lg text-gray-700 max-w-2xl mx-auto leading-snug transition-all duration-[1200ms] ease-out delay-300 ${
+          <p className={`text-lg md:text-xl text-gray-700 max-w-2xl mx-auto leading-snug transition-all duration-[1200ms] ease-out delay-300 ${
             titleVisible
               ? 'opacity-100 translate-y-0'
               : 'opacity-0 translate-y-8'
@@ -199,9 +202,6 @@ const Portfolio: React.FC<PortfolioProps> = ({ onNavigate }) => {
               className={`group relative bg-white rounded-3xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-500 hover:-translate-y-3 ${
                 isAdmin ? 'ring-2 ring-dashed ring-harmonie-300 hover:ring-harmonie-500' : ''
               }`}
-              style={{
-                animation: `fadeInUp 0.6s ease-out ${index * 0.1}s both`
-              }}
             >
               <div className="aspect-[4/5] overflow-hidden relative">
                 <img
@@ -210,7 +210,6 @@ const Portfolio: React.FC<PortfolioProps> = ({ onNavigate }) => {
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
                 />
 
-                {/* Overlay élégant avec animation fluide */}
                 {!isAdmin && (
                   <div className="absolute inset-0 bg-gradient-to-t from-neutral-900/95 via-neutral-900/60 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-700 flex flex-col justify-end p-8">
                     {/* Ligne décorative animée */}
@@ -220,14 +219,9 @@ const Portfolio: React.FC<PortfolioProps> = ({ onNavigate }) => {
                       <h3 className="font-display text-2xl font-bold text-white mb-3 leading-tight">
                         {image.title}
                       </h3>
-                      <p className="text-white/90 text-sm mb-4 leading-relaxed line-clamp-2">
+                      <p className="text-white/90 text-sm leading-relaxed line-clamp-2">
                         {image.detailedDescription}
                       </p>
-
-                      <div className="flex items-center gap-2 text-sm text-harmonie-300 font-medium">
-                        <ExternalLink size={16} className="animate-pulse" />
-                        <span>Découvrir</span>
-                      </div>
                     </div>
                   </div>
                 )}
@@ -293,13 +287,10 @@ const Portfolio: React.FC<PortfolioProps> = ({ onNavigate }) => {
 
         {/* CTA Section moderne */}
         <div className="max-w-4xl mx-auto">
-          <div className="relative bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900 rounded-2xl md:rounded-3xl p-8 md:p-12 overflow-hidden shadow-2xl">
+            <div className="relative bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900 rounded-2xl md:rounded-3xl p-8 md:p-12 overflow-hidden shadow-2xl">
             {/* Pattern de fond */}
             <div className="absolute inset-0 opacity-10">
-              <div className="absolute inset-0" style={{
-                backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)',
-                backgroundSize: '40px 40px'
-              }}></div>
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_2px_2px,white_1px,transparent_0)] bg-[length:40px_40px]"></div>
             </div>
 
             <div className="relative z-10 text-center">
@@ -333,6 +324,7 @@ const Portfolio: React.FC<PortfolioProps> = ({ onNavigate }) => {
       {/* Modal d'édition */}
       {editModal && (
         <AdminEditModal
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           type={editModal.type as any}
           data={editModal.data}
           onSave={handleSaveImage}
@@ -351,6 +343,8 @@ const Portfolio: React.FC<PortfolioProps> = ({ onNavigate }) => {
               <button
                 onClick={() => setShowCategoryManager(false)}
                 className="p-2 text-harmonie-400 hover:text-harmonie-600 hover:bg-harmonie-50 rounded-lg transition-colors"
+                aria-label="Fermer la gestion des catégories"
+                title="Fermer"
               >
                 <Trash2 size={20} />
               </button>
@@ -397,6 +391,8 @@ const Portfolio: React.FC<PortfolioProps> = ({ onNavigate }) => {
                       onClick={() => handleMoveCategory(index, 'up')}
                       disabled={index === 0}
                       className="p-1 text-harmonie-600 hover:bg-harmonie-100 rounded disabled:opacity-30 disabled:cursor-not-allowed"
+                      aria-label="Monter la catégorie"
+                      title="Monter"
                     >
                       <ArrowUp size={16} />
                     </button>
@@ -404,12 +400,16 @@ const Portfolio: React.FC<PortfolioProps> = ({ onNavigate }) => {
                       onClick={() => handleMoveCategory(index, 'down')}
                       disabled={index === categories.length - 1}
                       className="p-1 text-harmonie-600 hover:bg-harmonie-100 rounded disabled:opacity-30 disabled:cursor-not-allowed"
+                      aria-label="Descendre la catégorie"
+                      title="Descendre"
                     >
                       <ArrowDown size={16} />
                     </button>
                   </div>
                   <input
                     type="text"
+                    aria-label="Nom de la catégorie"
+                    placeholder="Nom de la catégorie"
                     value={cat.name}
                     onChange={(e) => handleUpdateCategory(cat.id, e.target.value, cat.order_index)}
                     className="flex-1 p-2 border border-harmonie-200 rounded-lg focus:ring-2 focus:ring-harmonie-500"
@@ -417,6 +417,8 @@ const Portfolio: React.FC<PortfolioProps> = ({ onNavigate }) => {
                   <button
                     onClick={() => handleDeleteCategory(cat.id)}
                     className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    aria-label="Supprimer la catégorie"
+                    title="Supprimer"
                   >
                     <Trash2 size={18} />
                   </button>

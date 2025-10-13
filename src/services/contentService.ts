@@ -5,6 +5,9 @@ export interface Promotion {
   title: string;
   description: string;
   price: string;
+  original_price?: string;
+  badge?: string;
+  icon?: string;
   order_index: number;
 }
 

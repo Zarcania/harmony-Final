@@ -8,7 +8,8 @@ interface ContactProps {
   preselectedService?: string | null;
 }
 
-const Contact: React.FC<ContactProps> = ({ onNavigate, preselectedService }) => {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const Contact: React.FC<ContactProps> = ({ onNavigate: _onNavigate, preselectedService }) => {
   const [formData, setFormData] = useState({
     nom: '',
     email: '',
@@ -97,7 +98,7 @@ const Contact: React.FC<ContactProps> = ({ onNavigate, preselectedService }) => 
                   Prendre rendez-vous
                 </button>
                 <div className="text-white/70 text-sm font-light">
-                  <p>Réponse immédiate • Confirmation automatique</p>
+                  <p>Réponse immédiate • Ajout facile à votre agenda</p>
                 </div>
               </div>
             </div>
@@ -191,6 +192,8 @@ const Contact: React.FC<ContactProps> = ({ onNavigate, preselectedService }) => 
                   target="_blank"
                   rel="noopener noreferrer"
                   className="p-4 bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-700 text-white rounded-xl hover:scale-110 hover:rotate-6 transition-all duration-300 shadow-lg"
+                  aria-label="Ouvrir Instagram Harmonie Cils"
+                  title="Instagram Harmonie Cils"
                 >
                   <Instagram size={20} />
                 </a>
@@ -200,17 +203,13 @@ const Contact: React.FC<ContactProps> = ({ onNavigate, preselectedService }) => 
 
           {/* Formulaire de contact */}
           <div
-            className="relative rounded-[2rem] p-8 md:p-10 shadow-[0_8px_32px_rgba(0,0,0,0.12)] border border-neutral-200/60 overflow-hidden group"
-            style={{
-              backgroundImage: 'linear-gradient(rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.85)), url(/b0247cde-f948-4236-bab0-3128ea1eaf2e.jpg)',
-              backgroundSize: 'cover',
-              backgroundPosition: 'center'
-            }}
+            className="relative rounded-[2rem] p-8 md:p-10 shadow-[0_8px_32px_rgba(0,0,0,0.12)] border border-neutral-200/60 overflow-hidden group bg-[url('/b0247cde-f948-4236-bab0-3128ea1eaf2e.jpg')] bg-cover bg-center"
           >
+            {/* Overlay to mimic original white gradient */}
+            <div className="absolute inset-0 bg-white/85"></div>
             {/* Décorations d'arrière-plan */}
             <div className="absolute top-0 right-0 w-32 h-32 bg-white/20 rounded-full blur-3xl opacity-60"></div>
             <div className="absolute bottom-0 left-0 w-40 h-40 bg-white/20 rounded-full blur-3xl opacity-50"></div>
-
             <div className="relative z-10">
               <h3 className="font-display text-3xl font-bold text-neutral-900 mb-8">
                 Demande d'information

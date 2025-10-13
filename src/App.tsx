@@ -13,6 +13,7 @@ import Footer from './components/Footer';
 import AdminWelcome from './components/AdminWelcome';
 import AdminPlanning from './components/AdminPlanning';
 import AdminPanel from './components/admin/AdminPanel';
+import PromotionEditor from './components/admin/PromotionEditor';
 import AdminLogin from './components/AdminLogin';
 import { useAdmin } from './contexts/AdminContext';
 
@@ -23,6 +24,7 @@ const AppContent: React.FC = () => {
   const [preselectedService, setPreselectedService] = useState<string | null>(null);
   const [showPlanning, setShowPlanning] = useState(false);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
+  const [showPromotionEditor, setShowPromotionEditor] = useState(false);
   const [showAdminLogin, setShowAdminLogin] = useState(false);
 
   useEffect(() => {
@@ -76,10 +78,16 @@ const AppContent: React.FC = () => {
   };
 
   return (
-    <div className="relative min-h-screen font-body" style={{ paddingTop: isAdmin ? '80px' : '0' }}>
-      {isAdmin && <AdminWelcome onDisableAdmin={() => setIsAdmin(false)} onShowPlanning={() => setShowPlanning(true)} onShowAdminPanel={() => setShowAdminPanel(true)} />}
+    <div className={`relative min-h-screen font-body ${isAdmin ? 'pt-14' : ''}`}>
+      {isAdmin && (
+        <AdminWelcome
+          onDisableAdmin={() => setIsAdmin(false)}
+          onShowPlanning={() => setShowPlanning(true)}
+          onShowPromotions={() => setShowPromotionEditor(true)}
+        />
+      )}
       <Header currentPage={currentPage} onNavigate={handleNavigate} />
-      <main className="relative z-10 pt-20">
+      <main className="relative z-10 pt-14 md:pt-20">
         {renderCurrentPage()}
       </main>
       <Footer onNavigate={handleNavigate} onAdminToggle={handleAdminToggle} />
@@ -91,6 +99,9 @@ const AppContent: React.FC = () => {
       )}
       {showAdminPanel && (
         <AdminPanel onClose={() => setShowAdminPanel(false)} />
+      )}
+      {showPromotionEditor && (
+        <PromotionEditor onClose={() => setShowPromotionEditor(false)} />
       )}
       {showAdminLogin && (
         <AdminLogin onClose={() => setShowAdminLogin(false)} />

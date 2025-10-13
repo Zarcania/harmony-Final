@@ -1,6 +1,8 @@
-import React from 'react';
-import { Gift, Sparkles, Clock, Star, Heart, Crown, Calendar } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Sparkles, Star, Calendar } from 'lucide-react';
+import * as Icons from 'lucide-react';
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
+import { getPromotions, Promotion } from '../services/contentService';
 
 interface PromotionSectionProps {
   onNavigate: (page: string, service?: string) => void;
@@ -9,41 +11,25 @@ interface PromotionSectionProps {
 const PromotionSection: React.FC<PromotionSectionProps> = ({ onNavigate }) => {
   const { elementRef: titleLeftRef, isVisible: titleLeftVisible } = useScrollAnimation();
   const { elementRef: titleRightRef, isVisible: titleRightVisible } = useScrollAnimation();
-  
-  const promotions = [
-    {
-      icon: <Sparkles className="w-6 h-6" />,
-      title: "Première visite",
-      description: "Volume russe + Rehaussement",
-      price: "80€",
-      originalPrice: "115€",
-      badge: "Nouveau"
-    },
-    {
-      icon: <Heart className="w-6 h-6" />,
-      title: "Pack Beauté", 
-      description: "Sourcils + Extensions",
-      price: "65€",
-      originalPrice: "90€",
-      badge: "Populaire"
-    },
-    {
-      icon: <Crown className="w-6 h-6" />,
-      title: "Premium",
-      description: "Volume russe + Soins",
-      price: "95€",
-      originalPrice: "120€", 
-      badge: "Premium"
-    },
-    {
-      icon: <Gift className="w-6 h-6" />,
-      title: "Duo Complice",
-      description: "Pour vous et votre amie",
-      price: "99€",
-      originalPrice: "140€",
-      badge: "Limité"
-    }
-  ];
+  const [promotions, setPromotions] = useState<Promotion[]>([]);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const data = await getPromotions();
+        setPromotions(data);
+      } catch (e) {
+        console.error('Failed to load promotions', e);
+      }
+    };
+    load();
+  }, []);
+
+  const getIcon = (iconName?: string) => {
+    if (!iconName) return <Sparkles className="w-6 h-6" />;
+    const IconComponent = (Icons as unknown as Record<string, React.ComponentType<{ className?: string }>>)[iconName];
+    return IconComponent ? <IconComponent className="w-6 h-6" /> : <Sparkles className="w-6 h-6" />;
+  };
 
   return (
     <section className="py-24 bg-gradient-to-br from-neutral-50 to-white">
@@ -60,7 +46,7 @@ const PromotionSection: React.FC<PromotionSectionProps> = ({ onNavigate }) => {
               titleRightVisible
                 ? 'opacity-100 translate-x-0'
                 : 'opacity-0 translate-x-[120px]'
-            }`}>Exclusives</span>
+            } text-harmonie-700`}>Exclusives</span>
           </h2>
           <p className={`text-xl md:text-2xl text-neutral-700 font-light max-w-3xl mx-auto leading-relaxed transition-all duration-[1200ms] ease-out delay-300 ${
             titleLeftVisible
@@ -83,11 +69,13 @@ const PromotionSection: React.FC<PromotionSectionProps> = ({ onNavigate }) => {
                 <div className="flex flex-col h-full">
                   <div className="flex items-center justify-between mb-3">
                     <div className="w-8 h-8 bg-harmonie-100 rounded-lg flex items-center justify-center text-harmonie-700">
-                      {React.cloneElement(promo.icon, { className: 'w-4 h-4' })}
+                      {getIcon(promo.icon)}
                     </div>
-                    <span className="text-xs bg-harmonie-100 text-harmonie-700 px-2 py-1 rounded-full font-medium">
-                      {promo.badge}
-                    </span>
+                    {promo.badge && (
+                      <span className="text-xs bg-harmonie-100 text-harmonie-700 px-2 py-1 rounded-full font-medium">
+                        {promo.badge}
+                      </span>
+                    )}
                   </div>
                   
                   <h3 className="font-display text-sm font-bold text-neutral-900 mb-2 leading-tight">
@@ -100,9 +88,11 @@ const PromotionSection: React.FC<PromotionSectionProps> = ({ onNavigate }) => {
                   
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs text-neutral-500 line-through">
-                        {promo.originalPrice}
-                      </span>
+                      {promo.original_price && (
+                        <span className="text-xs text-neutral-500 line-through">
+                          {promo.original_price}
+                        </span>
+                      )}
                       <span className="text-lg font-bold text-harmonie-700">
                         {promo.price}
                       </span>
@@ -137,11 +127,13 @@ const PromotionSection: React.FC<PromotionSectionProps> = ({ onNavigate }) => {
               >
                 <div className="flex items-center justify-between mb-6">
                   <div className="w-14 h-14 bg-harmonie-100 rounded-xl flex items-center justify-center text-harmonie-700 group-hover:scale-110 transition-transform">
-                    {promo.icon}
+                    {getIcon(promo.icon)}
                   </div>
-                  <span className="text-sm bg-harmonie-100 text-harmonie-700 px-3 py-1 rounded-full font-medium">
-                    {promo.badge}
-                  </span>
+                  {promo.badge && (
+                    <span className="text-sm bg-harmonie-100 text-harmonie-700 px-3 py-1 rounded-full font-medium">
+                      {promo.badge}
+                    </span>
+                  )}
                 </div>
                 
                 <h3 className="font-display text-2xl font-bold text-neutral-900 mb-3">
@@ -154,10 +146,12 @@ const PromotionSection: React.FC<PromotionSectionProps> = ({ onNavigate }) => {
                 
                 <div className="space-y-4">
                   <div className="flex items-baseline justify-between">
-                    <span className="text-lg text-neutral-500 line-through">
-                      {promo.originalPrice}
-                    </span>
-                    <span className="text-4xl font-light text-harmonie-700">
+                    {promo.original_price && (
+                      <span className="text-lg text-neutral-500 line-through">
+                        {promo.original_price}
+                      </span>
+                    )}
+                    <span className={`text-4xl font-light text-harmonie-700 ${!promo.original_price ? 'ml-auto' : ''}`}>
                       {promo.price}
                     </span>
                   </div>

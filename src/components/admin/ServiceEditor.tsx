@@ -126,7 +126,7 @@ const ServiceEditor: React.FC<ServiceEditorProps> = ({ onClose }) => {
       <div className="bg-white rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
         <div className="p-6 border-b border-gray-200 flex justify-between items-center">
           <h2 className="text-2xl font-bold text-gray-900">Gérer les Prestations</h2>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg transition-colors" aria-label="Fermer l'éditeur" title="Fermer">
             <X size={24} />
           </button>
         </div>
@@ -149,17 +149,20 @@ const ServiceEditor: React.FC<ServiceEditorProps> = ({ onClose }) => {
               </h3>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Titre *</label>
+                  <label htmlFor="service-title" className="block text-sm font-medium text-gray-700 mb-2">Titre *</label>
                   <input
                     type="text"
+                    id="service-title"
+                    placeholder="Titre de la catégorie"
                     value={editingService.title || ''}
                     onChange={(e) => setEditingService({ ...editingService, title: e.target.value })}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Icône *</label>
+                  <label htmlFor="service-icon" className="block text-sm font-medium text-gray-700 mb-2">Icône *</label>
                   <select
+                    id="service-icon"
                     value={editingService.icon || 'Eye'}
                     onChange={(e) => setEditingService({ ...editingService, icon: e.target.value })}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
@@ -197,27 +200,32 @@ const ServiceEditor: React.FC<ServiceEditorProps> = ({ onClose }) => {
               </h3>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Service *</label>
+                  <label htmlFor="item-label" className="block text-sm font-medium text-gray-700 mb-2">Service *</label>
                   <input
                     type="text"
+                    id="item-label"
+                    placeholder="Nom du service"
                     value={editingItem.label || ''}
                     onChange={(e) => setEditingItem({ ...editingItem, label: e.target.value })}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Prix *</label>
+                  <label htmlFor="item-price" className="block text-sm font-medium text-gray-700 mb-2">Prix *</label>
                   <input
                     type="text"
+                    id="item-price"
+                    placeholder="Ex: 49€"
                     value={editingItem.price || ''}
                     onChange={(e) => setEditingItem({ ...editingItem, price: e.target.value })}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Durée (optionnel)</label>
+                  <label htmlFor="item-duration" className="block text-sm font-medium text-gray-700 mb-2">Durée (optionnel)</label>
                   <input
                     type="text"
+                    id="item-duration"
                     placeholder="Ex: 1h30, 45min, 2h"
                     value={editingItem.duration || ''}
                     onChange={(e) => setEditingItem({ ...editingItem, duration: e.target.value })}
@@ -277,12 +285,16 @@ const ServiceEditor: React.FC<ServiceEditorProps> = ({ onClose }) => {
                     <button
                       onClick={() => setEditingService(service)}
                       className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"
+                      aria-label="Modifier la catégorie"
+                      title="Modifier la catégorie"
                     >
                       <Edit size={20} />
                     </button>
                     <button
                       onClick={() => handleDeleteService(service.id)}
                       className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
+                      aria-label="Supprimer la catégorie"
+                      title="Supprimer la catégorie"
                     >
                       <Trash2 size={20} />
                     </button>
@@ -324,12 +336,16 @@ const ServiceEditor: React.FC<ServiceEditorProps> = ({ onClose }) => {
                           <button
                             onClick={() => setEditingItem(item)}
                             className="p-1 text-blue-600 hover:bg-blue-100 rounded"
+                            aria-label="Modifier le service"
+                            title="Modifier"
                           >
                             <Edit size={16} />
                           </button>
                           <button
                             onClick={() => handleDeleteItem(item.id)}
                             className="p-1 text-red-600 hover:bg-red-100 rounded"
+                            aria-label="Supprimer le service"
+                            title="Supprimer"
                           >
                             <Trash2 size={16} />
                           </button>

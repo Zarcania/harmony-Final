@@ -19,12 +19,8 @@ const PortfolioPreview: React.FC<PortfolioPreviewProps> = ({ onNavigate }) => {
       <div className="container mx-auto px-4">
         {/* En-tête */}
         <div className="text-center mb-10 md:mb-12">
-          <div className="inline-flex items-center gap-2 bg-harmonie-100/60 backdrop-blur-sm rounded-full px-4 py-2 mb-4 border border-harmonie-200/50">
-            <Eye className="w-4 h-4 text-harmonie-600" />
-            <span className="text-harmonie-700 font-accent font-medium text-sm">Nos réalisations</span>
-          </div>
 
-          <h2 ref={titleRef} className={`font-display text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-black mb-3 md:mb-4 leading-tight transition-all duration-[1200ms] ease-out ${
+          <h2 ref={titleRef} className={`font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-black mb-4 md:mb-5 leading-tight transition-all duration-[1200ms] ease-out ${
             titleVisible
               ? 'opacity-100 translate-x-0'
               : 'opacity-0 -translate-x-[120px]'
@@ -38,7 +34,7 @@ const PortfolioPreview: React.FC<PortfolioPreviewProps> = ({ onNavigate }) => {
               de nos créations
             </span>
           </h2>
-          <p className={`text-sm sm:text-base md:text-lg text-gray-700 max-w-2xl mx-auto leading-snug px-4 transition-all duration-[1200ms] ease-out delay-300 ${
+          <p className={`text-base sm:text-lg md:text-xl text-gray-700 max-w-2xl mx-auto leading-snug px-4 transition-all duration-[1200ms] ease-out delay-300 ${
             titleVisible
               ? 'opacity-100 translate-y-0'
               : 'opacity-0 translate-y-8'

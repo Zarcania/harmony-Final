@@ -39,6 +39,8 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onClose }) => {
         {/* Bouton de fermeture */}
         <button
           onClick={onClose}
+          aria-label="Fermer la fenêtre de connexion"
+          title="Fermer"
           className="absolute top-4 right-4 p-2 text-harmonie-400 hover:text-harmonie-600 hover:bg-harmonie-50 rounded-full transition-colors"
         >
           <X size={20} />
@@ -101,6 +103,8 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onClose }) => {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                title={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-harmonie-400 hover:text-harmonie-600"
               >
                 {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}

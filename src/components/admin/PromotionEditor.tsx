@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, CreditCard as Edit, Trash2, Save, X } from 'lucide-react';
+import { Plus, CreditCard as Edit, Trash2, Save, X, Gift } from 'lucide-react';
 import { Promotion, getPromotions, createPromotion, updatePromotion, deletePromotion } from '../../services/contentService';
 
 interface PromotionEditorProps {
@@ -10,6 +10,14 @@ const PromotionEditor: React.FC<PromotionEditorProps> = ({ onClose }) => {
   const [promotions, setPromotions] = useState<Promotion[]>([]);
   const [editingPromo, setEditingPromo] = useState<Partial<Promotion> | null>(null);
   const [loading, setLoading] = useState(false);
+  const [seeding, setSeeding] = useState(false);
+
+  const defaultPromotions: Omit<Promotion, 'id'>[] = [
+    { title: 'Première visite', description: 'Volume russe + Rehaussement', price: '80€', original_price: '115€', badge: 'Nouveau', icon: 'Sparkles', order_index: 0 },
+    { title: 'Pack Beauté', description: 'Sourcils + Extensions', price: '65€', original_price: '90€', badge: 'Populaire', icon: 'Heart', order_index: 1 },
+    { title: 'Premium', description: 'Volume russe + Soins', price: '95€', original_price: '120€', badge: 'Premium', icon: 'Crown', order_index: 2 },
+    { title: 'Duo Complice', description: 'Pour vous et votre amie', price: '99€', original_price: '140€', badge: 'Limité', icon: 'Gift', order_index: 3 },
+  ];
 
   useEffect(() => {
     loadPromotions();
@@ -22,6 +30,27 @@ const PromotionEditor: React.FC<PromotionEditorProps> = ({ onClose }) => {
     } catch (error) {
       console.error('Error loading promotions:', error);
       alert('Erreur lors du chargement des promotions');
+    }
+  };
+
+  const seedDefaults = async () => {
+    setSeeding(true);
+    try {
+      const existing = promotions.map((p) => p.title.toLowerCase());
+      const toCreate = defaultPromotions.filter((p) => !existing.includes(p.title.toLowerCase()));
+      if (toCreate.length === 0) {
+        alert('Les promotions par défaut sont déjà présentes.');
+        return;
+      }
+      for (const promo of toCreate) {
+        await createPromotion(promo);
+      }
+      await loadPromotions();
+    } catch (error) {
+      console.error('Error seeding promotions:', error);
+      alert('Erreur lors de l\'ajout des promotions par défaut');
+    } finally {
+      setSeeding(false);
     }
   };
 
@@ -40,6 +69,9 @@ const PromotionEditor: React.FC<PromotionEditorProps> = ({ onClose }) => {
           title: editingPromo.title,
           description: editingPromo.description,
           price: editingPromo.price,
+          original_price: editingPromo.original_price,
+          badge: editingPromo.badge,
+          icon: editingPromo.icon,
           order_index: editingPromo.order_index || 0,
         });
       }
@@ -69,92 +101,158 @@ const PromotionEditor: React.FC<PromotionEditorProps> = ({ onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
-        <div className="p-6 border-b border-gray-200 flex justify-between items-center">
-          <h2 className="text-2xl font-bold text-gray-900">Gérer les Offres Exclusives</h2>
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[70] flex items-end sm:items-center justify-center p-0 sm:p-4 pt-[env(safe-area-inset-top)]">
+      <div className="bg-white w-full sm:max-w-4xl sm:rounded-2xl rounded-t-2xl max-h-[92vh] sm:max-h-[90vh] overflow-hidden shadow-2xl">
+        {/* Header */}
+        <div className="sticky top-0 z-10 bg-white flex items-center justify-between px-4 sm:px-6 py-4 border-b border-harmonie-100">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-harmonie-100 text-harmonie-600 rounded-lg">
+              <Gift size={20} />
+            </div>
+            <h2 className="font-display text-lg sm:text-xl font-bold text-harmonie-800">Gérer les Offres Exclusives</h2>
+          </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 text-harmonie-400 hover:text-harmonie-600 hover:bg-harmonie-50 rounded-lg transition-colors"
+            aria-label="Fermer"
+            title="Fermer"
           >
-            <X size={24} />
+            <X size={20} />
           </button>
         </div>
 
-        <div className="p-6 overflow-y-auto max-h-[calc(90vh-80px)]">
-          <button
-            onClick={() => setEditingPromo({ title: '', description: '', price: '', order_index: promotions.length })}
-            className="mb-6 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-          >
-            <Plus size={20} />
-            Ajouter une promotion
-          </button>
+        {/* Content */}
+        <div className="p-4 sm:p-6 overflow-y-auto max-h-[calc(92vh-80px)] sm:max-h-[calc(90vh-80px)]">
+          <div className="flex flex-col sm:flex-row gap-3 mb-6">
+            <button
+              onClick={() => setEditingPromo({ title: '', description: '', price: '', order_index: promotions.length })}
+              className="flex-1 sm:flex-none sm:w-auto bg-gradient-to-r from-harmonie-600 to-harmonie-700 text-white px-5 py-3 rounded-lg hover:from-harmonie-700 hover:to-harmonie-800 transition-all duration-300 shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+            >
+              <Plus size={18} />
+              Ajouter une promotion
+            </button>
+            <button
+              onClick={seedDefaults}
+              disabled={seeding}
+              className="flex-1 sm:flex-none sm:w-auto px-5 py-3 border border-harmonie-200 text-harmonie-700 rounded-lg hover:bg-harmonie-50 transition-colors disabled:opacity-50"
+            >
+              {seeding ? 'Ajout…' : 'Remplir avec promos par défaut'}
+            </button>
+          </div>
 
           {editingPromo && (
-            <div className="mb-6 p-6 bg-blue-50 rounded-xl border-2 border-blue-300">
-              <h3 className="text-lg font-semibold mb-4">
+            <div className="mb-6 p-6 bg-harmonie-50 rounded-xl border border-harmonie-200">
+              <h3 className="text-lg font-semibold mb-4 text-harmonie-800">
                 {editingPromo.id ? 'Modifier la promotion' : 'Nouvelle promotion'}
               </h3>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="promo-title" className="block text-sm font-medium text-harmonie-700 mb-2">
                     Titre *
                   </label>
                   <input
+                    id="promo-title"
                     type="text"
                     value={editingPromo.title || ''}
                     onChange={(e) => setEditingPromo({ ...editingPromo, title: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-4 py-2 border border-harmonie-200 rounded-lg focus:ring-2 focus:ring-harmonie-500 focus:border-harmonie-500"
                     placeholder="Ex: Première visite"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="promo-description" className="block text-sm font-medium text-harmonie-700 mb-2">
                     Description *
                   </label>
                   <textarea
+                    id="promo-description"
                     value={editingPromo.description || ''}
                     onChange={(e) => setEditingPromo({ ...editingPromo, description: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-4 py-2 border border-harmonie-200 rounded-lg focus:ring-2 focus:ring-harmonie-500 focus:border-harmonie-500"
                     rows={3}
                     placeholder="Ex: Volume russe + Rehaussement pour les nouvelles clientes"
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Prix *
-                  </label>
-                  <input
-                    type="text"
-                    value={editingPromo.price || ''}
-                    onChange={(e) => setEditingPromo({ ...editingPromo, price: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Ex: 80€"
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="promo-price" className="block text-sm font-medium text-harmonie-700 mb-2">
+                      Prix *
+                    </label>
+                    <input
+                      id="promo-price"
+                      type="text"
+                      value={editingPromo.price || ''}
+                      onChange={(e) => setEditingPromo({ ...editingPromo, price: e.target.value })}
+                      className="w-full px-4 py-2 border border-harmonie-200 rounded-lg focus:ring-2 focus:ring-harmonie-500 focus:border-harmonie-500"
+                      placeholder="Ex: 80€"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="promo-original-price" className="block text-sm font-medium text-harmonie-700 mb-2">
+                      Prix barré
+                    </label>
+                    <input
+                      id="promo-original-price"
+                      type="text"
+                      value={editingPromo.original_price || ''}
+                      onChange={(e) => setEditingPromo({ ...editingPromo, original_price: e.target.value })}
+                      className="w-full px-4 py-2 border border-harmonie-200 rounded-lg focus:ring-2 focus:ring-harmonie-500 focus:border-harmonie-500"
+                      placeholder="Ex: 115€"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="promo-badge" className="block text-sm font-medium text-harmonie-700 mb-2">
+                      Badge
+                    </label>
+                    <input
+                      id="promo-badge"
+                      type="text"
+                      value={editingPromo.badge || ''}
+                      onChange={(e) => setEditingPromo({ ...editingPromo, badge: e.target.value })}
+                      className="w-full px-4 py-2 border border-harmonie-200 rounded-lg focus:ring-2 focus:ring-harmonie-500 focus:border-harmonie-500"
+                      placeholder="Ex: Nouveau, Populaire"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="promo-icon" className="block text-sm font-medium text-harmonie-700 mb-2">
+                      Icône
+                    </label>
+                    <input
+                      id="promo-icon"
+                      type="text"
+                      value={editingPromo.icon || ''}
+                      onChange={(e) => setEditingPromo({ ...editingPromo, icon: e.target.value })}
+                      className="w-full px-4 py-2 border border-harmonie-200 rounded-lg focus:ring-2 focus:ring-harmonie-500 focus:border-harmonie-500"
+                      placeholder="Ex: Sparkles, Heart, Crown, Gift"
+                    />
+                  </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="promo-order" className="block text-sm font-medium text-harmonie-700 mb-2">
                     Ordre d'affichage
                   </label>
                   <input
+                    id="promo-order"
                     type="number"
                     value={editingPromo.order_index || 0}
                     onChange={(e) => setEditingPromo({ ...editingPromo, order_index: parseInt(e.target.value) })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-4 py-2 border border-harmonie-200 rounded-lg focus:ring-2 focus:ring-harmonie-500 focus:border-harmonie-500"
+                    placeholder="0"
                   />
                 </div>
                 <div className="flex gap-3">
                   <button
                     onClick={handleSave}
                     disabled={loading}
-                    className="flex-1 bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                    className="flex-1 bg-harmonie-600 text-white px-6 py-3 rounded-lg hover:bg-harmonie-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
                   >
                     <Save size={20} />
                     Sauvegarder
                   </button>
                   <button
                     onClick={() => setEditingPromo(null)}
-                    className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                    className="px-6 py-3 border border-harmonie-200 text-harmonie-700 rounded-lg hover:bg-harmonie-50 transition-colors"
                   >
                     Annuler
                   </button>
@@ -167,19 +265,35 @@ const PromotionEditor: React.FC<PromotionEditorProps> = ({ onClose }) => {
             {promotions.map((promo) => (
               <div
                 key={promo.id}
-                className="p-6 bg-white border border-gray-200 rounded-xl hover:shadow-md transition-shadow"
+                className="p-6 bg-white border border-harmonie-200 rounded-xl hover:shadow-md transition-shadow"
               >
                 <div className="flex justify-between items-start gap-4">
                   <div className="flex-1">
-                    <h4 className="font-bold text-lg text-gray-900 mb-2">{promo.title}</h4>
-                    <p className="text-gray-600 mb-2">{promo.description}</p>
-                    <p className="text-xl font-bold text-blue-600">{promo.price}</p>
-                    <p className="text-sm text-gray-500 mt-2">Ordre: {promo.order_index}</p>
+                    <div className="flex items-center gap-3 mb-2">
+                      <h4 className="font-bold text-lg text-harmonie-900">{promo.title}</h4>
+                      {promo.badge && (
+                        <span className="text-xs bg-harmonie-100 text-harmonie-700 px-2 py-1 rounded-full">
+                          {promo.badge}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-harmonie-700 mb-2">{promo.description}</p>
+                    <div className="flex items-baseline gap-3">
+                      {promo.original_price && (
+                        <span className="text-sm text-harmonie-500 line-through">{promo.original_price}</span>
+                      )}
+                      <span className="text-2xl font-semibold text-harmonie-700">{promo.price}</span>
+                    </div>
+                    <p className="text-sm text-harmonie-500 mt-2">
+                      Ordre: {promo.order_index} {promo.icon && `• Icône: ${promo.icon}`}
+                    </p>
                   </div>
                   <div className="flex gap-2">
                     <button
                       onClick={() => setEditingPromo(promo)}
-                      className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                      className="p-2 text-harmonie-700 hover:bg-harmonie-50 rounded-lg transition-colors"
+                      aria-label={`Modifier ${promo.title}`}
+                      title={`Modifier ${promo.title}`}
                     >
                       <Edit size={20} />
                     </button>
@@ -187,6 +301,8 @@ const PromotionEditor: React.FC<PromotionEditorProps> = ({ onClose }) => {
                       onClick={() => handleDelete(promo.id)}
                       disabled={loading}
                       className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+                      aria-label={`Supprimer ${promo.title}`}
+                      title={`Supprimer ${promo.title}`}
                     >
                       <Trash2 size={20} />
                     </button>

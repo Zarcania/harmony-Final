@@ -10,6 +10,7 @@ interface PortfolioImage {
   description: string;
   detailedDescription: string;
   showOnHome: boolean;
+  category?: string;
 }
 
 interface ServiceItem {
@@ -42,6 +43,8 @@ interface AdminContextType {
   updateServiceItem: (sectionId: string, itemId: string, updates: Partial<ServiceItem>) => void;
   addServiceItem: (sectionId: string, item: Omit<ServiceItem, 'id'>) => void;
   deleteServiceItem: (sectionId: string, itemId: string) => void;
+  addServiceSection: (section: { title: string; icon: string }) => void;
+  moveServiceSection: (id: string, direction: 'up' | 'down') => void;
   prestationsBackgroundImage: string;
   setPrestationsBackgroundImage: (url: string) => void;
   showPrestationsBackground: boolean;
@@ -50,6 +53,7 @@ interface AdminContextType {
 
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAdmin = () => {
   const context = useContext(AdminContext);
   if (context === undefined) {
@@ -253,6 +257,29 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     ));
   };
 
+  const addServiceSection = (section: { title: string; icon: string }) => {
+    const newSection: ServiceSection = {
+      id: `${Date.now()}`,
+      title: section.title,
+      icon: section.icon,
+      items: []
+    };
+    setServiceSections(prev => [...prev, newSection]);
+  };
+
+  const moveServiceSection = (id: string, direction: 'up' | 'down') => {
+    setServiceSections(prev => {
+      const index = prev.findIndex(s => s.id === id);
+      if (index === -1) return prev;
+      const targetIndex = direction === 'up' ? index - 1 : index + 1;
+      if (targetIndex < 0 || targetIndex >= prev.length) return prev;
+      const next = [...prev];
+      const [item] = next.splice(index, 1);
+      next.splice(targetIndex, 0, item);
+      return next;
+    });
+  };
+
   useEffect(() => {
     const initAuth = async () => {
       try {
@@ -374,6 +401,8 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       updateServiceItem,
       addServiceItem,
       deleteServiceItem,
+      addServiceSection,
+      moveServiceSection,
       prestationsBackgroundImage,
       setPrestationsBackgroundImage,
       showPrestationsBackground,
