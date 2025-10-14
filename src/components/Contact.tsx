@@ -141,10 +141,10 @@ const Contact: React.FC<ContactProps> = ({ onNavigate: _onNavigate, preselectedS
                 <div className="pt-1">
                   <h4 className="font-semibold text-neutral-900 mb-2 text-lg">Email</h4>
                   <a
-                    href="mailto:contact@harmoniecils.fr"
+                    href="mailto:harmoniecilsstudio@gmail.com"
                     className="text-neutral-700 hover:text-neutral-900 transition-colors font-medium break-all"
                   >
-                    contact@harmoniecils.fr
+                    harmoniecilsstudio@gmail.com
                   </a>
                 </div>
               </div>

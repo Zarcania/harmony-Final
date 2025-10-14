@@ -230,7 +230,7 @@ function generateConfirmationEmail(booking: any, cancellationUrl: string): strin
               </p>
               <p style="margin: 0; color: #999999; font-size: 13px; line-height: 1.6;">
                 Institut de beauté spécialisé en extensions de cils<br>
-                Email: contact@harmoniecils.com | Téléphone: 06 XX XX XX XX
+                Email: harmoniecilsstudio@gmail.com | Téléphone: 06 XX XX XX XX
               </p>
             </td>
           </tr>
