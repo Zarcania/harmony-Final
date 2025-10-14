@@ -1,5 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { CheckCircle, AlertCircle, Calendar, Clock } from 'lucide-react';
+import { supabase } from '../lib/supabase';
+
+type CancelledBookingInfo = {
+  service: string;
+  date: string; // YYYY-MM-DD
+  time: string; // HH:mm
+};
 
 interface CancelBookingPageProps {
   onNavigate: (page: string) => void;
@@ -8,7 +15,7 @@ interface CancelBookingPageProps {
 const CancelBookingPage: React.FC<CancelBookingPageProps> = ({ onNavigate }) => {
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState('');
-  const [bookingDetails, setBookingDetails] = useState<any>(null);
+  const [bookingDetails, setBookingDetails] = useState<CancelledBookingInfo | null>(null);
 
   useEffect(() => {
     const cancelBooking = async () => {
@@ -22,27 +29,25 @@ const CancelBookingPage: React.FC<CancelBookingPageProps> = ({ onNavigate }) => 
       }
 
       try {
-        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-        const response = await fetch(`${supabaseUrl}/functions/v1/cancel-booking`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ token }),
-        });
+        const { data, error } = await supabase.rpc('cancel_booking', { p_token: token });
 
-        const data = await response.json();
+        if (error) {
+          throw error;
+        }
 
-        if (!response.ok) {
-          throw new Error(data.error || 'Erreur lors de l\'annulation');
+        if (!data || data.success !== true) {
+          setStatus('error');
+          setMessage((data && data.message) || 'Erreur lors de l\'annulation');
+          return;
         }
 
         setStatus('success');
         setMessage(data.message);
         setBookingDetails(data.booking);
-      } catch (error: any) {
+      } catch (error: unknown) {
         setStatus('error');
-        setMessage(error.message || 'Une erreur est survenue');
+        const errMsg = (error as { message?: string })?.message ?? 'Une erreur est survenue';
+        setMessage(errMsg);
       }
     };
 

@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Calendar, Clock, User, Phone, Mail, Trash2, Plus, X, CreditCard as Edit } from 'lucide-react';
 import { useBooking } from '../contexts/BookingContext';
 import { format, addDays, startOfWeek, isSameDay } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Booking } from '../types/booking';
 import BookingEditModal from './BookingEditModal';
+import { supabase } from '../lib/supabase';
 
 interface AdminPlanningProps {
   onClose: () => void;
@@ -16,6 +17,40 @@ const AdminPlanning: React.FC<AdminPlanningProps> = ({ onClose }) => {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+
+  // Business hours and closures state
+  type BusinessHour = { id: string; day_of_week: number; open_time: string | null; close_time: string | null; is_closed: boolean };
+  type Closure = { id: string; start_date: string; end_date: string; reason: string };
+  const [hours, setHours] = useState<BusinessHour[]>([]);
+  const [closures, setClosures] = useState<Closure[]>([]);
+  const [saving, setSaving] = useState(false);
+
+  const dayLabels = useMemo(() => ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'], []);
+
+  useEffect(() => {
+    const loadSettings = async () => {
+      const { data: h } = await supabase
+        .from('business_hours')
+        .select('id, day_of_week, open_time, close_time, is_closed')
+        .order('day_of_week', { ascending: true });
+
+      const { data: c } = await supabase
+        .from('closures')
+        .select('id, start_date, end_date, reason')
+        .order('start_date', { ascending: true });
+
+      setHours((h || []).map(row => ({
+        id: row.id,
+        day_of_week: row.day_of_week,
+        open_time: row.open_time ? String(row.open_time).slice(0,5) : null,
+        close_time: row.close_time ? String(row.close_time).slice(0,5) : null,
+        is_closed: row.is_closed,
+      })));
+      setClosures(c || []);
+    };
+    loadSettings();
+  }, []);
 
   // Générer les 7 jours de la semaine
   const getWeekDays = () => {
@@ -84,6 +119,71 @@ const AdminPlanning: React.FC<AdminPlanningProps> = ({ onClose }) => {
     setShowAddModal(false);
   };
 
+  // Save business hours (upsert for each day)
+  const saveBusinessHours = async () => {
+    setSaving(true);
+    try {
+      // Upsert rows individually to keep unique(day_of_week)
+      for (const row of hours) {
+        const payload = {
+          id: row.id || undefined,
+          day_of_week: row.day_of_week,
+          open_time: row.is_closed ? null : (row.open_time ? row.open_time + ':00' : null),
+          close_time: row.is_closed ? null : (row.close_time ? row.close_time + ':00' : null),
+          is_closed: row.is_closed,
+        };
+        const { data, error } = await supabase
+          .from('business_hours')
+          .upsert(payload, { onConflict: 'day_of_week' })
+          .select()
+          .single();
+        if (error) throw error;
+        // Update local id if new
+        setHours(prev => prev.map(h => (h.day_of_week === row.day_of_week ? {
+          ...h, id: data.id,
+        } : h)));
+      }
+    } catch (e) {
+      console.error(e);
+      alert('Erreur lors de la sauvegarde des horaires');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const addClosure = async () => {
+    const today = format(new Date(), 'yyyy-MM-dd');
+    const payload = { start_date: today, end_date: today, reason: '' };
+    const { data, error } = await supabase.from('closures').insert(payload).select().single();
+    if (error) {
+      console.error(error);
+      alert('Erreur lors de l\'ajout de la fermeture');
+      return;
+    }
+    setClosures(prev => [...prev, data as Closure]);
+  };
+
+  const updateClosure = async (id: string, updates: Partial<Closure>) => {
+    const { error } = await supabase.from('closures').update(updates).eq('id', id);
+    if (error) {
+      console.error(error);
+      alert('Erreur lors de la mise à jour de la fermeture');
+      return;
+    }
+    setClosures(prev => prev.map(c => (c.id === id ? { ...c, ...updates } : c)));
+  };
+
+  const deleteClosure = async (id: string) => {
+    if (!confirm('Supprimer cette fermeture ?')) return;
+    const { error } = await supabase.from('closures').delete().eq('id', id);
+    if (error) {
+      console.error(error);
+      alert('Erreur lors de la suppression');
+      return;
+    }
+    setClosures(prev => prev.filter(c => c.id !== id));
+  };
+
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[70] flex items-end sm:items-center justify-center p-0 sm:p-4 pt-[env(safe-area-inset-top)]">
       <div className="bg-white w-full sm:max-w-7xl sm:rounded-2xl rounded-t-2xl max-h-[92vh] sm:max-h-[90vh] overflow-hidden shadow-2xl">
@@ -106,7 +206,7 @@ const AdminPlanning: React.FC<AdminPlanningProps> = ({ onClose }) => {
           </button>
         </div>
 
-        {/* Navigation semaine */}
+        {/* Navigation semaine + bouton paramètres */}
         <div className="bg-harmonie-50 border-b border-harmonie-100 p-2 sm:p-4">
           <div className="grid grid-cols-3 items-center gap-2">
             <button
@@ -136,8 +236,122 @@ const AdminPlanning: React.FC<AdminPlanningProps> = ({ onClose }) => {
               <Plus size={16} />
               Nouveau rendez-vous
             </button>
+            <div>
+              <button
+                onClick={() => setShowSettings(s => !s)}
+                className="px-4 py-2 border border-harmonie-200 rounded-lg hover:bg-white transition-colors"
+              >
+                {showSettings ? 'Masquer les paramètres' : 'Paramètres horaires'}
+              </button>
+            </div>
           </div>
           {/* Bouton ajout sur desktop */}
+
+        {showSettings && (
+          <div className="border-b border-harmonie-200 bg-white p-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Business hours editor */}
+              <div>
+                <h4 className="font-semibold text-harmonie-800 mb-3">Horaires hebdomadaires</h4>
+                <div className="space-y-2">
+                  {Array.from({ length: 7 }).map((_, i) => {
+                    const h = hours.find(x => x.day_of_week === i) || { id: '', day_of_week: i, open_time: '09:00', close_time: '18:00', is_closed: i >= 5 };
+                    return (
+                      <div key={i} className="flex items-center gap-2 text-sm">
+                        <div className="w-12 text-harmonie-700">{dayLabels[i]}</div>
+                        <label className="flex items-center gap-1">
+                          <input
+                            type="checkbox"
+                            checked={h.is_closed}
+                            onChange={e => setHours(prev => {
+                              const next = [...prev.filter(x => x.day_of_week !== i), { ...h, is_closed: e.target.checked }];
+                              return next.sort((a,b) => a.day_of_week - b.day_of_week);
+                            })}
+                          />
+                          <span>Fermé</span>
+                        </label>
+                        {!h.is_closed && (
+                          <>
+                            <input
+                              type="time"
+                              value={h.open_time || '09:00'}
+                              onChange={e => setHours(prev => {
+                                const next = [...prev.filter(x => x.day_of_week !== i), { ...h, open_time: e.target.value }];
+                                return next.sort((a,b) => a.day_of_week - b.day_of_week);
+                              })}
+                              className="border border-harmonie-200 rounded px-2 py-1"
+                            />
+                            <span>-</span>
+                            <input
+                              type="time"
+                              value={h.close_time || '18:00'}
+                              onChange={e => setHours(prev => {
+                                const next = [...prev.filter(x => x.day_of_week !== i), { ...h, close_time: e.target.value }];
+                                return next.sort((a,b) => a.day_of_week - b.day_of_week);
+                              })}
+                              className="border border-harmonie-200 rounded px-2 py-1"
+                            />
+                          </>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="mt-3">
+                  <button
+                    onClick={saveBusinessHours}
+                    disabled={saving}
+                    className="px-4 py-2 bg-harmonie-600 text-white rounded-lg hover:bg-harmonie-700 disabled:opacity-50"
+                  >
+                    {saving ? 'Enregistrement...' : 'Enregistrer les horaires'}
+                  </button>
+                </div>
+              </div>
+
+              {/* Closures editor */}
+              <div>
+                <h4 className="font-semibold text-harmonie-800 mb-3">Fermetures exceptionnelles</h4>
+                <div className="space-y-3">
+                  {closures.map(c => (
+                    <div key={c.id} className="flex items-center gap-2 text-sm">
+                      <input
+                        type="date"
+                        value={c.start_date}
+                        onChange={e => updateClosure(c.id, { start_date: e.target.value })}
+                        className="border border-harmonie-200 rounded px-2 py-1"
+                      />
+                      <span>→</span>
+                      <input
+                        type="date"
+                        value={c.end_date}
+                        onChange={e => updateClosure(c.id, { end_date: e.target.value })}
+                        className="border border-harmonie-200 rounded px-2 py-1"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Raison (optionnel)"
+                        value={c.reason || ''}
+                        onChange={e => updateClosure(c.id, { reason: e.target.value })}
+                        className="flex-1 border border-harmonie-200 rounded px-2 py-1"
+                      />
+                      <button onClick={() => deleteClosure(c.id)} className="p-2 text-red-600 hover:bg-red-50 rounded">
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-3 flex gap-2">
+                  <button
+                    onClick={addClosure}
+                    className="px-4 py-2 bg-white border border-harmonie-200 rounded-lg hover:bg-harmonie-50"
+                  >
+                    Ajouter une fermeture
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
           <div className="hidden sm:flex mt-2 justify-start">
             <button
               onClick={() => setShowAddModal(true)}
