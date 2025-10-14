@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Login</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <h1>Test Admin Login</h1>
+  <button onclick="testLogin()">Test Login</button>
+  <pre id="result"></pre>
+
+  <script>
+    const supabaseUrl = 'https://cbelpqfkxvxwrrbxiyww.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNiZWxwcWZreHZ4d3JyYnhpeXd3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk0MzQ2MDMsImV4cCI6MjA3NTAxMDYwM30.zHKBDyORl26gh6MvASqb8BMLrsjPYpxBHD2GsLOqsHA';
+
+    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+    async function testLogin() {
+      const username = 'castro.oceane@laposte.net';
+      const password = '3agZ&#@*pY@?hSV';
+
+      console.log('Testing login with:', { username, password });
+
+      const { data, error } = await supabase
+        .from('admin_users')
+        .select('*')
+        .eq('username', username)
+        .eq('password_hash', password)
+        .maybeSingle();
+
+      const resultElement = document.getElementById('result');
+
+      if (error) {
+        console.error('Login error:', error);
+        resultElement.textContent = 'ERROR: ' + JSON.stringify(error, null, 2);
+        return false;
+      }
+
+      if (data) {
+        console.log('Login successful!', data);
+        resultElement.textContent = 'SUCCESS: ' + JSON.stringify(data, null, 2);
+        return true;
+      }
+
+      resultElement.textContent = 'No data returned';
+      return false;
+    }
+  </script>
+</body>
+</html>
