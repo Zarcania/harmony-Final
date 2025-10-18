@@ -18,7 +18,10 @@ export interface Booking {
 }
 
 export interface BookingFormData {
+  // Nom affiché du service (item)
   service: string;
+  // Identifiant du service item pour disponibilité/durée
+  serviceId?: string;
   date: string;
   time: string;
   clientName: string;

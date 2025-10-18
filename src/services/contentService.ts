@@ -1,5 +1,11 @@
 import { supabase } from '../lib/supabase';
 
+const log = (url: string, status: number, body?: unknown) => {
+  const prefix = '[API]';
+  if (status >= 200 && status < 300) console.info(prefix, status, url);
+  else console.warn(prefix, status, url, body);
+};
+
 export interface Promotion {
   id: string;
   title: string;
@@ -107,11 +113,11 @@ export const deletePromotion = async (id: string) => {
 
 // Services
 export const getServices = async () => {
-  const { data, error } = await supabase
+  const { data, error, status } = await supabase
     .from('services')
     .select('*')
     .order('order_index');
-
+  log('table:services', status as number, error);
   if (error) throw error;
   return data || [];
 };
@@ -159,8 +165,8 @@ export const getServiceItems = async (serviceId?: string) => {
     query = query.eq('service_id', serviceId);
   }
 
-  const { data, error } = await query;
-
+  const { data, error, status } = await query;
+  log('table:service_items', status as number, error);
   if (error) throw error;
   return data || [];
 };

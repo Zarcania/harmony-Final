@@ -423,11 +423,9 @@ const Services: React.FC<ServicesProps> = ({ onNavigate }) => {
                                   </span>
                                 )}
                               </div>
-                              {item.description && (
-                                <p className="text-neutral-600 text-xs md:text-sm leading-relaxed">
-                                  {item.description}
-                                </p>
-                              )}
+                              <p className="text-neutral-600 text-xs md:text-sm leading-relaxed">
+                                {item.description || '—'}
+                              </p>
                             </div>
                             <div className="flex items-center gap-2">
                               <span className="font-bold text-neutral-900 text-lg md:text-xl tracking-tight whitespace-nowrap">

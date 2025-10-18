@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { X, Calendar, User, Phone, Mail, CheckCircle } from 'lucide-react';
 import { useBooking } from '../contexts/BookingContext';
 import { BookingFormData } from '../types/booking';
@@ -12,7 +12,7 @@ interface BookingModalProps {
 }
 
 const BookingModal: React.FC<BookingModalProps> = ({ onClose, preselectedService }) => {
-  const { addBooking, getAvailableSlots } = useBooking();
+  const { addBooking, getAvailableSlots, isLoadingSlots } = useBooking();
   const [step, setStep] = useState(preselectedService ? 2 : 1);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
@@ -28,32 +28,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ onClose, preselectedService
 
   // Prestations dynamiques depuis AdminContext (sections + items)
   const { serviceSections } = useAdmin();
-  const services = useMemo(() => {
-    const result: string[] = [];
-    const seen = new Set<string>();
-    serviceSections.forEach(sec => {
-      sec.items.forEach(item => {
-        const label = (item.label || '').trim();
-        if (label && !seen.has(label)) {
-          seen.add(label);
-          result.push(label);
-        }
-      });
-    });
-    // Fallback au cas où aucune section n'est chargée
-    if (result.length === 0) {
-      return [
-        'Extensions volume russe',
-        'Extensions cil à cil',
-        'Extensions volume mixte',
-        'Rehaussement de cils',
-        'Épilation sourcils',
-        'Épilation lèvre',
-        'Teinture de cils'
-      ];
-    }
-    return result;
-  }, [serviceSections]);
+  // UI: on affiche directement serviceSections groupées
 
   // Générer les 14 prochains jours (sauf dimanche)
   const getAvailableDates = () => {
@@ -77,7 +52,17 @@ const BookingModal: React.FC<BookingModalProps> = ({ onClose, preselectedService
     setIsSubmitted(true);
   };
 
-  const availableSlots = formData.date ? getAvailableSlots(formData.date) : [];
+  const [slots, setSlots] = useState<string[]>([]);
+  React.useEffect(() => {
+    let canceled = false;
+    const run = async () => {
+      if (!formData.date) { setSlots([]); return; }
+      const out = await getAvailableSlots(formData.date, formData.serviceId);
+      if (!canceled) setSlots(out);
+    };
+    run();
+    return () => { canceled = true; };
+  }, [formData.date, formData.serviceId, getAvailableSlots]);
 
   if (isSubmitted) {
     // Build calendar helpers
@@ -234,18 +219,30 @@ const BookingModal: React.FC<BookingModalProps> = ({ onClose, preselectedService
                 </div>
               )}
               <div className="grid gap-3">
-                {services.map((service) => (
-                  <button
-                    key={service}
-                    onClick={() => setFormData({ ...formData, service })}
-                    className={`p-3 md:p-4 rounded-xl border-2 text-left text-sm md:text-base transition-all ${
-                      formData.service === service
-                        ? 'border-harmonie-500 bg-harmonie-50'
-                        : 'border-harmonie-200 hover:border-harmonie-300'
-                    }`}
-                  >
-                    {service}
-                  </button>
+                {serviceSections.map((section) => (
+                  <div key={section.id} className="border border-harmonie-200 rounded-xl overflow-hidden">
+                    <div className="px-3 py-2 text-sm font-semibold text-harmonie-700 bg-harmonie-50">{section.title}</div>
+                    <div className="p-2 grid gap-2">
+                      {section.items.map((item) => (
+                        <button
+                          key={item.id}
+                          onClick={() => setFormData({ ...formData, service: item.label, serviceId: item.id })}
+                          className={`p-3 rounded-lg border-2 text-left text-sm transition-all ${
+                            formData.serviceId === item.id ? 'border-harmonie-500 bg-harmonie-50' : 'border-harmonie-200 hover:border-harmonie-300'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-3">
+                            <div>
+                              <div className="font-medium text-harmonie-900">{item.label}</div>
+                              <div className="text-xs text-harmonie-600">{item.duration || '—'}</div>
+                              <div className="text-xs text-harmonie-600 mt-1">{item.description || '—'}</div>
+                            </div>
+                            <div className="font-semibold text-harmonie-900 whitespace-nowrap">{item.price}</div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 ))}
               </div>
               <div className="flex justify-end mt-6">
@@ -307,24 +304,25 @@ const BookingModal: React.FC<BookingModalProps> = ({ onClose, preselectedService
                   <label className="block text-sm font-medium text-harmonie-700 mb-3">
                     Heure
                   </label>
-                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                    {availableSlots.map((slot) => (
-                      <button
-                        key={slot.id}
-                        onClick={() => setFormData({ ...formData, time: slot.time })}
-                        disabled={!slot.available}
-                        className={`p-2 md:p-3 rounded-lg border text-xs md:text-sm transition-all ${
-                          !slot.available
-                            ? 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
-                            : formData.time === slot.time
-                            ? 'border-harmonie-500 bg-harmonie-50'
-                            : 'border-harmonie-200 hover:border-harmonie-300'
-                        }`}
-                      >
-                        {slot.time}
-                      </button>
-                    ))}
-                  </div>
+                  {isLoadingSlots ? (
+                    <div className="text-sm text-harmonie-600">Chargement des créneaux…</div>
+                  ) : slots.length === 0 ? (
+                    <div className="text-sm text-harmonie-600">Aucun créneau</div>
+                  ) : (
+                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                      {slots.map((t) => (
+                        <button
+                          key={t}
+                          onClick={() => setFormData({ ...formData, time: t })}
+                          className={`p-2 md:p-3 rounded-lg border text-xs md:text-sm transition-all ${
+                            formData.time === t ? 'border-harmonie-500 bg-harmonie-50' : 'border-harmonie-200 hover:border-harmonie-300'
+                          }`}
+                        >
+                          {t}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
 

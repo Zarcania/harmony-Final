@@ -16,6 +16,7 @@ import AdminPanel from './components/admin/AdminPanel';
 import PromotionEditor from './components/admin/PromotionEditor';
 import AdminLogin from './components/AdminLogin';
 import { useAdmin } from './contexts/AdminContext';
+import { HttpProvider, ErrorBanner } from './contexts/HttpContext';
 
 const AppContent: React.FC = () => {
   const { isAdmin, setIsAdmin } = useAdmin();
@@ -164,11 +165,14 @@ const AppContent: React.FC = () => {
 
 function App() {
   return (
-    <BookingProvider>
-      <AdminProvider>
-        <AppContent />
-      </AdminProvider>
-    </BookingProvider>
+    <HttpProvider>
+      <ErrorBanner />
+      <BookingProvider>
+        <AdminProvider>
+          <AppContent />
+        </AdminProvider>
+      </BookingProvider>
+    </HttpProvider>
   );
 }
 
