@@ -1,17 +1,26 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.58.0';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Client-Info, Apikey',
+// Align CORS with other functions using ALLOWED_ORIGINS secret
+const allowed = (Deno.env.get('ALLOWED_ORIGINS') ?? 'https://harmoniecils.com,http://localhost:5173')
+  .split(',')
+  .map((s) => s.trim());
+
+const cors = (origin?: string) => {
+  const o = origin && allowed.includes(origin) ? origin : allowed[0];
+  return {
+    'Access-Control-Allow-Origin': o,
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Client-Info, Apikey',
+    'Vary': 'Origin',
+  } as Record<string, string>;
 };
 
 Deno.serve(async (req: Request) => {
+  const origin = req.headers.get('Origin') ?? undefined;
+  const corsHeaders = cors(origin);
+
   if (req.method === 'OPTIONS') {
-    return new Response(null, {
-      status: 200,
-      headers: corsHeaders,
-    });
+    return new Response(null, { status: 204, headers: corsHeaders });
   }
 
   try {
@@ -44,12 +53,7 @@ Deno.serve(async (req: Request) => {
     if (!bookings || bookings.length === 0) {
       return new Response(
         JSON.stringify({ success: true, message: 'No bookings to remind', count: 0 }),
-        {
-          headers: {
-            ...corsHeaders,
-            'Content-Type': 'application/json',
-          },
-        }
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -142,25 +146,11 @@ Deno.serve(async (req: Request) => {
         failureCount,
         total: bookings.length 
       }),
-      {
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json',
-        },
-      }
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
     console.error('Error:', error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      {
-        status: 500,
-        headers: {
-          ...corsHeaders,
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    return new Response(JSON.stringify({ error: (error as Error)?.message ?? 'unknown' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
 });
 
