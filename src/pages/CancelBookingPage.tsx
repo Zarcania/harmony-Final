@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { CheckCircle, AlertCircle, Calendar, Clock } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+// Edge Function approach: call Supabase function endpoint directly
 
 type CancelledBookingInfo = {
-  service: string;
-  date: string; // YYYY-MM-DD
-  time: string; // HH:mm
+  service?: string;
+  date?: string; // YYYY-MM-DD
+  time?: string; // HH:mm
 };
 
 interface CancelBookingPageProps {
@@ -19,8 +19,8 @@ const CancelBookingPage: React.FC<CancelBookingPageProps> = ({ onNavigate }) => 
 
   useEffect(() => {
     const cancelBooking = async () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const token = urlParams.get('token');
+      const url = new URL(window.location.href);
+      const token = url.searchParams.get('token') || window.location.hash.replace('#', '');
 
       if (!token) {
         setStatus('error');
@@ -29,21 +29,38 @@ const CancelBookingPage: React.FC<CancelBookingPageProps> = ({ onNavigate }) => 
       }
 
       try {
-        const { data, error } = await supabase.rpc('cancel_booking', { p_token: token });
+        const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/cancel-booking`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          },
+          body: JSON.stringify({ token }),
+        });
 
-        if (error) {
-          throw error;
+        const data = await res.json().catch(() => (null));
+
+        if (!res.ok) {
+          console.error({ status: res.status, body: data });
+          const bodyMsg = (data && (data.error || data.message)) || 'Erreur inconnue';
+          setStatus('error');
+          setMessage(`${res.status} - ${bodyMsg}`);
+          return;
         }
 
-        if (!data || data.success !== true) {
+        // Support multiple shapes from the edge function
+        const already = Boolean(data?.alreadyCanceled || data?.already_cancelled || data?.already_canceled);
+        const success = already || Boolean(data?.ok || data?.success || data?.status === 'ok');
+
+        if (!success) {
           setStatus('error');
-          setMessage((data && data.message) || 'Erreur lors de l\'annulation');
+          setMessage(data?.message || 'Erreur lors de l\'annulation');
           return;
         }
 
         setStatus('success');
-        setMessage(data.message);
-        setBookingDetails(data.booking);
+        setMessage(already ? 'Ce rendez-vous est déjà annulé.' : 'Votre rendez-vous a bien été annulé.');
+        setBookingDetails(data?.booking || null);
       } catch (error: unknown) {
         setStatus('error');
         const errMsg = (error as { message?: string })?.message ?? 'Une erreur est survenue';
@@ -109,14 +126,14 @@ const CancelBookingPage: React.FC<CancelBookingPageProps> = ({ onNavigate }) => 
                       <Clock size={20} className="text-red-600" />
                       <div>
                         <span className="font-medium">Date : </span>
-                        {formatDate(bookingDetails.date)}
+                        {formatDate(bookingDetails.date || '')}
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
                       <Clock size={20} className="text-red-600" />
                       <div>
                         <span className="font-medium">Heure : </span>
-                        {bookingDetails.time}
+                        {bookingDetails.time || ''}
                       </div>
                     </div>
                   </div>

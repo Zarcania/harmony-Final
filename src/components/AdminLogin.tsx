@@ -19,15 +19,15 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onClose }) => {
     setIsLoading(true);
     setError('');
 
-    const success = await login(email, password);
+    const result = await login(email, password);
 
-    if (success) {
+    if (result.ok) {
       onClose();
       setTimeout(() => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }, 100);
     } else {
-      setError('Email ou mot de passe incorrect. Veuillez vérifier vos identifiants.');
+      setError(result.message || 'Email ou mot de passe incorrect. Veuillez vérifier vos identifiants.');
     }
 
     setIsLoading(false);

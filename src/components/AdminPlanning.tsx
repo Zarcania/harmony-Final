@@ -25,20 +25,32 @@ const AdminPlanning: React.FC<AdminPlanningProps> = ({ onClose }) => {
   const [hours, setHours] = useState<BusinessHour[]>([]);
   const [closures, setClosures] = useState<Closure[]>([]);
   const [saving, setSaving] = useState(false);
+  const [hoursError, setHoursError] = useState<string | null>(null);
+  const [closuresError, setClosuresError] = useState<string | null>(null);
 
   const dayLabels = useMemo(() => ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'], []);
 
   useEffect(() => {
     const loadSettings = async () => {
-      const { data: h } = await supabase
+      setHoursError(null);
+      setClosuresError(null);
+      const { data: h, error: hErr } = await supabase
         .from('business_hours')
         .select('id, day_of_week, open_time, close_time, is_closed')
         .order('day_of_week', { ascending: true });
+      if (hErr) {
+        console.error('Erreur chargement business_hours:', hErr);
+        setHoursError(hErr.message || 'Erreur lors du chargement des horaires');
+      }
 
-      const { data: c } = await supabase
+      const { data: c, error: cErr } = await supabase
         .from('closures')
         .select('id, start_date, end_date, reason')
         .order('start_date', { ascending: true });
+      if (cErr) {
+        console.error('Erreur chargement closures:', cErr);
+        setClosuresError(cErr.message || 'Erreur lors du chargement des fermetures');
+      }
 
       setHours((h || []).map(row => ({
         id: row.id,
@@ -122,6 +134,7 @@ const AdminPlanning: React.FC<AdminPlanningProps> = ({ onClose }) => {
   // Save business hours (upsert for each day)
   const saveBusinessHours = async () => {
     setSaving(true);
+    setHoursError(null);
     try {
       // Upsert rows individually to keep unique(day_of_week)
       for (const row of hours) {
@@ -132,11 +145,13 @@ const AdminPlanning: React.FC<AdminPlanningProps> = ({ onClose }) => {
           close_time: row.is_closed ? null : (row.close_time ? row.close_time + ':00' : null),
           is_closed: row.is_closed,
         };
+        console.debug('[business_hours.upsert] payload:', payload);
         const { data, error } = await supabase
           .from('business_hours')
           .upsert(payload, { onConflict: 'day_of_week' })
           .select()
           .single();
+        console.debug('[business_hours.upsert] response:', { data, error });
         if (error) throw error;
         // Update local id if new
         setHours(prev => prev.map(h => (h.day_of_week === row.day_of_week ? {
@@ -144,7 +159,8 @@ const AdminPlanning: React.FC<AdminPlanningProps> = ({ onClose }) => {
         } : h)));
       }
     } catch (e) {
-      console.error(e);
+      console.error('Erreur saveBusinessHours:', e);
+      setHoursError((e as { message?: string })?.message || 'Erreur lors de la sauvegarde des horaires');
       alert('Erreur lors de la sauvegarde des horaires');
     } finally {
       setSaving(false);
@@ -152,11 +168,15 @@ const AdminPlanning: React.FC<AdminPlanningProps> = ({ onClose }) => {
   };
 
   const addClosure = async () => {
+    setClosuresError(null);
     const today = format(new Date(), 'yyyy-MM-dd');
     const payload = { start_date: today, end_date: today, reason: '' };
+    console.debug('[closures.insert] payload:', payload);
     const { data, error } = await supabase.from('closures').insert(payload).select().single();
+    console.debug('[closures.insert] response:', { data, error });
     if (error) {
       console.error(error);
+      setClosuresError(error.message || 'Erreur lors de l\'ajout de la fermeture');
       alert('Erreur lors de l\'ajout de la fermeture');
       return;
     }
@@ -164,9 +184,13 @@ const AdminPlanning: React.FC<AdminPlanningProps> = ({ onClose }) => {
   };
 
   const updateClosure = async (id: string, updates: Partial<Closure>) => {
+    setClosuresError(null);
+    console.debug('[closures.update] payload:', { id, updates });
     const { error } = await supabase.from('closures').update(updates).eq('id', id);
+    console.debug('[closures.update] response:', { error });
     if (error) {
       console.error(error);
+      setClosuresError(error.message || 'Erreur lors de la mise à jour de la fermeture');
       alert('Erreur lors de la mise à jour de la fermeture');
       return;
     }
@@ -174,10 +198,14 @@ const AdminPlanning: React.FC<AdminPlanningProps> = ({ onClose }) => {
   };
 
   const deleteClosure = async (id: string) => {
+    setClosuresError(null);
     if (!confirm('Supprimer cette fermeture ?')) return;
+    console.debug('[closures.delete] payload:', { id });
     const { error } = await supabase.from('closures').delete().eq('id', id);
+    console.debug('[closures.delete] response:', { error });
     if (error) {
       console.error(error);
+      setClosuresError(error.message || 'Erreur lors de la suppression');
       alert('Erreur lors de la suppression');
       return;
     }
@@ -204,6 +232,15 @@ const AdminPlanning: React.FC<AdminPlanningProps> = ({ onClose }) => {
           >
             <X size={20} />
           </button>
+          {/* Bouton paramètres visible sous la navigation */}
+          <div className="mt-2 hidden sm:flex justify-end">
+            <button
+              onClick={() => setShowSettings(s => !s)}
+              className="px-3 py-1.5 sm:px-4 sm:py-2 bg-white border border-harmonie-200 rounded-lg hover:bg-harmonie-50 transition-colors text-xs sm:text-sm"
+            >
+              {showSettings ? 'Masquer les paramètres' : 'Paramètres d’ouverture'}
+            </button>
+          </div>
         </div>
 
         {/* Navigation semaine + bouton paramètres */}
@@ -253,6 +290,7 @@ const AdminPlanning: React.FC<AdminPlanningProps> = ({ onClose }) => {
               {/* Business hours editor */}
               <div>
                 <h4 className="font-semibold text-harmonie-800 mb-3">Horaires hebdomadaires</h4>
+                {hoursError && <p className="text-red-600 mb-2">{hoursError}</p>}
                 <div className="space-y-2">
                   {Array.from({ length: 7 }).map((_, i) => {
                     const h = hours.find(x => x.day_of_week === i) || { id: '', day_of_week: i, open_time: '09:00', close_time: '18:00', is_closed: i >= 5 };
@@ -311,6 +349,7 @@ const AdminPlanning: React.FC<AdminPlanningProps> = ({ onClose }) => {
               {/* Closures editor */}
               <div>
                 <h4 className="font-semibold text-harmonie-800 mb-3">Fermetures exceptionnelles</h4>
+                {closuresError && <p className="text-red-600 mb-2">{closuresError}</p>}
                 <div className="space-y-3">
                   {closures.map(c => (
                     <div key={c.id} className="flex items-center gap-2 text-sm">

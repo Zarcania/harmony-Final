@@ -1,9 +1,9 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.58.0';
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Client-Info, Apikey',
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
 interface CancelBookingRequest {
@@ -11,10 +11,13 @@ interface CancelBookingRequest {
 }
 
 Deno.serve(async (req: Request) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, {
-      status: 200,
-      headers: corsHeaders,
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
+  if (req.method !== 'POST') {
+    return new Response(JSON.stringify({ error: 'Method Not Allowed' }), {
+      status: 405,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
 
@@ -33,7 +36,10 @@ Deno.serve(async (req: Request) => {
     const { token }: CancelBookingRequest = await req.json();
 
     if (!token) {
-      throw new Error('Token is required');
+      return new Response(JSON.stringify({ error: 'Token is required' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     const { data: tokenData, error: tokenError } = await supabaseClient
@@ -90,7 +96,10 @@ Deno.serve(async (req: Request) => {
       .eq('id', tokenData.booking_id);
 
     if (updateBookingError) {
-      throw new Error('Failed to cancel booking');
+      return new Response(JSON.stringify({ error: 'Failed to cancel booking' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     const { error: updateTokenError } = await supabaseClient
@@ -143,7 +152,7 @@ Deno.serve(async (req: Request) => {
   } catch (error) {
     console.error('Error:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: (error as { message?: string })?.message || 'Server error' }),
       {
         status: 500,
         headers: {

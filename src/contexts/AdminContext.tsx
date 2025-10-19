@@ -31,7 +31,7 @@ interface ServiceSection {
 interface AdminContextType {
   isAdmin: boolean;
   setIsAdmin: (value: boolean) => void;
-  login: (email: string, password: string) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<{ ok: boolean; message?: string }>;
   logout: () => Promise<void>;
   isLoading: boolean;
   portfolioImages: PortfolioImage[];
@@ -65,6 +65,7 @@ export const useAdmin = () => {
 export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  // État d'erreur auth optionnel (peut être exposé au besoin)
   const [prestationsBackgroundImage, setPrestationsBackgroundImage] = useState('');
   const [showPrestationsBackground, setShowPrestationsBackground] = useState(false);
 
@@ -345,34 +346,34 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     loadServices();
   }, []);
 
-  const login = async (email: string, password: string): Promise<boolean> => {
+  const login = async (email: string, password: string): Promise<{ ok: boolean; message?: string }> => {
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
-        console.error('Login error:', error.message);
-        return false;
+        console.error('login error', error);
+        return { ok: false, message: error.message };
       }
 
-      if (data.user) {
-        const isAdminUser = await checkIsAdmin();
-        if (isAdminUser) {
-          setIsAdmin(true);
-          return true;
-        } else {
-          await supabase.auth.signOut();
-          console.error('User does not have admin privileges');
-          return false;
-        }
+      const { data: s } = await supabase.auth.getSession();
+      console.log('session', s);
+
+      const isAdminUser = await checkIsAdmin();
+      if (!isAdminUser) {
+        await supabase.auth.signOut();
+        const msg = 'Accès refusé: vous n\'êtes pas administrateur.';
+        return { ok: false, message: msg };
       }
 
-      return false;
-    } catch (error) {
-      console.error('Login exception:', error);
-      return false;
+      // Test réseau post-login (temporaire)
+      const { data: hours, error: e2 } = await supabase.from('business_hours').select('*').limit(1);
+      console.log('hours', { hours, e2 });
+
+      setIsAdmin(true);
+      return { ok: true };
+    } catch (e) {
+      const msg = (e as { message?: string })?.message ?? 'Erreur inconnue';
+      console.error('login exception', e);
+      return { ok: false, message: msg };
     }
   };
 
