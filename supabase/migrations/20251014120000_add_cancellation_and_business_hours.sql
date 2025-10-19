@@ -50,7 +50,7 @@ BEGIN
   IF NOT FOUND THEN
     RETURN jsonb_build_object(
       'success', false,
-      'message', 'Lien d\'annulation invalide'
+      'message', 'Lien d''annulation invalide'
     );
   END IF;
 
