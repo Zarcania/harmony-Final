@@ -27,6 +27,7 @@ vite.config.ts.timestamp-*
 *.sw?
 .env
 .env.local
+.env.production
 .env.*.local
 
 # Supabase temp files
