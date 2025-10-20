@@ -260,12 +260,12 @@ const Contact: React.FC<ContactProps> = ({ onNavigate: _onNavigate, preselectedS
                   </div>
 
                   <div>
-                    <label htmlFor="email" className="block text-sm font-semibold text-neutral-900 mb-2">
+                    <label htmlFor="contact-email" className="block text-sm font-semibold text-neutral-900 mb-2">
                       Email *
                     </label>
                     <input
                       type="email"
-                      id="email"
+                      id="contact-email"
                       name="email"
                       value={formData.email}
                       onChange={handleInputChange}

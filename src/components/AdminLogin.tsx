@@ -68,14 +68,14 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onClose }) => {
           )}
 
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-harmonie-700 mb-2">
+            <label htmlFor="admin-email" className="block text-sm font-medium text-harmonie-700 mb-2">
               Email
             </label>
             <div className="relative">
               <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-harmonie-400" size={20} />
               <input
                 type="email"
-                id="email"
+                id="admin-email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -86,14 +86,14 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onClose }) => {
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-harmonie-700 mb-2">
+            <label htmlFor="admin-password" className="block text-sm font-medium text-harmonie-700 mb-2">
               Mot de passe
             </label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-harmonie-400" size={20} />
               <input
                 type={showPassword ? 'text' : 'password'}
-                id="password"
+                id="admin-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
