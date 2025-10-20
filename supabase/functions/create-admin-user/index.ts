@@ -37,7 +37,7 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    const { data: existingUser, error: checkError } = await supabaseAdmin.auth.admin.listUsers();
+  const { data: existingUser } = await supabaseAdmin.auth.admin.listUsers();
     
     if (existingUser) {
       const userExists = existingUser.users.find(u => u.email === email);

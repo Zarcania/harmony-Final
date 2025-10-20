@@ -90,9 +90,8 @@ Deno.serve(async (req: Request) => {
     const cancelUrl = `${siteBase}/booking/cancel?token=${encodeURIComponent(token)}`;
 
     // 4) Construire l'email et envoyer via Resend
-    const subject = `Confirmation de rendez-vous - ${booking.service_name} - ${booking.preferred_date}`;
-    const name = [booking.client_first_name, booking.client_name].filter(Boolean).join(' ').trim();
-    const time = booking.preferred_time ? ` à ${booking.preferred_time}` : '';
+  const subject = `Confirmation de rendez-vous - ${booking.service_name} - ${booking.preferred_date}`;
+  const name = [booking.client_first_name, booking.client_name].filter(Boolean).join(' ').trim();
     const emailHtml = generateConfirmationEmail({
       booking,
       confirmUrl,
