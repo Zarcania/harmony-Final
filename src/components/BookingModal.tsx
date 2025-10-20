@@ -5,6 +5,7 @@ import { BookingFormData } from '../types/booking';
 import { format, addDays, isBefore, startOfDay } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useAdmin } from '../contexts/AdminContext';
+import { useToast } from '../contexts/ToastContext';
 
 interface BookingModalProps {
   onClose: () => void;
@@ -13,6 +14,7 @@ interface BookingModalProps {
 
 const BookingModal: React.FC<BookingModalProps> = ({ onClose, preselectedService }) => {
   const { addBooking, getAvailableSlots, isLoadingSlots } = useBooking();
+  const { showToast } = useToast();
   const [step, setStep] = useState(preselectedService ? 2 : 1);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
@@ -47,9 +49,16 @@ const BookingModal: React.FC<BookingModalProps> = ({ onClose, preselectedService
     return dates;
   };
 
-  const handleSubmit = () => {
-    addBooking(formData);
-    setIsSubmitted(true);
+  const handleSubmit = async () => {
+    // Réservation sans connexion: insert anonyme autorisé par RLS
+    try {
+      await addBooking(formData);
+      showToast('Rendez-vous enregistré.', 'success');
+      setIsSubmitted(true);
+    } catch (e) {
+      const msg = (e as { message?: string })?.message ?? 'Erreur lors de la réservation';
+      showToast(msg, 'error');
+    }
   };
 
   const [slots, setSlots] = useState<string[]>([]);

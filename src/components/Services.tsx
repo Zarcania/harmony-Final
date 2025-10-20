@@ -31,7 +31,9 @@ const Services: React.FC<ServicesProps> = ({ onNavigate }) => {
     addServiceItem,
     deleteServiceItem,
     addServiceSection,
-    moveServiceSection
+    moveServiceSection,
+    servicesError,
+    reloadServices
   } = useAdmin();
 
   // Suppression de la modale d'image de fond
@@ -193,6 +195,14 @@ const Services: React.FC<ServicesProps> = ({ onNavigate }) => {
   return (
     <section id="prestations" className="relative py-12 md:py-20 bg-white">
       <div className="container mx-auto px-4">
+        {servicesError && (
+          <div className="mb-4 p-4 rounded-lg border-2 border-red-200 bg-red-50 text-red-800 flex items-center justify-between gap-3">
+            <div>
+              <strong>Erreur chargement prestations:</strong> {servicesError}
+            </div>
+            <button onClick={reloadServices} className="px-3 py-1.5 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm">Réessayer</button>
+          </div>
+        )}
         {/* En-tête */}
         <div id="services-title" className="text-center mb-8 md:mb-16">
           <h2 className="font-display text-3xl md:text-5xl lg:text-6xl font-bold text-black mb-3 md:mb-4 leading-tight">

@@ -7,24 +7,26 @@ Deno.serve(async (req: Request) => {
   const opt = handleOptions(req);
   if (opt) return opt;
 
-  // Read token from GET ?token=... or POST { token }
+  // Read token from GET ?token=... or POST { token } OR booking_id
   let token: string | undefined;
+  let bookingId: string | undefined;
   try {
     if (req.method === 'GET') {
       const url = new URL(req.url);
       token = url.searchParams.get('token') ?? undefined;
+      bookingId = url.searchParams.get('booking_id') ?? undefined;
     } else if (req.method === 'POST') {
       const body = await req.json();
       token = typeof body?.token === 'string' ? body.token : undefined;
+      bookingId = typeof body?.booking_id === 'string' ? body.booking_id : undefined;
     } else {
       return new Response(JSON.stringify({ error: 'method_not_allowed' }), { status: 405, headers });
     }
   } catch {
     return new Response(JSON.stringify({ error: 'invalid_payload' }), { status: 400, headers });
   }
-
-  if (!token) {
-    return new Response(JSON.stringify({ error: 'invalid_payload', message: 'Token manquant' }), { status: 400, headers });
+  if (!token && !bookingId) {
+    return new Response(JSON.stringify({ error: 'invalid_payload', message: 'token ou booking_id requis' }), { status: 400, headers });
   }
 
   try {
@@ -34,8 +36,14 @@ Deno.serve(async (req: Request) => {
       { auth: { autoRefreshToken: false, persistSession: false } }
     );
 
-    // Transactional RPC call
-    const { data, error } = await supabase.rpc('cancel_booking_with_log', { p_token: token });
+    // Transactional RPC call: prefer token, fallback to booking_id
+    let data: any = null;
+    let error: any = null;
+    if (token) {
+      ({ data, error } = await supabase.rpc('cancel_booking_with_log', { p_token: token }));
+    } else if (bookingId) {
+      ({ data, error } = await supabase.rpc('cancel_booking_tx', { p_booking_id: bookingId }));
+    }
 
     if (error) {
       console.error('RPC error:', error);

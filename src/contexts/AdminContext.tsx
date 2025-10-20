@@ -49,6 +49,8 @@ interface AdminContextType {
   setPrestationsBackgroundImage: (url: string) => void;
   showPrestationsBackground: boolean;
   setShowPrestationsBackground: (show: boolean) => void;
+  servicesError?: string | null;
+  reloadServices: () => Promise<void>;
 }
 
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
@@ -68,6 +70,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // État d'erreur auth optionnel (peut être exposé au besoin)
   const [prestationsBackgroundImage, setPrestationsBackgroundImage] = useState('');
   const [showPrestationsBackground, setShowPrestationsBackground] = useState(false);
+  const [servicesError, setServicesError] = useState<string | null>(null);
 
   const [portfolioImages, setPortfolioImages] = useState<PortfolioImage[]>([
     {
@@ -313,6 +316,38 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       subscription.unsubscribe();
     };
   }, []);
+  const reloadServices = React.useCallback(async () => {
+    try {
+      setServicesError(null);
+      const services = await getServices();
+      const sectionsWithItems: ServiceSection[] = await Promise.all(
+        services.map(async (service) => {
+          const items = await getServiceItems(service.id);
+          return {
+            id: service.id,
+            title: service.title,
+            icon: service.icon,
+            items: items.map((item) => ({
+              id: item.id,
+              label: item.label,
+              price: item.price,
+              duration: item.duration,
+              description: item.description
+            }))
+          };
+        })
+      );
+      if (sectionsWithItems.length > 0) {
+        setServiceSections(sectionsWithItems);
+      }
+    } catch (error) {
+      const msg = (error as { message?: string })?.message || 'Erreur lors du chargement des prestations';
+      setServicesError(msg);
+      console.error('Error loading services:', error);
+    }
+  }, []);
+
+  useEffect(() => { reloadServices(); }, [reloadServices]);
 
   useEffect(() => {
     const loadServices = async () => {
@@ -407,7 +442,9 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       prestationsBackgroundImage,
       setPrestationsBackgroundImage,
       showPrestationsBackground,
-      setShowPrestationsBackground
+      setShowPrestationsBackground,
+      servicesError,
+      reloadServices,
     }}>
       {children}
     </AdminContext.Provider>

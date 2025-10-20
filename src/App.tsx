@@ -17,6 +17,7 @@ import PromotionEditor from './components/admin/PromotionEditor';
 import AdminLogin from './components/AdminLogin';
 import { useAdmin } from './contexts/AdminContext';
 import { HttpProvider, ErrorBanner } from './contexts/HttpContext';
+import { ToastProvider } from './contexts/ToastContext';
 import { useSupabaseSession } from './hooks/useSupabaseSession';
 
 const AppContent: React.FC = () => {
@@ -172,12 +173,14 @@ const AppContent: React.FC = () => {
 function App() {
   return (
     <HttpProvider>
-      <ErrorBanner />
-      <BookingProvider>
-        <AdminProvider>
-          <AppContent />
-        </AdminProvider>
-      </BookingProvider>
+      <ToastProvider>
+        <ErrorBanner />
+        <BookingProvider>
+          <AdminProvider>
+            <AppContent />
+          </AdminProvider>
+        </BookingProvider>
+      </ToastProvider>
     </HttpProvider>
   );
 }

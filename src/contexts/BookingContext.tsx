@@ -146,29 +146,31 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
   ];
 
   const addBooking = async (bookingData: BookingFormData) => {
-    try {
-      const { error } = await supabase
-        .from('bookings')
-        .insert([{
-          client_name: bookingData.clientName,
-          client_first_name: bookingData.clientFirstName,
-          client_email: bookingData.clientEmail,
-          client_phone: bookingData.clientPhone,
-          service_name: bookingData.service,
-          preferred_date: bookingData.date,
-          preferred_time: bookingData.time,
-          status: 'confirmed'
-        }]);
+    const { error } = await supabase
+      .from('bookings')
+      .insert([{
+        client_name: bookingData.clientName,
+        client_first_name: bookingData.clientFirstName,
+        client_email: bookingData.clientEmail,
+        client_phone: bookingData.clientPhone,
+        service_name: bookingData.service,
+        preferred_date: bookingData.date,
+        preferred_time: bookingData.time,
+        status: 'confirmed'
+      }]);
 
-      if (error) throw error;
-
-      // Email sending disabled as requested; no confirmation email is sent.
-
-      fetchBookings();
-    } catch (error) {
-      console.error('Error adding booking:', error);
-      alert('Erreur lors de l\'ajout du rendez-vous');
+    if (error) {
+      // Forward specific HTTP-like errors to global banner as well
+      const st = (error as unknown as { status?: number }).status;
+      if (st && [401,403,404].includes(st)) {
+        const emsg = (error as { message?: string })?.message || 'Erreur lors de la réservation';
+        setHttpError({ status: st, message: emsg });
+      }
+      throw error;
     }
+
+    // Email sending disabled as requested; no confirmation email is sent.
+    await fetchBookings();
   };
 
   const deleteBooking = async (id: string) => {

@@ -1,5 +1,5 @@
 -- 01_rls_policies.sql
--- Idempotent policies and indexes for services, bookings, users_profiles.
+-- Idempotent policies and indexes for services, bookings, profiles.
 -- NOTE: Adjust table names if your schema differs.
 
 begin;
@@ -7,42 +7,160 @@ begin;
 -- Enable RLS where needed
 alter table if exists public.services enable row level security;
 alter table if exists public.bookings enable row level security;
-alter table if exists public.users_profiles enable row level security;
+alter table if exists public.profiles enable row level security;
+
+-- Add user_id to bookings if missing, and FK to auth.users
+alter table if exists public.bookings
+  add column if not exists user_id uuid;
+
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_constraint
+    where conname = 'bookings_user_id_fkey'
+  ) then
+    alter table public.bookings
+      add constraint bookings_user_id_fkey foreign key (user_id) references auth.users(id) on delete set null;
+  end if;
+end $$;
+
+-- JWT-based admin helper
+-- Returns true if the JWT contains role=admin in either root or app_metadata.{role|roles}
+create or replace function public.is_admin()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $fn$
+  select coalesce(
+    (auth.jwt() ->> 'role') = 'admin'
+    or (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
+    or exists (
+      select 1
+      from jsonb_array_elements_text(coalesce(auth.jwt() -> 'app_metadata' -> 'roles', '[]'::jsonb)) as r(role)
+      where r.role = 'admin'
+    )
+  , false);
+$fn$;
+
+-- Auto-fill user_id on insert with auth.uid() when available
+create or replace function public.set_bookings_user_id()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if new.user_id is null then
+    new.user_id := auth.uid();
+  end if;
+  return new;
+end;
+$$;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_trigger where tgname = 'bookings_set_user_id'
+  ) then
+    create trigger bookings_set_user_id
+      before insert on public.bookings
+      for each row execute function public.set_bookings_user_id();
+  end if;
+end $$;
 
 -- SERVICES: open SELECT for anon+authenticated
-create policy if not exists services_select_all
-  on public.services
-  for select
-  to anon, authenticated
-  using (true);
+do $$
+begin
+  if not exists (
+    select 1 from pg_policies
+    where schemaname = 'public' and tablename = 'services' and policyname = 'services_select_all'
+  ) then
+    execute $pol$
+      create policy services_select_all on public.services
+      for select to anon, authenticated
+      using (true)
+    $pol$;
+  end if;
+end $$;
 
--- BOOKINGS: owner-based access
+-- BOOKINGS: owner-based access with JWT admin bypass
 -- Assume bookings has a column user_id uuid referencing auth.users.id
-create policy if not exists bookings_select_own
-  on public.bookings
-  for select
-  to authenticated
-  using (user_id = auth.uid());
+do $$
+begin
+  if exists (
+    select 1 from pg_policies
+    where schemaname = 'public' and tablename = 'bookings' and policyname = 'bookings_select_own'
+  ) then
+    execute $pol$
+      alter policy bookings_select_own on public.bookings
+      using (user_id = auth.uid() or public.is_admin())
+    $pol$;
+  else
+    execute $pol$
+      create policy bookings_select_own on public.bookings
+      for select to authenticated
+      using (user_id = auth.uid() or public.is_admin())
+    $pol$;
+  end if;
+end $$;
 
-create policy if not exists bookings_insert_own
-  on public.bookings
-  for insert
-  to authenticated
-  with check (user_id = auth.uid());
+do $$
+begin
+  if exists (
+    select 1 from pg_policies
+    where schemaname = 'public' and tablename = 'bookings' and policyname = 'bookings_insert_own'
+  ) then
+    execute $pol$
+      alter policy bookings_insert_own on public.bookings
+      with check (public.is_admin() or user_id = auth.uid())
+    $pol$;
+  else
+    execute $pol$
+      create policy bookings_insert_own on public.bookings
+      for insert to authenticated
+      with check (public.is_admin() or user_id = auth.uid())
+    $pol$;
+  end if;
+end $$;
 
-create policy if not exists bookings_update_own
-  on public.bookings
-  for update
-  to authenticated
-  using (user_id = auth.uid())
-  with check (user_id = auth.uid());
+do $$
+begin
+  if exists (
+    select 1 from pg_policies
+    where schemaname = 'public' and tablename = 'bookings' and policyname = 'bookings_update_own'
+  ) then
+    execute $pol$
+      alter policy bookings_update_own on public.bookings
+      using (user_id = auth.uid() or public.is_admin())
+      with check (user_id = auth.uid() or public.is_admin())
+    $pol$;
+  else
+    execute $pol$
+      create policy bookings_update_own on public.bookings
+      for update to authenticated
+      using (user_id = auth.uid() or public.is_admin())
+      with check (user_id = auth.uid() or public.is_admin())
+    $pol$;
+  end if;
+end $$;
 
--- Optionnel: autoriser l'INSERT anonyme si vous stockez une email et/ou un token propriétaire côté appli
--- create policy if not exists bookings_insert_anon
---   on public.bookings
---   for insert
---   to anon
---   with check (true);
+-- Autoriser l'INSERT anonyme pour permettre la réservation sans compte
+do $$
+begin
+  if not exists (
+    select 1 from pg_policies
+    where schemaname = 'public' and tablename = 'bookings' and policyname = 'bookings_insert_anon'
+  ) then
+    execute $pol$
+      create policy bookings_insert_anon on public.bookings
+      for insert to anon
+      with check (true)
+    $pol$;
+  end if;
+end $$;
 
 -- CHECK constraint pour normaliser les statuts
 -- Ajoute la contrainte si absente
@@ -107,5 +225,25 @@ exception when others then
     end if;
   end;
 end $$;
+
+-- PROFILES: allow users to read their own row
+do $$
+begin
+  if exists (
+    select 1 from pg_policies
+    where schemaname = 'public' and tablename = 'profiles' and policyname = 'profiles_select_own'
+  ) then
+    execute $pol$
+      alter policy profiles_select_own on public.profiles
+      using (id = auth.uid() or public.is_admin())
+    $pol$;
+  else
+    execute $pol$
+      create policy profiles_select_own on public.profiles
+      for select to authenticated
+      using (id = auth.uid() or public.is_admin())
+    $pol$;
+  end if;
+end $$ language plpgsql;
 
 commit;
