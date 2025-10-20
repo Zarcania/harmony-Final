@@ -17,9 +17,11 @@ import PromotionEditor from './components/admin/PromotionEditor';
 import AdminLogin from './components/AdminLogin';
 import { useAdmin } from './contexts/AdminContext';
 import { HttpProvider, ErrorBanner } from './contexts/HttpContext';
+import { useSupabaseSession } from './hooks/useSupabaseSession';
 
 const AppContent: React.FC = () => {
   const { isAdmin, setIsAdmin } = useAdmin();
+  const { session } = useSupabaseSession();
   const [showPopup, setShowPopup] = useState(false);
   const [currentPage, setCurrentPage] = useState('accueil');
   const [preselectedService, setPreselectedService] = useState<string | null>(null);
@@ -112,6 +114,10 @@ const AppContent: React.FC = () => {
   }, []);
 
   const renderCurrentPage = () => {
+    // Protection simple: si page admin implicite via isAdmin mais plus de session -> forcer écran de login
+    if (!session && isAdmin) {
+      return <AdminLogin onClose={() => setShowAdminLogin(false)} />
+    }
     switch (currentPage) {
       case 'accueil':
         return <HomePage onNavigate={handleNavigate} />;

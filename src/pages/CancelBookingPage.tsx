@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { ENV } from '../lib/config';
 import { CheckCircle, AlertCircle, Calendar, Clock } from 'lucide-react';
 // Edge Function approach: call Supabase function endpoint directly
 
@@ -29,11 +30,11 @@ const CancelBookingPage: React.FC<CancelBookingPageProps> = ({ onNavigate }) => 
       }
 
       try {
-  const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/cancel-booking`, {
+  const res = await fetch(`${ENV.SUPABASE_URL}/functions/v1/cancel-booking`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+            'Authorization': `Bearer ${ENV.SUPABASE_ANON_KEY}`,
           },
           body: JSON.stringify({ token }),
         });
