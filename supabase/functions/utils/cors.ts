@@ -1,0 +1,31 @@
+/**
+ * CORS utility for Supabase Edge Functions (Deno runtime).
+ * Reads ALLOWED_ORIGINS (CSV) from secrets. Falls back to defaults if missing.
+ */
+
+export type CorsHeaders = Record<string, string>
+
+export const getAllowedOrigins = (): string[] => {
+  const raw = Deno.env.get('ALLOWED_ORIGINS') ?? 'https://harmoniecils.com,http://localhost:5173'
+  return raw.split(',').map((s) => s.trim()).filter(Boolean)
+}
+
+export const buildCors = (origin?: string): CorsHeaders => {
+  const allowed = getAllowedOrigins()
+  const o = origin && allowed.includes(origin) ? origin : allowed[0]
+  return {
+    'Access-Control-Allow-Origin': o,
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'authorization,content-type,x-client-info,apikey',
+    'Vary': 'Origin',
+  }
+}
+
+export const handleOptions = (req: Request): Response | null => {
+  if (req.method === 'OPTIONS') {
+    const origin = req.headers.get('Origin') ?? undefined
+    const headers = buildCors(origin)
+    return new Response(null, { status: 204, headers })
+  }
+  return null
+}

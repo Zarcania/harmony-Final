@@ -1,27 +1,11 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.58.0';
-
-const allowed = (Deno.env.get('ALLOWED_ORIGINS') ?? 'https://harmoniecils.com,http://localhost:3000,http://localhost:5173')
-  .split(',')
-  .map((s) => s.trim());
-
-const cors = (origin?: string) => {
-  const o = origin && allowed.includes(origin) ? origin : allowed[0];
-  return {
-    'Access-Control-Allow-Origin': o,
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-    'Vary': 'Origin',
-    'Content-Type': 'application/json',
-  } as Record<string, string>;
-};
+import { buildCors, handleOptions } from '../utils/cors.ts'
 
 Deno.serve(async (req: Request) => {
   const origin = req.headers.get('Origin') ?? undefined;
-  const headers = cors(origin);
-
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { status: 204, headers });
-  }
+  const headers = { ...buildCors(origin), 'Content-Type': 'application/json' } as Record<string, string>;
+  const opt = handleOptions(req);
+  if (opt) return opt;
 
   // Read token from GET ?token=... or POST { token }
   let token: string | undefined;
