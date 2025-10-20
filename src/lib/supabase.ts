@@ -12,7 +12,7 @@ export const supabase = createClient(url!, anon!, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: false,
+    detectSessionInUrl: true,
     // Clé de stockage stable pour éviter les collisions multi-clients
     storageKey: 'hc_auth',
   },
@@ -24,8 +24,15 @@ export const supabase = createClient(url!, anon!, {
 })
 
 // Expose le client globalement pour le debug navigateur (clé anon publique)
-// @ts-ignore
-if (typeof window !== 'undefined') window.supabase = supabase
+declare global {
+  interface Window {
+    supabase: ReturnType<typeof createClient>
+  }
+}
+if (typeof window !== 'undefined') {
+  // @ts-expect-error - assignation runtime
+  window.supabase = supabase
+}
 
 /**
  * Détermine si l'utilisateur courant est admin.

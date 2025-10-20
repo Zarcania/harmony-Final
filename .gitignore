@@ -9,6 +9,7 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+dist.zip
 *.local
 
 .vscode/*
@@ -23,3 +24,6 @@ dist-ssr
 .env
 .env.local
 .env.*.local
+
+# Supabase temp files
+supabase/.temp/
