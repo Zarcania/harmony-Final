@@ -108,7 +108,7 @@ const About: React.FC<AboutProps> = () => {
           {/* Photo professionnelle */}
           <div className="relative">
             <img
-              src="/files_3416049-1759335889816-files_3416049-1759265627661-unnamed - Modifié.png"
+              src="/files_3416049-1759335889816-files_3416049-1759265627661-unnamed-modifie.png"
               alt="Professionnelle Harmonie Cils"
               className="w-full h-auto object-cover"
             />
