@@ -29,7 +29,7 @@ const CancelBookingPage: React.FC<CancelBookingPageProps> = ({ onNavigate }) => 
       }
 
       try {
-        const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/cancel-booking`, {
+  const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/cancel-booking`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

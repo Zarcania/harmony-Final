@@ -1,14 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
+import { ENV } from './config'
 
-const url = import.meta.env.VITE_SUPABASE_URL
-const anon = import.meta.env.VITE_SUPABASE_ANON_KEY
-
-if (!url || !anon) {
-  // Rend l'erreur explicite en dev
-  console.error('[Supabase] VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY manquantes. Vérifiez .env.local puis redémarrez Vite.')
-}
-
-export const supabase = createClient(url!, anon!, {
+export const supabase = createClient(ENV.SUPABASE_URL, ENV.SUPABASE_ANON_KEY, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
