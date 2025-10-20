@@ -2,6 +2,8 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { Booking, BookingFormData } from '../types/booking';
 import { supabase } from '../lib/supabase';
+import { callRpc, invokeFunction, insert } from '../api/supa';
+import { useToast } from './ToastContext';
 import { useHttp } from './HttpContext';
 
 interface BookingContextType {
@@ -30,6 +32,7 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [isLoadingSlots, setIsLoadingSlots] = useState(false);
   const { setHttpError } = useHttp();
+  const { showToast } = useToast();
   type BusinessHour = { day_of_week: number; open_time: string | null; close_time: string | null; closed: boolean };
   type Closure = { id: number; start_date: string; end_date: string; reason?: string };
   const [businessHours, setBusinessHours] = useState<BusinessHour[]>([]);
@@ -146,30 +149,37 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
   ];
 
   const addBooking = async (bookingData: BookingFormData) => {
-    const { error } = await supabase
-      .from('bookings')
-      .insert([{
-        client_name: bookingData.clientName,
-        client_first_name: bookingData.clientFirstName,
-        client_email: bookingData.clientEmail,
-        client_phone: bookingData.clientPhone,
-        service_name: bookingData.service,
-        preferred_date: bookingData.date,
-        preferred_time: bookingData.time,
-        status: 'confirmed'
-      }]);
+    const row = {
+      client_name: bookingData.clientName,
+      client_first_name: bookingData.clientFirstName ?? '',
+      client_email: bookingData.clientEmail,
+      client_phone: bookingData.clientPhone,
+      service_name: bookingData.service,
+      preferred_date: bookingData.date,
+      preferred_time: bookingData.time,
+      status: 'confirmed' as const,
+    }
 
-    if (error) {
-      // Forward specific HTTP-like errors to global banner as well
+    // If admin authenticated, use Edge Function (service key path) to avoid anon writes
+    const { data: { user } } = await supabase.auth.getUser();
+    try {
+      if (user) {
+        await invokeFunction('create-booking', row, { timeoutMs: 8000 });
+      } else {
+        await insert('bookings', [row]);
+      }
+    } catch (error) {
       const st = (error as unknown as { status?: number }).status;
       if (st && [401,403,404].includes(st)) {
         const emsg = (error as { message?: string })?.message || 'Erreur lors de la réservation';
         setHttpError({ status: st, message: emsg });
       }
+      const emsg = (error as { message?: string; code?: string })?.message ?? 'Erreur lors de la réservation';
+      const code = (error as { code?: string; status?: number })?.code || st;
+      showToast(`Réservation échouée — ${emsg}${code ? ` (code: ${code})` : ''}`, 'error');
       throw error;
     }
 
-    // Email sending disabled as requested; no confirmation email is sent.
     await fetchBookings();
   };
 
@@ -214,14 +224,7 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   };
 
-  const logFetch = (url: string, status: number, body?: unknown) => {
-    const prefix = '[API]';
-    if (status >= 200 && status < 300) {
-      console.info(prefix, status, url);
-    } else {
-      console.warn(prefix, status, url, body);
-    }
-  };
+  // central logging in api/supa.ts
 
   const getParisNowHHmm = (): string => {
     try {
@@ -251,24 +254,26 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
       // Tentative RPC: public.get_available_slots(date text, service_id uuid?)
       // Cette RPC peut ne pas exister; on catche l'erreur pour fallback
-      const rpcName = 'get_available_slots';
-      const payload: Record<string, unknown> = { p_date: date };
-      if (serviceId) payload.p_service_id = serviceId;
+  const rpcName = 'get_available_slots';
+  const payload: Record<string, unknown> = { p_date: date };
+  if (serviceId) payload.p_service_id = serviceId;
 
       // On utilise la table virtuelle RPC si dispo
       let slots: string[] | null = null;
       try {
-        const { data, error, status } = await supabase.rpc(rpcName, payload as Record<string, unknown>);
-        logFetch(`rpc:${rpcName}`,(status as number) ?? (error ? 500 : 200), error || data);
-        if (error) throw error;
+        const data = await callRpc<string[]>(rpcName, payload, { timeoutMs: 8000 });
         if (Array.isArray(data)) {
-          // data peut être une liste de { time: 'HH:mm' } ou directement ['HH:mm']
-          const extracted = (data as unknown[]).map((d) => (typeof d === 'string' ? d : (d as { time?: string })?.time)).filter(Boolean) as string[];
+          // data est text[]: ['HH:MM', ...]
+          const extracted = data.filter((d): d is string => typeof d === 'string');
           slots = extracted as string[];
         }
-      } catch {
+      } catch (e) {
         // RPC indispo: fallback local avec bookings + business hours
-        console.info('[Availability] RPC indisponible, fallback local');
+        console.info('[Availability] RPC indisponible ou en erreur, fallback local');
+        const err = e as { message?: string; code?: string };
+        const msg = err?.message ?? 'Erreur RPC';
+        const code = err?.code;
+        showToast(`Erreur créneaux — ${msg}${code ? ` (code: ${code})` : ''}`, 'error');
       }
 
       if (!slots) {
@@ -292,6 +297,8 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
       if (e?.status && [401,403,404].includes(e.status)) {
         setHttpError({ status: e.status, message: e.message || 'Erreur de chargement des créneaux' });
       }
+      const isTimeout = /Timeout/i.test(e?.message || '');
+      showToast(isTimeout ? 'Délai dépassé (8s) pour le chargement des créneaux' : `Erreur créneaux — ${(e?.message) ?? 'inconnue'}` , 'error');
       return [];
     } finally {
       setIsLoadingSlots(false);
