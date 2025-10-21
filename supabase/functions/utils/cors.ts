@@ -1,3 +1,5 @@
+// Declare Deno for TS tooling outside Deno runtime
+declare const Deno: { env: { get: (k: string) => string | undefined } };
 /**
  * CORS utility for Supabase Edge Functions (Deno runtime).
  * Reads ALLOWED_ORIGINS (CSV) from secrets. Falls back to defaults if missing.
@@ -6,8 +8,8 @@
 export type CorsHeaders = Record<string, string>
 
 export const getAllowedOrigins = (): string[] => {
-  const raw = Deno.env.get('ALLOWED_ORIGINS') ?? 'https://harmoniecils.com,http://localhost:5173'
-  return raw.split(',').map((s) => s.trim()).filter(Boolean)
+  const raw = Deno.env.get('ALLOWED_ORIGINS') ?? 'https://harmoniecils.com,https://www.harmoniecils.com,http://localhost:5173'
+  return raw.split(',').map((s: string) => s.trim()).filter(Boolean)
 }
 
 export const buildCors = (origin?: string): CorsHeaders => {

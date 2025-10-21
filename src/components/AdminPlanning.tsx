@@ -6,6 +6,8 @@ import { fr } from 'date-fns/locale';
 import { Booking } from '../types/booking';
 import BookingEditModal from './BookingEditModal';
 import { supabase } from '../lib/supabase';
+import { invokeFunction } from '../api/supa';
+import { useToast } from '../contexts/ToastContext';
 
 interface AdminPlanningProps {
   onClose: () => void;
@@ -13,6 +15,7 @@ interface AdminPlanningProps {
 
 const AdminPlanning: React.FC<AdminPlanningProps> = ({ onClose }) => {
   const { bookings, deleteBooking, updateBooking, addBooking } = useBooking();
+  const { showToast } = useToast();
   const [currentWeek, setCurrentWeek] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
@@ -131,37 +134,25 @@ const AdminPlanning: React.FC<AdminPlanningProps> = ({ onClose }) => {
     setShowAddModal(false);
   };
 
-  // Save business hours (upsert for each day)
+  // Save business hours via Edge Function (admin only)
   const saveBusinessHours = async () => {
     setSaving(true);
     setHoursError(null);
     try {
-      // Upsert rows individually to keep unique(day_of_week)
-      for (const row of hours) {
-        const payload = {
-          id: row.id || undefined,
-          day_of_week: row.day_of_week,
-          open_time: row.is_closed ? null : (row.open_time ? row.open_time + ':00' : null),
-          close_time: row.is_closed ? null : (row.close_time ? row.close_time + ':00' : null),
-          is_closed: row.is_closed,
-        };
-        console.debug('[business_hours.upsert] payload:', payload);
-        const { data, error } = await supabase
-          .from('business_hours')
-          .upsert(payload, { onConflict: 'day_of_week' })
-          .select()
-          .single();
-        console.debug('[business_hours.upsert] response:', { data, error });
-        if (error) throw error;
-        // Update local id if new
-        setHours(prev => prev.map(h => (h.day_of_week === row.day_of_week ? {
-          ...h, id: data.id,
-        } : h)));
-      }
+      const payload = hours.map(row => ({
+        id: row.id || undefined,
+        day_of_week: row.day_of_week,
+        open_time: row.open_time,
+        close_time: row.close_time,
+        is_closed: row.is_closed,
+      }))
+      await invokeFunction('upsert-hours', payload, { timeoutMs: 8000 })
+      showToast('Horaires enregistrés.', 'success')
     } catch (e) {
       console.error('Erreur saveBusinessHours:', e);
-      setHoursError((e as { message?: string })?.message || 'Erreur lors de la sauvegarde des horaires');
-      alert('Erreur lors de la sauvegarde des horaires');
+      const msg = (e as { message?: string; code?: string })?.message || 'Erreur lors de la sauvegarde des horaires';
+      setHoursError(msg);
+      showToast(`Erreur horaires — ${msg}`, 'error');
     } finally {
       setSaving(false);
     }
@@ -176,8 +167,9 @@ const AdminPlanning: React.FC<AdminPlanningProps> = ({ onClose }) => {
     console.debug('[closures.insert] response:', { data, error });
     if (error) {
       console.error(error);
-      setClosuresError(error.message || 'Erreur lors de l\'ajout de la fermeture');
-      alert('Erreur lors de l\'ajout de la fermeture');
+      const msg = error.message || 'Erreur lors de l\'ajout de la fermeture';
+      setClosuresError(msg);
+      showToast(`Erreur fermeture — ${msg}`, 'error');
       return;
     }
     setClosures(prev => [...prev, data as Closure]);
@@ -190,8 +182,9 @@ const AdminPlanning: React.FC<AdminPlanningProps> = ({ onClose }) => {
     console.debug('[closures.update] response:', { error });
     if (error) {
       console.error(error);
-      setClosuresError(error.message || 'Erreur lors de la mise à jour de la fermeture');
-      alert('Erreur lors de la mise à jour de la fermeture');
+      const msg = error.message || 'Erreur lors de la mise à jour de la fermeture';
+      setClosuresError(msg);
+      showToast(`Erreur fermeture — ${msg}`, 'error');
       return;
     }
     setClosures(prev => prev.map(c => (c.id === id ? { ...c, ...updates } : c)));
@@ -205,8 +198,9 @@ const AdminPlanning: React.FC<AdminPlanningProps> = ({ onClose }) => {
     console.debug('[closures.delete] response:', { error });
     if (error) {
       console.error(error);
-      setClosuresError(error.message || 'Erreur lors de la suppression');
-      alert('Erreur lors de la suppression');
+      const msg = error.message || 'Erreur lors de la suppression';
+      setClosuresError(msg);
+      showToast(`Erreur fermeture — ${msg}`, 'error');
       return;
     }
     setClosures(prev => prev.filter(c => c.id !== id));
