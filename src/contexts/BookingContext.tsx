@@ -278,6 +278,10 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   };
 
+  // DB utilise 0 = lundi .. 6 = dimanche (isodow-1). JS getDay(): 0 = dimanche .. 6 = samedi
+  // Convertit une date JS vers l'index DB (0=lundi)
+  const getDbDow = (d: Date): number => (d.getDay() + 6) % 7;
+
   // Appelle la vue/RPC côté Supabase si disponible, sinon fallback local sur les bookings existants
   const getAvailableSlots = async (date: string, serviceId?: string): Promise<string[]> => {
     try {
@@ -345,12 +349,12 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const isDateClosed = (d: Date): boolean => {
     const iso = d.toISOString().slice(0, 10);
     if (closures.some(c => iso >= c.start_date && iso <= c.end_date)) return true;
-    const bh = businessHours.find(b => b.day_of_week === d.getDay());
+    const bh = businessHours.find(b => b.day_of_week === getDbDow(d));
     return !bh || bh.closed;
   };
 
   const filterSlotsBySchedule = (d: Date, slots: string[]): string[] => {
-    const bh = businessHours.find(b => b.day_of_week === d.getDay());
+    const bh = businessHours.find(b => b.day_of_week === getDbDow(d));
     if (!bh || bh.closed) return [];
     const { open_time, close_time } = bh;
     if (!open_time || !close_time) return [];

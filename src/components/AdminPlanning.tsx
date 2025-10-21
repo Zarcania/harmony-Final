@@ -23,8 +23,10 @@ const AdminPlanning: React.FC<AdminPlanningProps> = ({ onClose }) => {
   const [showSettings, setShowSettings] = useState(false);
 
   // Business hours and closures state
-  type BusinessHour = { id: string; day_of_week: number; open_time: string | null; close_time: string | null; is_closed: boolean };
-  type Closure = { id: string; start_date: string; end_date: string; reason: string };
+  // Selon le schéma Supabase fourni: public.business_hours n'a PAS de colonne id, PK = day_of_week
+  type BusinessHour = { day_of_week: number; open_time: string | null; close_time: string | null; is_closed: boolean };
+  // public.closures.id est un bigint (numérique)
+  type Closure = { id: number; start_date: string; end_date: string; reason: string };
   const [hours, setHours] = useState<BusinessHour[]>([]);
   const [closures, setClosures] = useState<Closure[]>([]);
   const [saving, setSaving] = useState(false);
@@ -34,16 +36,33 @@ const AdminPlanning: React.FC<AdminPlanningProps> = ({ onClose }) => {
   const dayLabels = useMemo(() => ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'], []);
 
   useEffect(() => {
+    type BusinessHourRow = { day_of_week: number; open_time: string | null; close_time: string | null; is_closed?: boolean; closed?: boolean };
     const loadSettings = async () => {
       setHoursError(null);
       setClosuresError(null);
-      const { data: h, error: hErr } = await supabase
-        .from('business_hours')
-        .select('id, day_of_week, open_time, close_time, is_closed')
-        .order('day_of_week', { ascending: true });
-      if (hErr) {
-        console.error('Erreur chargement business_hours:', hErr);
-        setHoursError(hErr.message || 'Erreur lors du chargement des horaires');
+      // Tenter is_closed; fallback sur closed si la colonne n'existe pas (42703)
+  let h: BusinessHourRow[] = [];
+      try {
+        const r1 = await supabase
+          .from('business_hours')
+          .select('day_of_week, open_time, close_time, is_closed')
+          .order('day_of_week', { ascending: true });
+        if (r1.error && r1.error.code === '42703') {
+          const r2 = await supabase
+            .from('business_hours')
+            .select('day_of_week, open_time, close_time, closed')
+            .order('day_of_week', { ascending: true });
+          if (r2.error) throw r2.error;
+          h = (r2.data as BusinessHourRow[]) || [];
+        } else if (r1.error) {
+          throw r1.error;
+        } else {
+          h = (r1.data as BusinessHourRow[]) || [];
+        }
+      } catch (err) {
+        console.error('Erreur chargement business_hours:', err);
+        const msg = (err as { message?: string })?.message || 'Erreur lors du chargement des horaires';
+        setHoursError(msg);
       }
 
       const { data: c, error: cErr } = await supabase
@@ -55,12 +74,11 @@ const AdminPlanning: React.FC<AdminPlanningProps> = ({ onClose }) => {
         setClosuresError(cErr.message || 'Erreur lors du chargement des fermetures');
       }
 
-      setHours((h || []).map(row => ({
-        id: row.id,
+      setHours((h || []).map((row: BusinessHourRow) => ({
         day_of_week: row.day_of_week,
         open_time: row.open_time ? String(row.open_time).slice(0,5) : null,
         close_time: row.close_time ? String(row.close_time).slice(0,5) : null,
-        is_closed: row.is_closed,
+        is_closed: (row.is_closed ?? row.closed ?? false) as boolean,
       })));
       setClosures(c || []);
     };
@@ -140,7 +158,6 @@ const AdminPlanning: React.FC<AdminPlanningProps> = ({ onClose }) => {
     setHoursError(null);
     try {
       const payload = hours.map(row => ({
-        id: row.id || undefined,
         day_of_week: row.day_of_week,
         open_time: row.open_time,
         close_time: row.close_time,
@@ -175,7 +192,7 @@ const AdminPlanning: React.FC<AdminPlanningProps> = ({ onClose }) => {
     setClosures(prev => [...prev, data as Closure]);
   };
 
-  const updateClosure = async (id: string, updates: Partial<Closure>) => {
+  const updateClosure = async (id: number, updates: Partial<Closure>) => {
     setClosuresError(null);
     console.debug('[closures.update] payload:', { id, updates });
     const { error } = await supabase.from('closures').update(updates).eq('id', id);
@@ -190,7 +207,7 @@ const AdminPlanning: React.FC<AdminPlanningProps> = ({ onClose }) => {
     setClosures(prev => prev.map(c => (c.id === id ? { ...c, ...updates } : c)));
   };
 
-  const deleteClosure = async (id: string) => {
+  const deleteClosure = async (id: number) => {
     setClosuresError(null);
     if (!confirm('Supprimer cette fermeture ?')) return;
     console.debug('[closures.delete] payload:', { id });
