@@ -1,3 +1,18 @@
+# Canonical redirect: forcer www vers domaine apex
+RewriteEngine On
+
+# Rediriger https://www.harmoniecils.com -> https://harmoniecils.com (chemin et query conservés)
+RewriteCond %{HTTP_HOST} ^www\.harmoniecils\.com$ [NC]
+RewriteRule ^(.*)$ https://harmoniecils.com/$1 [L,R=301]
+
+# (Optionnel) Forcer HTTPS si besoin — décommentez pour rediriger http -> https côté apex
+#RewriteCond %{HTTPS} !=on
+#RewriteRule ^(.*)$ https://harmoniecils.com/$1 [L,R=301]
+
+# Fallback SPA (Vite / React): servir index.html pour les routes non-fichiers/non-dossiers
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule . /index.html [L]
 # SPA rewrite for React/Vite on Apache (o2switch)
 <IfModule mod_rewrite.c>
   RewriteEngine On

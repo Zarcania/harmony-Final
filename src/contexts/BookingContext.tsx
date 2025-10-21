@@ -14,7 +14,7 @@ interface BookingContextType {
   getAvailableSlots: (date: string, serviceId?: string) => Promise<string[]>;
   getBookingsForDate: (date: string) => Booking[];
   isDateClosed: (date: Date) => boolean;
-  filterSlotsBySchedule: (date: Date, slots: string[]) => string[];
+  filterSlotsBySchedule: (date: Date, slots: string[])  => string[];
   isLoadingSlots: boolean;
 }
 
@@ -43,48 +43,73 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
   // Charger horaires & fermetures
   useEffect(() => {
     const loadSettings = async () => {
-      // business_hours
-      const { data: bh, error: bhErr, status: bhStatus } = await supabase
-        .from('business_hours')
-        .select('day_of_week, open_time, close_time, is_closed, closed')
-        .order('day_of_week', { ascending: true });
-      if (typeof bhStatus === 'number') {
-        if (bhErr) console.warn('[API]', bhStatus, 'table:business_hours', bhErr);
-        else console.info('[API]', bhStatus, 'table:business_hours');
-      }
-      if (bhErr) {
+      // business_hours: tenter is_closed, basculer sur closed si 42703
+      let normalizedBH: BusinessHour[] = [];
+      try {
+        const r1 = await supabase
+          .from('business_hours')
+          .select('day_of_week, open_time, close_time, is_closed')
+          .order('day_of_week', { ascending: true });
+        if (typeof r1.status === 'number') {
+          if (r1.error) console.warn('[API]', r1.status, 'table:business_hours', r1.error);
+          else console.info('[API]', r1.status, 'table:business_hours');
+        }
+        if (r1.error && r1.error.code === '42703') {
+          // colonne is_closed absente: on retente avec closed
+          const r2 = await supabase
+            .from('business_hours')
+            .select('day_of_week, open_time, close_time, closed')
+            .order('day_of_week', { ascending: true });
+          if (r2.error) throw r2.error;
+          const bh2 = r2.data as Array<{ day_of_week: number; open_time: string | null; close_time: string | null; closed?: boolean }>;
+          normalizedBH = (bh2 || []).map((row) => ({
+            day_of_week: row.day_of_week,
+            open_time: row.open_time ? String(row.open_time).slice(0, 5) : null,
+            close_time: row.close_time ? String(row.close_time).slice(0, 5) : null,
+            closed: row.closed ?? false,
+          }));
+        } else {
+          if (r1.error) throw r1.error;
+          const bh1 = r1.data as Array<{ day_of_week: number; open_time: string | null; close_time: string | null; is_closed?: boolean }>;
+          normalizedBH = (bh1 || []).map((row) => ({
+            day_of_week: row.day_of_week,
+            open_time: row.open_time ? String(row.open_time).slice(0, 5) : null,
+            close_time: row.close_time ? String(row.close_time).slice(0, 5) : null,
+            closed: row.is_closed ?? false,
+          }));
+        }
+      } catch (bhErr) {
         console.error('Erreur chargement business_hours:', bhErr);
       }
 
-      // compat: certains schémas utilisent is_closed vs closed
-      const normalizedBH: BusinessHour[] = (bh || []).map((row: { day_of_week: number; open_time: string | null; close_time: string | null; is_closed?: boolean; closed?: boolean }) => ({
-        day_of_week: row.day_of_week,
-        open_time: row.open_time ? String(row.open_time).slice(0,5) : null,
-        close_time: row.close_time ? String(row.close_time).slice(0,5) : null,
-        closed: row.closed ?? row.is_closed ?? false,
-      }));
-
       // closures
-      const { data: cl, error: clErr, status: clStatus } = await supabase
-        .from('closures')
-        .select('id, start_date, end_date, reason')
-        .order('start_date', { ascending: true });
-      if (typeof clStatus === 'number') {
-        if (clErr) console.warn('[API]', clStatus, 'table:closures', clErr);
-        else console.info('[API]', clStatus, 'table:closures');
-      }
-      if (clErr) {
+      try {
+        const r = await supabase
+          .from('closures')
+          .select('id, start_date, end_date, reason')
+          .order('start_date', { ascending: true });
+        if (typeof r.status === 'number') {
+          if (r.error) console.warn('[API]', r.status, 'table:closures', r.error);
+          else console.info('[API]', r.status, 'table:closures');
+        }
+        if (r.error) throw r.error;
+        setClosures((r.data as Closure[]) || []);
+      } catch (clErr) {
         console.error('Erreur chargement closures:', clErr);
       }
 
       setBusinessHours(normalizedBH);
-      setClosures((cl as Closure[]) || []);
     };
     loadSettings();
   }, []);
 
   const fetchBookings = useCallback(async () => {
     try {
+      const { data: auth } = await supabase.auth.getUser();
+      if (!auth.user) {
+        // Visiteur non connecté: ne pas interroger la table protégée par RLS
+        return;
+      }
       const { data, error, status } = await supabase
         .from('bookings')
         .select('*')
@@ -130,15 +155,23 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
   useEffect(() => {
     fetchBookings();
 
-    const channel = supabase
-      .channel('bookings_changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, () => {
-        fetchBookings();
-      })
-      .subscribe();
+    // S'abonner aux changements seulement pour les utilisateurs connectés
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+    (async () => {
+      const { data: auth } = await supabase.auth.getUser();
+      if (!auth.user) return;
+      channel = supabase
+        .channel('bookings_changes')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, () => {
+          fetchBookings();
+        })
+        .subscribe();
+    })();
 
     return () => {
-      supabase.removeChannel(channel);
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
     };
   }, [fetchBookings]);
 
