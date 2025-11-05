@@ -3,18 +3,42 @@ on:
   push:
     branches: [ main ]
   workflow_dispatch:
+
+concurrency:
+  group: deploy-prod
+  cancel-in-progress: true
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    env:
-      VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-      VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: '20' }
+        with:
+          node-version: '20'
+          cache: 'npm'
+
       - run: npm ci
-      - run: npm run build
+
+      # Force les variables Vite depuis les secrets
+      - name: Create .env.production
+        run: |
+          cat > .env.production <<'EOF'
+          VITE_SUPABASE_URL=${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY=${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_PUBLIC_SITE_URL=${{ secrets.VITE_PUBLIC_SITE_URL }}
+          EOF
+
+      - run: npm run build -- --mode=production
+
+      # Garde-fou: bonne URL présente et ancienne absente
+      - name: Validate Supabase target
+        run: |
+          grep -R "lmpfrrkqdevxkgimvnfw\.supabase\.co" dist || (echo "URL Supabase absente du bundle" && exit 1)
+          if grep -R "cbelpqfkxvxwrrbxiyww\.supabase\.co" dist; then
+            echo "Ancienne URL Supabase détectée" && exit 1
+          fi
+
       - name: Upload via FTPS
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
