@@ -1,0 +1,3 @@
+-- Placeholder migration file to satisfy Supabase CLI history alignment.
+-- Remote migration 20251031043423 is already applied on the database.
+-- The original migration content was not present locally; keeping as noop.

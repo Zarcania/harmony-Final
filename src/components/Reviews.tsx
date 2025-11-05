@@ -195,6 +195,9 @@ const Reviews: React.FC = () => {
                   <img
                     src={img}
                     alt={`Réalisation ${idx + 1}`}
+                    loading="lazy"
+                    decoding="async"
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 20vw"
                     className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">

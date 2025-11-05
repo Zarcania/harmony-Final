@@ -32,3 +32,6 @@ vite.config.ts.timestamp-*
 
 # Supabase temp files
 supabase/.temp/
+
+# Local dev scripts (non versionnés)
+scripts/dev/*

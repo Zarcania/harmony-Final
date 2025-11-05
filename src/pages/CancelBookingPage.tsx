@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { ENV } from '../lib/config';
+import { supabase } from '../lib/supabase';
+import SEO from '../components/SEO';
 import { CheckCircle, AlertCircle, Calendar, Clock } from 'lucide-react';
 // Edge Function approach: call Supabase function endpoint directly
 
@@ -30,38 +31,42 @@ const CancelBookingPage: React.FC<CancelBookingPageProps> = ({ onNavigate }) => 
       }
 
       try {
-  const res = await fetch(`${ENV.SUPABASE_URL}/functions/v1/cancel-booking`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${ENV.SUPABASE_ANON_KEY}`,
-          },
-          body: JSON.stringify({ token }),
-        });
+        // Appel direct RPC (stable, sans Edge Function)
+  const { data, error } = await supabase.rpc('cancel_booking_with_log', { p_token: token });
 
-        const data = await res.json().catch(() => (null));
-
-        if (!res.ok) {
-          console.error({ status: res.status, body: data });
-          const bodyMsg = (data && (data.error || data.message)) || 'Erreur inconnue';
+        if (error) {
+          console.error('RPC error:', error);
           setStatus('error');
-          setMessage(`${res.status} - ${bodyMsg}`);
+          setMessage(error.message || 'Erreur lors de l\'annulation');
           return;
         }
 
-        // Support multiple shapes from the edge function
-        const already = Boolean(data?.alreadyCanceled || data?.already_cancelled || data?.already_canceled);
-        const success = already || Boolean(data?.ok || data?.success || data?.status === 'ok');
+        type CancelResponse = {
+          alreadyCanceled?: boolean; already_cancelled?: boolean; already_canceled?: boolean;
+          ok?: boolean; success?: boolean; status?: string; message?: string;
+          booking?: { service?: string; service_name?: string; date?: string; preferred_date?: string; time?: string; preferred_time?: string };
+        };
+        const payload = (data ?? {}) as unknown as CancelResponse;
+        const already = Boolean(payload.alreadyCanceled || payload.already_cancelled || payload.already_canceled);
+  const success = already || Boolean(payload.ok || payload.success || payload.status === 'ok');
 
         if (!success) {
           setStatus('error');
-          setMessage(data?.message || 'Erreur lors de l\'annulation');
+          setMessage(payload?.message || 'Erreur lors de l\'annulation');
           return;
         }
 
+        // Normalise les détails pour l'UI
+  const b = payload?.booking || {};
+        const details = {
+          service: b.service || b.service_name,
+          date: b.date || b.preferred_date,
+          time: b.time || b.preferred_time,
+        } as CancelledBookingInfo;
+
         setStatus('success');
         setMessage(already ? 'Ce rendez-vous est déjà annulé.' : 'Votre rendez-vous a bien été annulé.');
-        setBookingDetails(data?.booking || null);
+        setBookingDetails(details);
       } catch (error: unknown) {
         setStatus('error');
         const errMsg = (error as { message?: string })?.message ?? 'Une erreur est survenue';
@@ -84,6 +89,7 @@ const CancelBookingPage: React.FC<CancelBookingPageProps> = ({ onNavigate }) => 
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-harmonie-50 to-white flex items-center justify-center p-4">
+      <SEO title="Annuler un rendez-vous" noIndex path="/cancel-booking" description="Page d'annulation de rendez-vous Harmonie Cils." />
       <div className="max-w-2xl w-full">
         {status === 'loading' && (
           <div className="bg-white rounded-2xl shadow-xl p-8 text-center">

@@ -34,14 +34,36 @@ stable
 security definer
 set search_path = public
 as $fn$
+  /*
+    Détection "admin" élargie:
+    - JWT root:          role == 'admin'
+    - app_metadata:      role == 'admin' OU roles[] contient 'admin'
+    - user_metadata:     role == 'admin' OU roles[] contient 'admin' OU is_admin == true
+
+    Remarque: certains projets renseignent le rôle dans user_metadata et non app_metadata.
+    Cette version couvre les deux emplacements et accepte un booléen is_admin.
+  */
   select coalesce(
+    -- Rôle racine du JWT
     (auth.jwt() ->> 'role') = 'admin'
+    -- app_metadata.role = 'admin'
     or (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
+    -- app_metadata.roles contient 'admin'
     or exists (
       select 1
       from jsonb_array_elements_text(coalesce(auth.jwt() -> 'app_metadata' -> 'roles', '[]'::jsonb)) as r(role)
       where r.role = 'admin'
     )
+    -- user_metadata.role = 'admin'
+    or (auth.jwt() -> 'user_metadata' ->> 'role') = 'admin'
+    -- user_metadata.roles contient 'admin'
+    or exists (
+      select 1
+      from jsonb_array_elements_text(coalesce(auth.jwt() -> 'user_metadata' -> 'roles', '[]'::jsonb)) as r2(role)
+      where r2.role = 'admin'
+    )
+    -- user_metadata.is_admin = true (booléen)
+    or coalesce((auth.jwt() -> 'user_metadata' ->> 'is_admin')::boolean, false)
   , false);
 $fn$;
 
@@ -228,7 +250,15 @@ end $$;
 
 -- PROFILES: allow users to read their own row
 do $$
+declare
+  has_profiles boolean;
 begin
+  -- Ne faire ces opérations que si la table public.profiles existe
+  select to_regclass('public.profiles') is not null into has_profiles;
+  if not has_profiles then
+    return;
+  end if;
+
   if exists (
     select 1 from pg_policies
     where schemaname = 'public' and tablename = 'profiles' and policyname = 'profiles_select_own'

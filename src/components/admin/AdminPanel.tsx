@@ -5,6 +5,7 @@ import ServiceEditor from './ServiceEditor';
 import PortfolioEditor from './PortfolioEditor';
 import AboutEditor from './AboutEditor';
 import ReviewEditor from './ReviewEditor';
+import { useLockBodyScroll } from '../../hooks/useLockBodyScroll';
 
 interface AdminPanelProps {
   onClose: () => void;
@@ -12,6 +13,8 @@ interface AdminPanelProps {
 
 const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
   const [activeEditor, setActiveEditor] = useState<string | null>(null);
+  // Empêcher le scroll de l'arrière-plan pendant que le panneau est ouvert
+  useLockBodyScroll(true);
 
   const sections = [
     {
@@ -53,14 +56,14 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
 
   return (
     <>
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
-          <div className="p-6 border-b border-gray-200 flex justify-between items-center bg-gradient-to-r from-blue-600 to-purple-600 text-white">
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 flex items-end sm:items-center justify-center p-0 sm:p-4 pt-[env(safe-area-inset-top)]">
+        <div className="bg-white w-full sm:max-w-4xl sm:rounded-2xl rounded-t-2xl max-h-[92vh] sm:max-h-[90vh] overflow-hidden shadow-2xl">
+          <div className="sticky top-0 z-10 px-4 sm:px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gradient-to-r from-blue-600 to-purple-600 text-white">
             <div className="flex items-center gap-3">
               <Settings className="w-8 h-8" />
               <div>
-                <h2 className="text-2xl font-bold">Panneau d'Administration</h2>
-                <p className="text-white/80 text-sm">Gérez le contenu de votre site</p>
+                <h2 className="text-lg sm:text-2xl font-bold">Panneau d'Administration</h2>
+                <p className="text-white/80 text-xs sm:text-sm">Gérez le contenu de votre site</p>
               </div>
             </div>
             <button
@@ -71,23 +74,23 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
             </button>
           </div>
 
-          <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
-            <div className="grid md:grid-cols-2 gap-6">
+          <div className="p-4 sm:p-6 overflow-y-auto max-h-[calc(92vh-120px)] sm:max-h-[calc(90vh-120px)]">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
               {sections.map((section) => (
                 <button
                   key={section.id}
                   onClick={() => setActiveEditor(section.id)}
-                  className="group p-6 bg-white border-2 border-gray-200 hover:border-blue-400 rounded-xl hover:shadow-lg transition-all duration-300 text-left"
+                  className="group p-4 sm:p-6 bg-white border-2 border-gray-200 hover:border-blue-400 rounded-xl hover:shadow-lg transition-all duration-300 text-left"
                 >
                   <div className="flex items-start gap-4">
                     <div className={`${section.color} text-white p-3 rounded-xl group-hover:scale-110 transition-transform duration-300`}>
                       {section.icon}
                     </div>
                     <div className="flex-1">
-                      <h3 className="font-bold text-xl text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+                      <h3 className="font-bold text-base sm:text-xl text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
                         {section.title}
                       </h3>
-                      <p className="text-gray-600 text-sm leading-relaxed">
+                      <p className="text-gray-600 text-xs sm:text-sm leading-relaxed">
                         {section.description}
                       </p>
                     </div>
@@ -99,9 +102,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
               ))}
             </div>
 
-            <div className="mt-8 p-6 bg-blue-50 rounded-xl border border-blue-200">
-              <h3 className="font-bold text-lg text-gray-900 mb-2">Conseil</h3>
-              <p className="text-gray-700 text-sm leading-relaxed">
+            <div className="mt-6 sm:mt-8 p-4 sm:p-6 bg-blue-50 rounded-xl border border-blue-200">
+              <h3 className="font-bold text-base sm:text-lg text-gray-900 mb-2">Conseil</h3>
+              <p className="text-gray-700 text-xs sm:text-sm leading-relaxed">
                 Toutes les modifications sont sauvegardées en base de données et s'affichent immédiatement sur votre site.
                 Assurez-vous de bien vérifier vos modifications avant de fermer les éditeurs.
               </p>

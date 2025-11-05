@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
-import { Phone, Mail, MapPin, Clock, Send, Instagram, CheckCircle, Calendar } from 'lucide-react';
+import { Phone, Mail, MapPin, Clock, Send, Instagram, CheckCircle } from 'lucide-react';
 import BookingModal from './BookingModal';
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
+import { useBooking } from '../contexts/BookingContext';
 
 interface ContactProps {
   onNavigate: (page: string, service?: string) => void;
   preselectedService?: string | null;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const Contact: React.FC<ContactProps> = ({ onNavigate: _onNavigate, preselectedService }) => {
+const Contact: React.FC<ContactProps> = ({ preselectedService }) => {
   const [formData, setFormData] = useState({
     nom: '',
     email: '',
@@ -19,6 +19,19 @@ const Contact: React.FC<ContactProps> = ({ onNavigate: _onNavigate, preselectedS
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [showBookingModal, setShowBookingModal] = useState(false);
   const { elementRef: titleRef, isVisible: titleVisible } = useScrollAnimation();
+  const bookingCtx = useBooking();
+  const businessHours = (bookingCtx && (bookingCtx as unknown as { businessHours: Array<{ day_of_week: number; open_time: string | null; close_time: string | null; closed: boolean }> }).businessHours) || [];
+
+  // business_hours utilise 0 = Lundi .. 6 = Dimanche
+  const daysOrder: Array<{ label: string; dow: number }> = [
+    { label: 'Lun', dow: 0 },
+    { label: 'Mar', dow: 1 },
+    { label: 'Mer', dow: 2 },
+    { label: 'Jeu', dow: 3 },
+    { label: 'Ven', dow: 4 },
+    { label: 'Sam', dow: 5 },
+    { label: 'Dim', dow: 6 },
+  ];
 
   // Ouvrir le modal automatiquement si un service est présélectionné
   React.useEffect(() => {
@@ -68,42 +81,7 @@ const Contact: React.FC<ContactProps> = ({ onNavigate: _onNavigate, preselectedS
           </p>
         </div>
 
-        {/* Section Calendly */}
-        <div className="mb-20">
-          <div className="relative bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900 rounded-[2rem] p-10 md:p-16 text-white text-center shadow-[0_20px_60px_rgba(0,0,0,0.3)] overflow-hidden group">
-            {/* Décorations d'arrière-plan */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl opacity-40 group-hover:opacity-60 transition-opacity duration-700"></div>
-            <div className="absolute bottom-0 left-0 w-80 h-80 bg-white/5 rounded-full blur-3xl opacity-30 group-hover:opacity-50 transition-opacity duration-700"></div>
-
-            {/* Effet de lueur subtile */}
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
-
-            <div className="relative z-10">
-              <div className="inline-flex items-center justify-center w-20 h-20 bg-white/10 backdrop-blur-sm rounded-2xl mb-6 group-hover:scale-110 transition-transform duration-500">
-                <Calendar size={32} />
-              </div>
-              <h3 className="font-display text-4xl md:text-5xl font-bold mb-6 leading-tight">
-                Réservez votre rendez-vous
-              </h3>
-              <p className="text-xl md:text-2xl mb-10 text-white/80 font-light max-w-2xl mx-auto leading-relaxed">
-                Choisissez votre créneau directement dans notre agenda en ligne.
-                Simple, rapide et disponible 24h/24 !
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                <button
-                  onClick={() => setShowBookingModal(true)}
-                  className="bg-white text-neutral-900 px-12 py-5 rounded-full font-semibold text-lg hover:bg-neutral-100 transition-all duration-300 hover:shadow-2xl hover:scale-105 shadow-lg inline-flex items-center gap-3"
-                >
-                  <Calendar size={20} />
-                  Prendre rendez-vous
-                </button>
-                <div className="text-white/70 text-sm font-light">
-                  <p>Réponse immédiate • Ajout facile à votre agenda</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        {/* Section de réservation supprimée sur demande */}
 
         <div className="grid lg:grid-cols-2 gap-12">
           {/* Informations de contact */}
@@ -141,10 +119,10 @@ const Contact: React.FC<ContactProps> = ({ onNavigate: _onNavigate, preselectedS
                 <div className="pt-1">
                   <h4 className="font-semibold text-neutral-900 mb-2 text-lg">Email</h4>
                   <a
-                    href="mailto:harmoniecilsstudio@gmail.com"
+                    href="mailto:contact@harmoniecils.com"
                     className="text-neutral-700 hover:text-neutral-900 transition-colors font-medium break-all"
                   >
-                    harmoniecilsstudio@gmail.com
+                    contact@harmoniecils.com
                   </a>
                 </div>
               </div>
@@ -175,9 +153,23 @@ const Contact: React.FC<ContactProps> = ({ onNavigate: _onNavigate, preselectedS
                 <div className="pt-1">
                   <h4 className="font-semibold text-neutral-900 mb-2 text-lg">Horaires</h4>
                   <div className="text-neutral-700 space-y-1 font-medium">
-                    <p>Lun - Ven: 9h00 - 19h00</p>
-                    <p>Samedi: 9h00 - 17h00</p>
-                    <p>Dimanche: Fermé</p>
+                    {businessHours && businessHours.length > 0 ? (
+                      daysOrder.map(({ label, dow }) => {
+                        const bh = businessHours.find(b => b.day_of_week === dow);
+                        const txt = !bh
+                          ? '—'
+                          : (bh.closed || !bh.open_time || !bh.close_time)
+                            ? 'Fermé'
+                            : `${bh.open_time} - ${bh.close_time}`;
+                        return (
+                          <p key={dow}>
+                            {label}: {txt}
+                          </p>
+                        );
+                      })
+                    ) : (
+                      <p className="text-neutral-500">Horaires en cours de chargement…</p>
+                    )}
                   </div>
                 </div>
               </div>

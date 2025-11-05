@@ -1,112 +1,77 @@
+// @ts-nocheck
 import { createClient } from 'npm:@supabase/supabase-js@2.58.0';
-
-// Align CORS with other functions using ALLOWED_ORIGINS secret
-const allowed = (Deno.env.get('ALLOWED_ORIGINS') ?? 'https://harmoniecils.com,http://localhost:5173')
-  .split(',')
-  .map((s) => s.trim());
-
-const cors = (origin?: string) => {
-  const o = origin && allowed.includes(origin) ? origin : allowed[0];
-  return {
-    'Access-Control-Allow-Origin': o,
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Client-Info, Apikey',
-    'Vary': 'Origin',
-  } as Record<string, string>;
-};
-
-Deno.serve(async (req: Request) => {
+import { buildCors, handleOptions } from '../utils/cors.ts';
+Deno.serve(async (req)=>{
   const origin = req.headers.get('Origin') ?? undefined;
-  const corsHeaders = cors(origin);
-
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { status: 204, headers: corsHeaders });
-  }
-
+  const corsHeaders = buildCors(origin);
+  const opt = handleOptions(req);
+  if (opt) return opt;
   try {
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
+    const supabaseClient = createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SERVICE_ROLE_KEY') ?? Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '', {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
       }
-    );
-
+    });
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     const tomorrowDate = tomorrow.toISOString().split('T')[0];
-
-    const { data: bookings, error: bookingsError } = await supabaseClient
-      .from('bookings')
-      .select('*')
-      .eq('preferred_date', tomorrowDate)
-      .eq('reminder_sent', false)
-      .in('status', ['confirmed', 'pending']);
-
+    const { data: bookings, error: bookingsError } = await supabaseClient.from('bookings').select('*').eq('preferred_date', tomorrowDate).eq('reminder_sent', false).in('status', [
+      'confirmed',
+      'pending'
+    ]);
     if (bookingsError) {
       throw new Error(`Failed to fetch bookings: ${bookingsError.message}`);
     }
-
     if (!bookings || bookings.length === 0) {
-      return new Response(
-        JSON.stringify({ success: true, message: 'No bookings to remind', count: 0 }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return new Response(JSON.stringify({
+        success: true,
+        message: 'No bookings to remind',
+        count: 0
+      }), {
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        }
+      });
     }
-
     let successCount = 0;
     let failureCount = 0;
-
-    for (const booking of bookings) {
+    for (const booking of bookings){
       try {
-        const { data: existingToken } = await supabaseClient
-          .from('cancellation_tokens')
-          .select('token')
-          .eq('booking_id', booking.id)
-          .maybeSingle();
-
+        const { data: existingToken } = await supabaseClient.from('cancellation_tokens').select('token').eq('booking_id', booking.id).maybeSingle();
         let cancellationToken = existingToken?.token;
-
         if (!cancellationToken) {
           const tokenResult = await supabaseClient.rpc('generate_cancellation_token', {
             p_booking_id: booking.id,
             p_expires_at: booking.preferred_date + 'T23:59:59Z'
           });
-
           if (tokenResult.error) {
             console.error('Error generating token:', tokenResult.error);
             throw new Error('Failed to generate cancellation token');
           }
-
           cancellationToken = tokenResult.data;
         }
-
-        const cancellationUrl = `${Deno.env.get('SUPABASE_URL')?.replace('/v1', '')}/cancel-booking?token=${cancellationToken}`;
+        const siteBase = (Deno.env.get('PUBLIC_SITE_URL') ?? 'https://harmoniecils.com').replace(/\/+$/, '');
+        const cancellationUrl = `${siteBase}/cancel-booking?token=${cancellationToken}`;
         const emailHtml = generateReminderEmail(booking, cancellationUrl);
-
         const emailData = {
           to: booking.client_email,
           subject: '🔔 Rappel : Votre rendez-vous demain - Harmonie Cils',
-          html: emailHtml,
+          html: emailHtml
         };
-
         const emailResponse = await fetch('https://api.resend.com/emails', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${Deno.env.get('RESEND_API_KEY')}`,
+            'Authorization': `Bearer ${Deno.env.get('RESEND_API_KEY')}`
           },
           body: JSON.stringify({
             from: 'Harmonie Cils <noreply@harmoniecils.com>',
             ...emailData
-          }),
+          })
         });
-
         const emailResult = await emailResponse.json();
-
         if (!emailResponse.ok) {
           await supabaseClient.from('email_logs').insert({
             booking_id: booking.id,
@@ -118,53 +83,56 @@ Deno.serve(async (req: Request) => {
           failureCount++;
           continue;
         }
-
         await supabaseClient.from('email_logs').insert({
           booking_id: booking.id,
           email_type: 'reminder',
           recipient_email: booking.client_email,
           status: 'sent'
         });
-
-        await supabaseClient
-          .from('bookings')
-          .update({ reminder_sent: true })
-          .eq('id', booking.id);
-
+        await supabaseClient.from('bookings').update({
+          reminder_sent: true
+        }).eq('id', booking.id);
         successCount++;
       } catch (error) {
         console.error(`Error sending reminder for booking ${booking.id}:`, error);
         failureCount++;
       }
     }
-
-    return new Response(
-      JSON.stringify({ 
-        success: true, 
-        message: 'Reminder emails processed', 
-        successCount, 
-        failureCount,
-        total: bookings.length 
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return new Response(JSON.stringify({
+      success: true,
+      message: 'Reminder emails processed',
+      successCount,
+      failureCount,
+      total: bookings.length
+    }), {
+      headers: {
+        ...corsHeaders,
+        'Content-Type': 'application/json'
+      }
+    });
   } catch (error) {
     console.error('Error:', error);
-    return new Response(JSON.stringify({ error: (error as Error)?.message ?? 'unknown' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    return new Response(JSON.stringify({
+      error: error?.message ?? 'unknown'
+    }), {
+      status: 500,
+      headers: {
+        ...corsHeaders,
+        'Content-Type': 'application/json'
+      }
+    });
   }
 });
-
-function generateReminderEmail(booking: any, cancellationUrl: string): string {
-  const formatDate = (dateStr: string) => {
+function generateReminderEmail(booking, cancellationUrl) {
+  const formatDate = (dateStr)=>{
     const date = new Date(dateStr);
-    return date.toLocaleDateString('fr-FR', { 
-      weekday: 'long', 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
+    return date.toLocaleDateString('fr-FR', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
     });
   };
-
   return `
 <!DOCTYPE html>
 <html lang="fr">
@@ -191,7 +159,7 @@ function generateReminderEmail(booking: any, cancellationUrl: string): string {
           <tr>
             <td style="padding: 40px 30px;">
               <p style="margin: 0 0 20px 0; color: #333333; font-size: 16px; line-height: 1.6;">
-                Bonjour <strong>${booking.client_first_name} ${booking.client_name}</strong>,
+                Bonjour <strong>${booking.client_name}</strong>,
               </p>
               
               <p style="margin: 0 0 30px 0; color: #333333; font-size: 16px; line-height: 1.6;">

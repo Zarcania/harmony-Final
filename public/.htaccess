@@ -34,3 +34,15 @@ RewriteRule . /index.html [L]
   ExpiresByType text/css "access plus 1 week"
   ExpiresByType application/javascript "access plus 1 week"
 </IfModule>
+
+# Sécurité et en-têtes (o2switch/Apache)
+<IfModule mod_headers.c>
+  Header set X-Frame-Options "DENY"
+  Header set X-Content-Type-Options "nosniff"
+  Header set Referrer-Policy "strict-origin-when-cross-origin"
+  Header set Permissions-Policy "geolocation=(), camera=(), microphone=()"
+  # Activez HSTS uniquement si HTTPS est forcé
+  Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+  # CSP compatible Vite/SPA et Supabase
+  Header set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: data: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https: ws: wss:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+</IfModule>

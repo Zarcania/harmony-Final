@@ -4,9 +4,10 @@ import { Phone, Instagram } from 'lucide-react';
 interface HeaderProps {
   currentPage: string;
   onNavigate: (page: string) => void;
+  onAdminOpen?: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ currentPage, onNavigate }) => {
+const Header: React.FC<HeaderProps> = ({ currentPage, onNavigate, onAdminOpen }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleNavigation = (page: string) => {
@@ -34,6 +35,7 @@ const Header: React.FC<HeaderProps> = ({ currentPage, onNavigate }) => {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-40 bg-[url('/h-co-tqu0IOMaiU8-unsplash.jpg')] bg-cover bg-center bg-no-repeat">
+      {/* Badge DEV retiré */}
       <div className="container mx-auto px-4">
   <div className="flex items-center justify-between h-14 md:h-20">
           {/* Logo */}
@@ -42,7 +44,7 @@ const Header: React.FC<HeaderProps> = ({ currentPage, onNavigate }) => {
             onClick={() => handleNavigation('accueil')}
           >
             <img
-              src="/49ab398c-dcda-40f2-9ce7-bb89453e6e8d.png"
+              src="/favicon.svg"
               alt="Harmonie Cils"
               className="h-12 md:h-14 lg:h-16 w-auto object-contain"
             />
@@ -107,15 +109,25 @@ const Header: React.FC<HeaderProps> = ({ currentPage, onNavigate }) => {
             </button>
           </nav>
 
-          {/* Bouton CTA Desktop */}
+          {/* Boutons Desktop */}
+          <div className="hidden lg:flex items-center gap-3">
+            <button
+              onClick={() => onAdminOpen?.()}
+              aria-label="Admin"
+              title="Admin"
+              className="relative border border-black/30 text-black px-4 py-2 rounded-full font-accent font-semibold transition-all duration-300 hover:bg-black hover:text-white"
+            >
+              Admin
+            </button>
           <button
-            onClick={() => handleNavigation('contact')}
+            onClick={() => handleNavigation('prestations')}
             aria-label="Réserver"
             title="Réserver"
             className="hidden lg:block relative bg-black text-white px-5 py-2.5 rounded-full font-accent font-semibold transition-all duration-300 shadow-lg hover:shadow-2xl hover:scale-105"
           >
             Réserver
           </button>
+          </div>
 
           {/* Menu Burger Mobile */}
           <button
@@ -145,10 +157,10 @@ const Header: React.FC<HeaderProps> = ({ currentPage, onNavigate }) => {
             : 'max-h-0 opacity-0 pb-0'
         }`}>
           <div className="bg-white/95 backdrop-blur-md rounded-2xl mt-6 p-4 shadow-2xl border border-harmonie-100/50">
-            <nav className="flex flex-col space-y-1">
+            <nav className="flex flex-col items-center space-y-1">
               <button 
                 onClick={() => handleNavigation('accueil')}
-                className={`font-accent font-medium text-left py-2.5 px-4 rounded-xl transition-all duration-300 ${
+                className={`font-accent font-medium text-center w-full py-2.5 px-4 rounded-xl transition-all duration-300 ${
                   isActivePage('accueil')
                     ? 'bg-harmonie-100 text-black font-bold'
                     : 'text-gray-900 hover:text-gray-700 hover:bg-harmonie-50'
@@ -158,7 +170,7 @@ const Header: React.FC<HeaderProps> = ({ currentPage, onNavigate }) => {
               </button>
               <button 
                 onClick={() => handleNavigation('prestations')}
-                className={`font-accent font-medium text-left py-2.5 px-4 rounded-xl transition-all duration-300 ${
+                className={`font-accent font-medium text-center w-full py-2.5 px-4 rounded-xl transition-all duration-300 ${
                   isActivePage('prestations')
                     ? 'bg-harmonie-100 text-black font-bold'
                     : 'text-gray-900 hover:text-gray-700 hover:bg-harmonie-50'
@@ -168,7 +180,7 @@ const Header: React.FC<HeaderProps> = ({ currentPage, onNavigate }) => {
               </button>
               <button 
                 onClick={() => handleNavigation('portfolio')}
-                className={`font-accent font-medium text-left py-2.5 px-4 rounded-xl transition-all duration-300 ${
+                className={`font-accent font-medium text-center w-full py-2.5 px-4 rounded-xl transition-all duration-300 ${
                   isActivePage('portfolio')
                     ? 'bg-harmonie-100 text-black font-bold'
                     : 'text-gray-900 hover:text-gray-700 hover:bg-harmonie-50'
@@ -178,7 +190,7 @@ const Header: React.FC<HeaderProps> = ({ currentPage, onNavigate }) => {
               </button>
               <button 
                 onClick={() => handleNavigation('about')}
-                className={`font-accent font-medium text-left py-2.5 px-4 rounded-xl transition-all duration-300 ${
+                className={`font-accent font-medium text-center w-full py-2.5 px-4 rounded-xl transition-all duration-300 ${
                   isActivePage('about')
                     ? 'bg-harmonie-100 text-black font-bold'
                     : 'text-gray-900 hover:text-gray-700 hover:bg-harmonie-50'
@@ -188,7 +200,7 @@ const Header: React.FC<HeaderProps> = ({ currentPage, onNavigate }) => {
               </button>
               <button 
                 onClick={() => handleNavigation('contact')}
-                className={`font-accent font-medium text-left py-2.5 px-4 rounded-xl transition-all duration-300 ${
+                className={`font-accent font-medium text-center w-full py-2.5 px-4 rounded-xl transition-all duration-300 ${
                   isActivePage('contact')
                     ? 'bg-harmonie-100 text-black font-bold'
                     : 'text-gray-900 hover:text-gray-700 hover:bg-harmonie-50'
@@ -223,7 +235,7 @@ const Header: React.FC<HeaderProps> = ({ currentPage, onNavigate }) => {
                   </a>
                 </div>
                 <button 
-                  onClick={() => handleNavigation('contact')}
+                  onClick={() => handleNavigation('prestations')}
                   className="bg-gradient-to-r from-harmonie-600 to-harmonie-700 text-white px-6 py-3 rounded-full hover:from-harmonie-700 hover:to-harmonie-800 transition-all duration-300 font-accent font-semibold shadow-lg hover:shadow-xl"
                 >
                   Réserver

@@ -25,10 +25,23 @@ const PromotionSection: React.FC<PromotionSectionProps> = ({ onNavigate }) => {
     load();
   }, []);
 
-  const getIcon = (iconName?: string) => {
+  const getIcon = (iconName?: string | null) => {
     if (!iconName) return <Sparkles className="w-6 h-6" />;
     const IconComponent = (Icons as unknown as Record<string, React.ComponentType<{ className?: string }>>)[iconName];
     return IconComponent ? <IconComponent className="w-6 h-6" /> : <Sparkles className="w-6 h-6" />;
+  };
+
+  const handleReserve = (promo: Promotion) => {
+    try {
+      // Si la promo référence des prestations, on les stocke pour présélection
+      if (promo.service_item_ids && promo.service_item_ids.length > 0) {
+        localStorage.setItem('hc_preselected_service_ids', JSON.stringify(promo.service_item_ids));
+      }
+      // Si un prix promo est fourni, on le transmet pour l'affichage dans le modal
+      if (promo.price) localStorage.setItem('hc_promo_price', String(promo.price));
+      if (promo.original_price) localStorage.setItem('hc_promo_original_price', String(promo.original_price));
+    } catch { /* ignore */ }
+    onNavigate('contact', promo.title);
   };
 
   return (
@@ -64,7 +77,7 @@ const PromotionSection: React.FC<PromotionSectionProps> = ({ onNavigate }) => {
               <div
                 key={index}
                 className="bg-white rounded-xl p-4 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group border border-neutral-200"
-                onClick={() => onNavigate('contact', promo.title)}
+                onClick={() => handleReserve(promo)}
               >
                 <div className="flex flex-col h-full">
                   <div className="flex items-center justify-between mb-3">
@@ -101,7 +114,7 @@ const PromotionSection: React.FC<PromotionSectionProps> = ({ onNavigate }) => {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        onNavigate('contact', promo.title);
+                        handleReserve(promo);
                       }}
                       className="w-full bg-harmonie-100 text-harmonie-700 py-2 rounded-lg text-xs font-medium hover:bg-harmonie-600 hover:text-white transition-colors flex items-center justify-center gap-1"
                     >
@@ -123,7 +136,7 @@ const PromotionSection: React.FC<PromotionSectionProps> = ({ onNavigate }) => {
               <div
                 key={index}
                 className="flex-shrink-0 w-72 sm:w-80 bg-white rounded-2xl p-6 sm:p-8 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group border border-neutral-200"
-                onClick={() => onNavigate('contact', promo.title)}
+                onClick={() => handleReserve(promo)}
               >
                 <div className="flex items-center justify-between mb-6">
                   <div className="w-14 h-14 bg-harmonie-100 rounded-xl flex items-center justify-center text-harmonie-700 group-hover:scale-110 transition-transform">
@@ -159,7 +172,7 @@ const PromotionSection: React.FC<PromotionSectionProps> = ({ onNavigate }) => {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      onNavigate('contact', promo.title);
+                      handleReserve(promo);
                     }}
                     className="w-full bg-harmonie-100 text-harmonie-700 py-3 rounded-xl font-medium hover:bg-harmonie-600 hover:text-white transition-colors flex items-center justify-center gap-2"
                   >

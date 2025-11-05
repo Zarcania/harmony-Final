@@ -30,7 +30,7 @@ const About: React.FC<AboutProps> = () => {
   ];
 
   return (
-    <section id="about" className="relative py-20 bg-white/70 backdrop-blur-sm">
+    <section id="about" className="relative py-20 bg-white">
       <div className="container mx-auto px-4">
         {/* En-tête */}
         <div className="text-center mb-20">
@@ -56,7 +56,7 @@ const About: React.FC<AboutProps> = () => {
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-20 items-center mb-20">
+  <div className="grid lg:grid-cols-2 gap-20 items-center mb-20" style={{ contentVisibility: 'auto' }}>
           {/* Contenu textuel */}
           <div>
             <h3 ref={subtitle1Ref} className={`font-display text-4xl md:text-5xl font-bold text-black mb-8 leading-tight transition-all duration-[1200ms] ease-out ${
@@ -105,18 +105,23 @@ const About: React.FC<AboutProps> = () => {
             </div>
           </div>
 
-          {/* Photo professionnelle */}
-          <div className="relative">
-            <img
-              src="/files_3416049-1759335889816-files_3416049-1759265627661-unnamed-modifie.png"
-              alt="Professionnelle Harmonie Cils"
-              className="w-full h-auto object-cover"
-            />
+          {/* Photo professionnelle (optimisée: lazy + content-visibility + conteneur à ratio) */}
+          <div className="relative" style={{ contentVisibility: 'auto' }}>
+            <div className="w-full overflow-hidden rounded-2xl" style={{ aspectRatio: '3 / 4' }}>
+              <img
+                src="/files_3416049-1759335889816-files_3416049-1759265627661-unnamed-modifie.png"
+                alt="Professionnelle Harmonie Cils"
+                loading="lazy"
+                decoding="async"
+                sizes="(min-width: 1024px) 600px, 100vw"
+                className="w-full h-full object-cover"
+              />
+            </div>
           </div>
         </div>
 
         {/* Caractéristiques */}
-        <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+  <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto" style={{ contentVisibility: 'auto' }}>
           {features.map((feature, index) => (
             <div
               key={index}

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, CreditCard as Edit, Trash2, Save, X, Gift } from 'lucide-react';
 import { Promotion, getPromotions, createPromotion, updatePromotion, deletePromotion } from '../../services/contentService';
+import { useAdmin } from '../../contexts/AdminContext';
 
 interface PromotionEditorProps {
   onClose: () => void;
@@ -11,6 +12,8 @@ const PromotionEditor: React.FC<PromotionEditorProps> = ({ onClose }) => {
   const [editingPromo, setEditingPromo] = useState<Partial<Promotion> | null>(null);
   const [loading, setLoading] = useState(false);
   const [seeding, setSeeding] = useState(false);
+  const { serviceSections } = useAdmin();
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
 
   const defaultPromotions: Omit<Promotion, 'id'>[] = [
     { title: 'Première visite', description: 'Volume russe + Rehaussement', price: '80€', original_price: '115€', badge: 'Nouveau', icon: 'Sparkles', order_index: 0 },
@@ -53,6 +56,14 @@ const PromotionEditor: React.FC<PromotionEditorProps> = ({ onClose }) => {
       setSeeding(false);
     }
   };
+
+  const toggleSection = (id: string) => setCollapsed((c) => ({ ...c, [id]: !c[id] }));
+  useEffect(() => {
+    // Fermer par défaut
+    const init: Record<string, boolean> = {};
+    for (const s of serviceSections) init[s.id] = true;
+    setCollapsed(init);
+  }, [serviceSections]);
 
   const handleSave = async () => {
     if (!editingPromo || !editingPromo.title || !editingPromo.description || !editingPromo.price) {
@@ -125,7 +136,7 @@ const PromotionEditor: React.FC<PromotionEditorProps> = ({ onClose }) => {
         <div className="p-4 sm:p-6 overflow-y-auto max-h-[calc(92vh-80px)] sm:max-h-[calc(90vh-80px)]">
           <div className="flex flex-col sm:flex-row gap-3 mb-6">
             <button
-              onClick={() => setEditingPromo({ title: '', description: '', price: '', order_index: promotions.length })}
+              onClick={() => setEditingPromo({ title: '', description: '', price: '', order_index: promotions.length, service_item_ids: [] })}
               className="flex-1 sm:flex-none sm:w-auto bg-gradient-to-r from-harmonie-600 to-harmonie-700 text-white px-5 py-3 rounded-lg hover:from-harmonie-700 hover:to-harmonie-800 transition-all duration-300 shadow-md hover:shadow-lg flex items-center justify-center gap-2"
             >
               <Plus size={18} />
@@ -158,6 +169,64 @@ const PromotionEditor: React.FC<PromotionEditorProps> = ({ onClose }) => {
                     className="w-full px-4 py-2 border border-harmonie-200 rounded-lg focus:ring-2 focus:ring-harmonie-500 focus:border-harmonie-500"
                     placeholder="Ex: Première visite"
                   />
+                </div>
+                {/* Sélection des prestations liées */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-sm font-medium text-harmonie-700">
+                      Prestations liées (facultatif)
+                    </label>
+                    {Array.isArray(editingPromo.service_item_ids) && editingPromo.service_item_ids.length > 0 && (
+                      <span className="text-xs text-harmonie-600">
+                        {editingPromo.service_item_ids.length} sélectionnée(s)
+                      </span>
+                    )}
+                  </div>
+                  <div className="grid gap-2">
+                    {serviceSections.map((section) => (
+                      <div key={section.id} className="border border-harmonie-200 rounded-xl overflow-hidden">
+                        <button
+                          type="button"
+                          onClick={() => toggleSection(section.id)}
+                          className="w-full flex items-center justify-between px-3 py-2 text-sm font-semibold text-harmonie-700 bg-harmonie-50"
+                        >
+                          <span>{section.title}</span>
+                          <span className="text-harmonie-500">{collapsed[section.id] ? '▸' : '▾'}</span>
+                        </button>
+                        {!collapsed[section.id] && (
+                          <div className="p-2 grid gap-2">
+                            {section.items.map((item) => {
+                              const checked = (editingPromo.service_item_ids || []).includes(item.id);
+                              return (
+                                <label key={item.id} className={`p-3 rounded-lg border-2 text-left text-sm transition-all ${checked ? 'border-harmonie-500 bg-harmonie-50' : 'border-harmonie-200 hover:border-harmonie-300'}`}>
+                                  <div className="flex items-center gap-3">
+                                    <input
+                                      type="checkbox"
+                                      className="h-4 w-4 mt-0.5"
+                                      checked={checked}
+                                      onChange={(e) => {
+                                        const next = new Set(editingPromo.service_item_ids || []);
+                                        if (e.target.checked) next.add(item.id); else next.delete(item.id);
+                                        setEditingPromo({ ...editingPromo, service_item_ids: Array.from(next) });
+                                      }}
+                                    />
+                                    <div className="flex-1">
+                                      <div className="font-medium text-harmonie-900">{item.label}</div>
+                                      <div className="text-xs text-harmonie-600">{item.description || '—'}</div>
+                                    </div>
+                                    <div className="text-right whitespace-nowrap">
+                                      <div className="font-semibold text-harmonie-900">{item.price}</div>
+                                      <div className="text-xs text-harmonie-600">{item.duration || '—'}</div>
+                                    </div>
+                                  </div>
+                                </label>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
                 <div>
                   <label htmlFor="promo-description" className="block text-sm font-medium text-harmonie-700 mb-2">
@@ -287,10 +356,15 @@ const PromotionEditor: React.FC<PromotionEditorProps> = ({ onClose }) => {
                     <p className="text-sm text-harmonie-500 mt-2">
                       Ordre: {promo.order_index} {promo.icon && `• Icône: ${promo.icon}`}
                     </p>
+                    {Array.isArray(promo.service_item_ids) && promo.service_item_ids.length > 0 && (
+                      <p className="text-sm text-harmonie-600 mt-1">
+                        Prestations: {promo.service_item_ids.length}
+                      </p>
+                    )}
                   </div>
                   <div className="flex gap-2">
                     <button
-                      onClick={() => setEditingPromo(promo)}
+                      onClick={() => setEditingPromo({ ...promo, service_item_ids: promo.service_item_ids || [] })}
                       className="p-2 text-harmonie-700 hover:bg-harmonie-50 rounded-lg transition-colors"
                       aria-label={`Modifier ${promo.title}`}
                       title={`Modifier ${promo.title}`}

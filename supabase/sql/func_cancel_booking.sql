@@ -40,7 +40,7 @@ BEGIN
     'booking', jsonb_build_object(
       'id', v_booking.id,
       'client_name', v_booking.client_name,
-      'client_first_name', v_booking.client_first_name,
+      'client_first_name', nullif(split_part(coalesce(v_booking.client_name, ''), ' ', 1), ''),
       'client_email', v_booking.client_email,
       'service_name', v_booking.service_name,
       'preferred_date', v_booking.preferred_date,

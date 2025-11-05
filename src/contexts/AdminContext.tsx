@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase, checkIsAdmin } from '../lib/supabase';
-import { getServices, getServiceItems } from '../services/contentService';
+import { invokeFunction } from '../api/supa';
+import { getServices, getServiceItems, createService, updateService, createServiceItem as csCreateServiceItem, updateServiceItem as csUpdateServiceItem, deleteServiceItem as csDeleteServiceItem } from '../services/contentService';
 
 interface PortfolioImage {
   id: string;
@@ -162,9 +163,9 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       title: "Épilation au fil",
       icon: "Scissors",
       items: [
-        { id: '1-1', label: "Sourcils", price: "12€" },
-        { id: '1-2', label: "Lèvre", price: "8€" },
-        { id: '1-3', label: "Menton", price: "7€" }
+        { id: '1-1', label: "Sourcils", price: "12€", duration: "15 min", description: "Épilation au fil des sourcils pour une ligne nette et harmonieuse." },
+        { id: '1-2', label: "Lèvre", price: "8€", duration: "10 min", description: "Épilation douce de la lèvre supérieure pour un fini impeccable." },
+        { id: '1-3', label: "Menton", price: "7€", duration: "10 min", description: "Épilation précise du menton adaptée aux peaux sensibles." }
       ]
     },
     {
@@ -172,8 +173,8 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       title: "Formules Épilation",
       icon: "Heart",
       items: [
-        { id: '2-1', label: "Sourcils & Lèvre", price: "18€" },
-        { id: '2-2', label: "Sourcils, Lèvre & Menton", price: "25€" }
+        { id: '2-1', label: "Sourcils & Lèvre", price: "18€", duration: "20 min", description: "Formule avantageuse pour un visage net (sourcils + lèvre)." },
+        { id: '2-2', label: "Sourcils, Lèvre & Menton", price: "25€", duration: "30 min", description: "Forfait complet d'épilation du visage au fil." }
       ]
     },
     {
@@ -181,10 +182,10 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       title: "Poses & Volumes",
       icon: "Eye",
       items: [
-        { id: '3-1', label: "Pose cil à cil", price: "55€" },
-        { id: '3-2', label: "Pose volume mixte", price: "65€" },
-        { id: '3-3', label: "Pose volume russe", price: "75€" },
-        { id: '3-4', label: "Pose volume russe intense", price: "80€" }
+        { id: '3-1', label: "Pose cil à cil", price: "55€", duration: "1h30", description: "Effet naturel: une extension par cil pour un regard subtil et soigné." },
+        { id: '3-2', label: "Pose volume mixte", price: "65€", duration: "1h45", description: "Mix cil à cil + éventails légers pour plus de densité avec naturel." },
+        { id: '3-3', label: "Pose volume russe", price: "75€", duration: "2h", description: "Éventails 3D-5D pour un regard intense et structuré." },
+        { id: '3-4', label: "Pose volume russe intense", price: "80€", duration: "2h15", description: "Volume plus fourni pour un résultat spectaculaire et glamour." }
       ]
     },
     {
@@ -192,10 +193,10 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       title: "Remplissages",
       icon: "Sparkles",
       items: [
-        { id: '4-1', label: "Remplissage cil à cil", price: "40€" },
-        { id: '4-2', label: "Remplissage mixte", price: "50€" },
-        { id: '4-3', label: "Remplissage russe", price: "60€" },
-        { id: '4-4', label: "Dépose", price: "10€" }
+        { id: '4-1', label: "Remplissage cil à cil", price: "40€", duration: "1h", description: "Entretien 2-3 semaines pour conserver un effet naturel." },
+        { id: '4-2', label: "Remplissage mixte", price: "50€", duration: "1h15", description: "Entretien 2-3 semaines des poses mixtes." },
+        { id: '4-3', label: "Remplissage russe", price: "60€", duration: "1h15", description: "Entretien 2-3 semaines des poses volume russe." },
+        { id: '4-4', label: "Dépose", price: "10€", duration: "20 min", description: "Retrait des extensions en douceur, sans abîmer les cils naturels." }
       ]
     },
     {
@@ -203,12 +204,14 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       title: "Rehaussement",
       icon: "Eye",
       items: [
-        { id: '5-1', label: "Rehaussement de cils", price: "40€" },
-        { id: '5-2', label: "Rehaussement & teinture", price: "45€" },
-        { id: '5-3', label: "Teinture de cils", price: "25€" }
+        { id: '5-1', label: "Rehaussement de cils", price: "40€", duration: "45 min", description: "Courbure naturelle qui ouvre le regard durablement." },
+        { id: '5-2', label: "Rehaussement & teinture", price: "45€", duration: "55 min", description: "Courbure + teinte pour un regard mis en valeur sans mascara." },
+        { id: '5-3', label: "Teinture de cils", price: "25€", duration: "20 min", description: "Teinte des cils pour intensifier le regard au quotidien." }
       ]
     }
   ]);
+
+  // Note: ancien seuil supprimé; on remplace le fallback dès que la DB renvoie des items
 
   const updatePortfolioImage = (id: string, updates: Partial<PortfolioImage>) => {
     setPortfolioImages(prev => prev.map(img => 
@@ -225,63 +228,124 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setPortfolioImages(prev => prev.filter(img => img.id !== id));
   };
 
-  const updateServiceSection = (id: string, updates: Partial<ServiceSection>) => {
-    setServiceSections(prev => prev.map(section => 
-      section.id === id ? { ...section, ...updates } : section
-    ));
+  const updateServiceSection = async (id: string, updates: Partial<ServiceSection>) => {
+    // Persiste en base puis recharge depuis la DB pour propager aux visiteurs
+    try {
+      await updateService(id, { title: updates.title, icon: updates.icon });
+      await reloadServices();
+    } catch (e) {
+      console.error('updateServiceSection failed', e);
+      // fallback UI local pour ne pas perdre la saisie immédiate
+      setServiceSections(prev => prev.map(section => 
+        section.id === id ? { ...section, ...updates } : section
+      ));
+    }
   };
 
-  const updateServiceItem = (sectionId: string, itemId: string, updates: Partial<ServiceItem>) => {
-    setServiceSections(prev => prev.map(section => 
-      section.id === sectionId 
-        ? { 
-            ...section, 
-            items: section.items.map(item => 
-              item.id === itemId ? { ...item, ...updates } : item
-            )
-          }
-        : section
-    ));
+  const updateServiceItem = async (sectionId: string, itemId: string, updates: Partial<ServiceItem>) => {
+    void sectionId; // non nécessaire côté DB pour la mise à jour
+    try {
+      await csUpdateServiceItem(itemId, {
+        label: updates.label,
+        price: updates.price,
+        duration: updates.duration,
+        description: updates.description,
+      });
+      await reloadServices();
+    } catch (e) {
+      console.error('updateServiceItem failed', e);
+      // fallback local pour retour instantané (non persistant)
+      setServiceSections(prev => prev.map(section => 
+        section.id === sectionId 
+          ? { 
+              ...section, 
+              items: section.items.map(item => 
+                item.id === itemId ? { ...item, ...updates } : item
+              )
+            }
+          : section
+      ));
+    }
   };
 
-  const addServiceItem = (sectionId: string, item: Omit<ServiceItem, 'id'>) => {
-    const newItem = { ...item, id: `${sectionId}-${Date.now()}` };
-    setServiceSections(prev => prev.map(section => 
-      section.id === sectionId 
-        ? { ...section, items: [...section.items, newItem] }
-        : section
-    ));
+  const addServiceItem = async (sectionId: string, item: Omit<ServiceItem, 'id'>) => {
+    try {
+      // ordre par défaut en fin de liste
+      const orderIndex = (serviceSections.find(s => s.id === sectionId)?.items.length ?? 0);
+      await csCreateServiceItem({
+        service_id: sectionId,
+        label: item.label,
+        price: item.price,
+        duration: item.duration ?? null,
+        description: item.description ?? null,
+        order_index: orderIndex,
+        duration_minutes: null,
+        benefits: null,
+      } as unknown as Parameters<typeof csCreateServiceItem>[0]);
+      await reloadServices();
+    } catch (e) {
+      console.error('addServiceItem failed', e);
+      // fallback local non persistant
+      const newItem = { ...item, id: `${sectionId}-${Date.now()}` } as ServiceItem;
+      setServiceSections(prev => prev.map(section => 
+        section.id === sectionId 
+          ? { ...section, items: [...section.items, newItem] }
+          : section
+      ));
+    }
   };
 
-  const deleteServiceItem = (sectionId: string, itemId: string) => {
-    setServiceSections(prev => prev.map(section => 
-      section.id === sectionId 
-        ? { ...section, items: section.items.filter(item => item.id !== itemId) }
-        : section
-    ));
+  const deleteServiceItem = async (sectionId: string, itemId: string) => {
+    try {
+      await csDeleteServiceItem(itemId);
+      await reloadServices();
+    } catch (e) {
+      console.error('deleteServiceItem failed', e);
+      // fallback local
+      setServiceSections(prev => prev.map(section => 
+        section.id === sectionId 
+          ? { ...section, items: section.items.filter(item => item.id !== itemId) }
+          : section
+      ));
+    }
   };
 
-  const addServiceSection = (section: { title: string; icon: string }) => {
-    const newSection: ServiceSection = {
-      id: `${Date.now()}`,
-      title: section.title,
-      icon: section.icon,
-      items: []
-    };
-    setServiceSections(prev => [...prev, newSection]);
+  const addServiceSection = async (section: { title: string; icon: string }) => {
+    try {
+      const orderIndex = serviceSections.length;
+      await createService({ title: section.title, icon: section.icon, order_index: orderIndex } as unknown as Parameters<typeof createService>[0]);
+      await reloadServices();
+    } catch (e) {
+      console.error('addServiceSection failed', e);
+      // fallback local non persistant
+      const newSection: ServiceSection = {
+        id: `${Date.now()}`,
+        title: section.title,
+        icon: section.icon,
+        items: []
+      };
+      setServiceSections(prev => [...prev, newSection]);
+    }
   };
 
-  const moveServiceSection = (id: string, direction: 'up' | 'down') => {
-    setServiceSections(prev => {
-      const index = prev.findIndex(s => s.id === id);
-      if (index === -1) return prev;
-      const targetIndex = direction === 'up' ? index - 1 : index + 1;
-      if (targetIndex < 0 || targetIndex >= prev.length) return prev;
-      const next = [...prev];
-      const [item] = next.splice(index, 1);
-      next.splice(targetIndex, 0, item);
-      return next;
-    });
+  const moveServiceSection = async (id: string, direction: 'up' | 'down') => {
+    const current = [...serviceSections];
+    const index = current.findIndex(s => s.id === id);
+    if (index === -1) return;
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= current.length) return;
+    // échange local
+    [current[index], current[targetIndex]] = [current[targetIndex], current[index]];
+    setServiceSections(current);
+    // persiste l'ordre
+    try {
+      await Promise.all(current.map((s, i) => updateService(s.id, { order_index: i })));
+      await reloadServices();
+    } catch (e) {
+      console.error('moveServiceSection persist failed', e);
+      // pas de rollback complexe: proposer un reload
+      await reloadServices();
+    }
   };
 
   useEffect(() => {
@@ -327,18 +391,34 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             id: service.id,
             title: service.title,
             icon: service.icon,
-            items: items.map((item) => ({
-              id: item.id,
-              label: item.label,
-              price: item.price,
-              duration: item.duration,
-              description: item.description
-            }))
+              items: items.map((item) => ({
+                id: item.id,
+                label: item.label,
+                price: item.price,
+                duration: item.duration ?? undefined,
+                description: item.description ?? undefined
+              }))
           };
         })
       );
       if (sectionsWithItems.length > 0) {
         setServiceSections(sectionsWithItems);
+      } else {
+        // Fallback: Edge Function publique (bypass RLS), garantit l'affichage complet pour les visiteurs
+        try {
+          const res = await invokeFunction<{ sections: Array<{ id: string; title: string; icon: string; items: Array<{ id: string; label: string; price: string; description?: string | null; duration?: string | null }> }> }>('get-services', undefined, { timeoutMs: 7000 });
+          if (res && Array.isArray(res.sections) && res.sections.length) {
+            const mapped: ServiceSection[] = res.sections.map((s) => ({
+              id: s.id,
+              title: s.title,
+              icon: s.icon,
+              items: s.items.map((it) => ({ id: it.id, label: it.label, price: it.price, duration: it.duration ?? undefined, description: it.description ?? undefined }))
+            }));
+            setServiceSections(mapped);
+          }
+        } catch (e) {
+          console.warn('Fallback get-services failed', e);
+        }
       }
     } catch (error) {
       const msg = (error as { message?: string })?.message || 'Erreur lors du chargement des prestations';
@@ -348,38 +428,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, []);
 
   useEffect(() => { reloadServices(); }, [reloadServices]);
-
-  useEffect(() => {
-    const loadServices = async () => {
-      try {
-        const services = await getServices();
-        const sectionsWithItems: ServiceSection[] = await Promise.all(
-          services.map(async (service) => {
-            const items = await getServiceItems(service.id);
-            return {
-              id: service.id,
-              title: service.title,
-              icon: service.icon,
-              items: items.map((item) => ({
-                id: item.id,
-                label: item.label,
-                price: item.price,
-                duration: item.duration,
-                description: item.description
-              }))
-            };
-          })
-        );
-        if (sectionsWithItems.length > 0) {
-          setServiceSections(sectionsWithItems);
-        }
-      } catch (error) {
-        console.error('Error loading services:', error);
-      }
-    };
-
-    loadServices();
-  }, []);
+  // Supprime le 2ème chargement doublon qui provoquait des appels multiples
 
   const login = async (email: string, password: string): Promise<{ ok: boolean; message?: string }> => {
     try {
@@ -391,12 +440,24 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
       const { data: s } = await supabase.auth.getSession();
       console.log('session', s);
-
-      const isAdminUser = await checkIsAdmin();
+      let isAdminUser = await checkIsAdmin();
       if (!isAdminUser) {
-        await supabase.auth.signOut();
-        const msg = 'Accès refusé: vous n\'êtes pas administrateur.';
-        return { ok: false, message: msg };
+        // Si non-admin mais email autorisé en ENV, tente la promotion via Edge Function
+        const allow = (import.meta.env.VITE_ADMIN_EMAILS as string | undefined)?.split(/[,;\s]+/).filter(Boolean) || [];
+        const isWhitelisted = allow.map(e => e.toLowerCase()).includes(email.toLowerCase());
+        if (isWhitelisted) {
+          try {
+            await invokeFunction('update-admin-role', { email }, { timeoutMs: 6000 });
+            isAdminUser = await checkIsAdmin();
+          } catch (promErr) {
+            console.warn('Auto-promotion admin a échoué', promErr);
+          }
+        }
+        if (!isAdminUser) {
+          await supabase.auth.signOut();
+          const msg = 'Accès refusé: vous n\'êtes pas administrateur.';
+          return { ok: false, message: msg };
+        }
       }
 
       // Test réseau post-login (temporaire)

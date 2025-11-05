@@ -4,9 +4,10 @@ import { Instagram, Phone, Mail, MapPin } from 'lucide-react';
 interface FooterProps {
   onNavigate?: (page: string) => void;
   onAdminToggle?: () => void;
+  onOpenCookies?: () => void;
 }
 
-const Footer: React.FC<FooterProps> = ({ onNavigate, onAdminToggle }) => {
+const Footer: React.FC<FooterProps> = ({ onNavigate, onAdminToggle, onOpenCookies }) => {
   const currentYear = new Date().getFullYear();
 
   const handleNavigation = (page: string) => {
@@ -22,22 +23,26 @@ const Footer: React.FC<FooterProps> = ({ onNavigate, onAdminToggle }) => {
       <div className="absolute top-0 left-0 w-96 h-96 bg-white/5 rounded-full blur-3xl opacity-30"></div>
       <div className="absolute bottom-0 right-0 w-96 h-96 bg-white/5 rounded-full blur-3xl opacity-30"></div>
 
-      <div className="container mx-auto px-4 py-16 relative z-10">
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
+      <div className="container mx-auto px-4 py-12 md:py-16 relative z-10">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-12 mb-8 md:mb-12 text-center md:text-left">
           {/* Logo et description */}
-          <div className="lg:col-span-2">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-white via-neutral-100 to-neutral-200 rounded-2xl flex items-center justify-center shadow-lg">
-                <span className="font-display text-2xl font-bold bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-700 bg-clip-text text-transparent">HC</span>
-              </div>
+          <div className="lg:col-span-2 flex flex-col items-center md:items-start">
+            <div className="flex items-center gap-3 mb-4 justify-center md:justify-start">
+              <img
+                src="/Harmonie Logo fond blanc.png"
+                alt="Logo Harmonie Cils"
+                className="w-12 h-12 rounded-2xl object-contain shadow-lg"
+                loading="eager"
+                decoding="async"
+              />
               <h3 className="font-display text-3xl font-bold text-white">
                 Harmonie Cils
               </h3>
             </div>
-            <p className="text-white/70 leading-relaxed mb-6 max-w-md font-light">
+            <p className="text-white/70 leading-relaxed mb-6 max-w-md font-light mx-auto md:mx-0">
               Institut de beauté spécialisé dans la mise en beauté du regard, les extensions de cils et le maquillage semi-permanent. Sublimez votre regard avec passion et expertise.
             </p>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 justify-center md:justify-start">
               <a
                 href="https://instagram.com/harmoniecils"
                 target="_blank"
@@ -53,7 +58,7 @@ const Footer: React.FC<FooterProps> = ({ onNavigate, onAdminToggle }) => {
                 <Phone size={20} />
               </a>
               <a
-                href="mailto:harmoniecilsstudio@gmail.com"
+                href="mailto:contact@harmoniecils.com"
                 className="p-3 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-xl transition-all duration-300 hover:scale-110 hover:rotate-6"
               >
                 <Mail size={20} />
@@ -62,42 +67,37 @@ const Footer: React.FC<FooterProps> = ({ onNavigate, onAdminToggle }) => {
           </div>
 
           {/* Navigation */}
-          <div>
+          <div className="flex flex-col items-center md:items-start">
             <h4 className="font-semibold text-white mb-6 text-lg">Navigation</h4>
-            <nav className="space-y-3">
+            <nav className="space-y-2 md:space-y-3 w-full md:w-auto text-center md:text-left flex flex-col items-center md:items-start">
               <button
                 onClick={() => handleNavigation('accueil')}
-                className="block text-white/70 hover:text-white transition-colors font-light hover:translate-x-1 duration-300"
+                className="block w-full text-center md:text-left text-white/70 hover:text-white transition-colors font-light md:hover:translate-x-1 duration-300"
               >
                 Accueil
               </button>
               <button
                 onClick={() => handleNavigation('prestations')}
-                className="block text-white/70 hover:text-white transition-colors font-light hover:translate-x-1 duration-300"
+                className="block w-full text-center md:text-left text-white/70 hover:text-white transition-colors font-light md:hover:translate-x-1 duration-300"
               >
                 Prestations
               </button>
               <button
                 onClick={() => handleNavigation('portfolio')}
-                className="block text-white/70 hover:text-white transition-colors font-light hover:translate-x-1 duration-300"
+                className="block w-full text-center md:text-left text-white/70 hover:text-white transition-colors font-light md:hover:translate-x-1 duration-300"
               >
                 Portfolio
               </button>
               <button
                 onClick={() => handleNavigation('about')}
-                className="block text-white/70 hover:text-white transition-colors font-light hover:translate-x-1 duration-300"
+                className="block w-full text-center md:text-left text-white/70 hover:text-white transition-colors font-light md:hover:translate-x-1 duration-300"
               >
                 À propos
               </button>
-              <button
-                onClick={() => handleNavigation('avis')}
-                className="block text-white/70 hover:text-white transition-colors font-light hover:translate-x-1 duration-300"
-              >
-                Avis
-              </button>
+              {/* Avis retiré de la navigation */}
               <button
                 onClick={() => handleNavigation('contact')}
-                className="block text-white/70 hover:text-white transition-colors font-light hover:translate-x-1 duration-300"
+                className="block w-full text-center md:text-left text-white/70 hover:text-white transition-colors font-light md:hover:translate-x-1 duration-300"
               >
                 Contact
               </button>
@@ -105,10 +105,10 @@ const Footer: React.FC<FooterProps> = ({ onNavigate, onAdminToggle }) => {
           </div>
 
           {/* Contact rapide */}
-          <div>
+          <div className="flex flex-col items-center md:items-start">
             <h4 className="font-semibold text-white mb-6 text-lg">Contact</h4>
-            <div className="space-y-4 text-white/70 font-light">
-              <div className="flex items-start gap-3 group">
+            <div className="space-y-3 md:space-y-4 text-white/70 font-light">
+              <div className="flex items-start gap-3 group justify-center md:justify-start">
                 <Phone size={18} className="mt-1 text-white/50 group-hover:text-white transition-colors" />
                 <div>
                   <a href="tel:0770166571" className="hover:text-white transition-colors block">
@@ -116,15 +116,15 @@ const Footer: React.FC<FooterProps> = ({ onNavigate, onAdminToggle }) => {
                   </a>
                 </div>
               </div>
-              <div className="flex items-start gap-3 group">
+              <div className="flex items-start gap-3 group justify-center md:justify-start">
                 <Mail size={18} className="mt-1 text-white/50 group-hover:text-white transition-colors" />
                 <div>
-                  <a href="mailto:harmoniecilsstudio@gmail.com" className="hover:text-white transition-colors break-all">
-                    harmoniecilsstudio@gmail.com
+                  <a href="mailto:contact@harmoniecils.com" className="hover:text-white transition-colors break-all">
+                    contact@harmoniecils.com
                   </a>
                 </div>
               </div>
-              <div className="flex items-start gap-3 group">
+              <div className="flex items-start gap-3 group justify-center md:justify-start">
                 <MapPin size={18} className="mt-1 text-white/50 group-hover:text-white transition-colors flex-shrink-0" />
                 <div>
                   <p className="hover:text-white transition-colors">
@@ -138,8 +138,8 @@ const Footer: React.FC<FooterProps> = ({ onNavigate, onAdminToggle }) => {
         </div>
 
         {/* Footer bottom */}
-        <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm">
-          <div className="flex flex-col items-center md:items-start gap-2">
+  <div className="flex flex-col md:flex-row justify-center md:justify-between items-center gap-3 md:gap-4 text-sm">
+          <div className="flex flex-col items-center md:items-start gap-2 text-center md:text-left">
             <p className="text-white/50 text-center md:text-left font-light">
               © {currentYear} Harmonie Cils. Tous droits réservés.
             </p>
@@ -155,7 +155,21 @@ const Footer: React.FC<FooterProps> = ({ onNavigate, onAdminToggle }) => {
               </a>
             </p>
           </div>
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-6 flex-wrap justify-center md:justify-end text-center">
+            <button
+              onClick={() => handleNavigation('legal')}
+              className="text-white/60 hover:text-white text-xs font-light transition-colors"
+            >
+              Mentions légales • Confidentialité • Cookies
+            </button>
+            <span className="text-white/20">|</span>
+            <button
+              onClick={onOpenCookies}
+              className="text-white/60 hover:text-white text-xs font-light transition-colors"
+            >
+              Gérer mes cookies
+            </button>
+            <span className="hidden md:inline text-white/20">|</span>
             <button
               onClick={onAdminToggle}
               className="text-white/30 hover:text-white/60 text-xs font-light transition-colors"

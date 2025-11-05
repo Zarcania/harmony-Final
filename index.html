@@ -3,25 +3,58 @@
   <head>
     <meta charset="UTF-8" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="apple-touch-icon" href="/favicon.svg" />
+  <link rel="manifest" href="/site.webmanifest" />
+  <!-- Préchargement images critiques pour améliorer le LCP sans changer le rendu -->
+  <link rel="preload" as="image" href="/h-co-tqu0IOMaiU8-unsplash.jpg" />
+  <link rel="preload" as="image" href="/favicon.svg" />
   <link rel="canonical" href="https://harmoniecils.com/" />
+  <meta name="robots" content="index, follow" />
+  <meta name="theme-color" content="#111827" />
+  <meta name="color-scheme" content="light" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: data: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https: ws: wss:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'" />
   <meta property="og:locale" content="fr_FR" />
   <meta property="og:type" content="website" />
   <meta property="og:title" content="Harmonie Cils — Extensions et soins" />
   <meta property="og:description" content="Extensions de cils, épilation au fil et soins haut de gamme. Réservez en ligne." />
   <meta property="og:url" content="https://harmoniecils.com/" />
-  <meta property="og:image" content="/favicon.png" />
+  <meta property="og:image" content="/favicon.svg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Harmonie Cils — Extensions et soins" />
   <meta name="twitter:description" content="Extensions de cils, épilation au fil et soins haut de gamme. Réservez en ligne." />
-  <meta name="twitter:image" content="/favicon.png" />
+  <meta name="twitter:image" content="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Harmonie'Cils - Extensions de cils et épilation au fil</title>
+  <title>HarmonieCils - Extensions de cils et épilation au fil</title>
     <meta name="description" content="Institut de beauté spécialisé dans les extensions de cils, épilation au fil et soins haut de gamme. Prenez rendez-vous pour sublimer votre regard.">
-    
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
+
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Données structurées (JSON-LD) -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "BeautySalon",
+        "name": "Harmonie Cils",
+        "url": "https://harmoniecils.com/",
+  "image": "/favicon.svg",
+        "description": "Extensions de cils, épilation au fil et soins haut de gamme. Réservez en ligne.",
+        "priceRange": "€€",
+        "sameAs": [],
+        "address": {
+          "@type": "PostalAddress",
+          "addressCountry": "FR"
+        }
+      }
+    </script>
+
+    <!-- Remarque sécurité: pour la prod, privilégier les en-têtes serveur (CSP, HSTS, X-Frame-Options). -->
   </head>
   <body>
     <div id="root"></div>

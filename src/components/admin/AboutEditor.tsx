@@ -111,21 +111,22 @@ const AboutEditor: React.FC<AboutEditorProps> = ({ onClose }) => {
   ];
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
-        <div className="p-6 border-b border-gray-200 flex justify-between items-center">
-          <h2 className="text-2xl font-bold text-gray-900">Gérer la section À propos</h2>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 pt-[env(safe-area-inset-top)]">
+      <div className="bg-white w-full sm:max-w-4xl sm:rounded-2xl rounded-t-2xl max-h-[92vh] sm:max-h-[90vh] overflow-hidden shadow-2xl">
+        {/* Header sticky pour mobile */}
+        <div className="sticky top-0 z-10 bg-white flex items-center justify-between px-4 sm:px-6 py-4 border-b border-gray-200">
+          <h2 className="font-display text-lg sm:text-2xl font-bold text-gray-900">Gérer la section À propos</h2>
+          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg transition-colors" aria-label="Fermer">
             <X size={24} />
           </button>
         </div>
 
-        <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
+        <div className="p-4 sm:p-6 overflow-y-auto max-h-[calc(92vh-140px)] sm:max-h-[calc(90vh-140px)]">
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Photo professionnelle
             </label>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 flex-wrap">
               <label className="cursor-pointer bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg flex items-center gap-2 transition-colors">
                 <Upload size={20} />
                 {uploading ? 'Téléchargement...' : 'Choisir une image'}
@@ -175,7 +176,7 @@ const AboutEditor: React.FC<AboutEditorProps> = ({ onClose }) => {
           </div>
         </div>
 
-        <div className="p-6 border-t border-gray-200">
+        <div className="p-4 sm:p-6 border-t border-gray-200">
           <button
             onClick={handleSave}
             disabled={loading || uploading}

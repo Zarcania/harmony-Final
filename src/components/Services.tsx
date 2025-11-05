@@ -2,6 +2,7 @@ import React from 'react';
 import { Eye, Scissors, Sparkles, Heart, Wand2, Brush, Droplet, Star, Leaf, Gem, Pipette, CreditCard as Edit, Plus, Trash2, Calendar, Save, X, ArrowUp, ArrowDown } from 'lucide-react';
 import { useAdmin } from '../contexts/AdminContext';
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
+import BookingModal from './BookingModal';
 
 interface ServiceItem {
   id: string;
@@ -22,7 +23,7 @@ interface ServicesProps {
   onNavigate: (page: string, service?: string) => void;
 }
 
-const Services: React.FC<ServicesProps> = ({ onNavigate }) => {
+const Services: React.FC<ServicesProps> = () => {
   const {
     isAdmin,
     serviceSections,
@@ -46,26 +47,39 @@ const Services: React.FC<ServicesProps> = ({ onNavigate }) => {
   const { elementRef: titleLeftRef } = useScrollAnimation();
   const { elementRef: titleRightRef } = useScrollAnimation();
 
-  const [isNavSticky, setIsNavSticky] = React.useState(false);
-
-  React.useEffect(() => {
-    const handleScroll = () => {
-      const navElement = document.getElementById('quick-nav');
-      if (navElement) {
-        const navOffset = navElement.offsetTop;
-        setIsNavSticky(window.scrollY > navOffset - 20);
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+  // Helpers de formatage (mêmes règles que l'éditeur)
+  const formatPrice = React.useCallback((raw: string | undefined | null): string => {
+    const s = (raw || '').toString().trim();
+    if (!s) return '';
+    let cleaned = s.replace(/[^0-9.,]/g, '').replace(/\./g, ',');
+    const parts = cleaned.split(',');
+    if (parts.length > 2) cleaned = parts[0] + ',' + parts.slice(1).join('').replace(/,/g, '');
+    cleaned = cleaned.replace(/^0+(\d)/, '$1');
+    return cleaned ? `${cleaned}\u00A0€` : '';
   }, []);
 
+  const normalizeDuration = React.useCallback((raw: string | undefined | null): string => {
+    const s = (raw || '').toString().trim();
+    if (!s) return '';
+    if (/^\d{1,2}:\d{1,2}$/.test(s)) {
+      const [h, m] = s.split(':');
+      return `${parseInt(h, 10)}h${parseInt(m, 10)}`;
+    }
+    if (/h/i.test(s)) return s.replace(/\s+/g, ' ').trim();
+    if (/\b(mn|m)\b/i.test(s)) return s.replace(/\b(mn|m)\b/gi, 'min');
+    if (/^\d+$/.test(s)) return `${s} min`;
+    return s;
+  }, []);
+
+  // Nav devient sticky via CSS (position: sticky) pour éviter les layout shifts
+
   const getHeaderOffset = () => {
-    // Hauteur du header fixe + marge
-    const header = document.querySelector('header');
-    const headerHeight = header ? (header as HTMLElement).offsetHeight : 0;
-    return headerHeight + (isNavSticky ? 60 : 20);
+    // Hauteur du header + hauteur de la nav rapide + petite marge
+    const header = document.querySelector('header') as HTMLElement | null;
+    const quickNav = document.getElementById('quick-nav') as HTMLElement | null;
+    const headerHeight = header?.offsetHeight ?? 0;
+    const navHeight = quickNav?.offsetHeight ?? 0;
+    return headerHeight + navHeight + 20;
   };
 
   const scrollToSection = (sectionId: string, updateHash: boolean = true) => {
@@ -163,18 +177,20 @@ const Services: React.FC<ServicesProps> = ({ onNavigate }) => {
   const saveItem = () => {
     if (!editingItemKey || !itemDraft.service_id || !itemDraft.label || !itemDraft.price) return;
     const [sectionId, itemId] = editingItemKey.split(':');
+    const formattedPrice = formatPrice(itemDraft.price);
+    const formattedDuration = normalizeDuration(itemDraft.duration || '');
     if (itemId === 'new') {
       addServiceItem(sectionId, {
         label: itemDraft.label!,
-        price: itemDraft.price!,
-        duration: itemDraft.duration || '',
+        price: formattedPrice!,
+        duration: formattedDuration || '',
         description: itemDraft.description || '',
       });
     } else {
       updateServiceItem(sectionId, itemId, {
         label: itemDraft.label!,
-        price: itemDraft.price!,
-        duration: itemDraft.duration,
+        price: formattedPrice!,
+        duration: formattedDuration,
         description: itemDraft.description,
       });
     }
@@ -191,6 +207,8 @@ const Services: React.FC<ServicesProps> = ({ onNavigate }) => {
 
   // Ajout d'une nouvelle section
   const [newSection, setNewSection] = React.useState<{ title: string; icon: string }>({ title: '', icon: 'Eye' });
+  const [showBookingModal, setShowBookingModal] = React.useState(false);
+  const [preselectedService, setPreselectedService] = React.useState<string | null>(null);
 
   return (
     <section id="prestations" className="relative py-12 md:py-20 bg-white">
@@ -218,11 +236,7 @@ const Services: React.FC<ServicesProps> = ({ onNavigate }) => {
 
         {/* Navigation rapide */}
         <div id="quick-nav" className="mb-6 md:mb-12">
-          <div className={`${
-            isNavSticky
-              ? 'fixed top-0 left-0 right-0 z-40 bg-white py-2'
-              : 'relative'
-          }`}>
+          <div className="sticky top-0 z-40 bg-white py-2">
             <div className="container mx-auto px-4">
               <div className="flex flex-wrap gap-2 md:gap-3 justify-center">
                 {serviceSections.map((section) => (
@@ -238,7 +252,7 @@ const Services: React.FC<ServicesProps> = ({ onNavigate }) => {
               {isAdmin && (
                 <div className="mt-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2">
                   <input
-                    className="px-3 py-2 border border-neutral-300 rounded w-full sm:w-72"
+                    className="px-3 py-2 border border-neutral-300 rounded bg-white w-full sm:w-72"
                     placeholder="Titre de la nouvelle section"
                     value={newSection.title}
                     onChange={(e) => setNewSection(s => ({ ...s, title: e.target.value }))}
@@ -386,25 +400,27 @@ const Services: React.FC<ServicesProps> = ({ onNavigate }) => {
                           <div className="flex flex-col gap-3 w-full">
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                               <input
-                                className="px-3 py-2 border border-neutral-300 rounded"
+                                className="px-3 py-2 border border-neutral-300 rounded bg-white text-neutral-900 placeholder-neutral-500"
                                 placeholder="Nom du service"
                                 value={itemDraft.label || ''}
                                 onChange={(e) => setItemDraft(d => ({ ...d, label: e.target.value }))}
                               />
                               <input
-                                className="px-3 py-2 border border-neutral-300 rounded"
+                                className="px-3 py-2 border border-neutral-300 rounded bg-white text-neutral-900 placeholder-neutral-500"
                                 placeholder="Prix (ex: 25€)"
                                 value={itemDraft.price || ''}
                                 onChange={(e) => setItemDraft(d => ({ ...d, price: e.target.value }))}
+                                onBlur={(e) => setItemDraft(d => ({ ...d, price: formatPrice(e.target.value) }))}
                               />
                               <input
-                                className="px-3 py-2 border border-neutral-300 rounded"
+                                className="px-3 py-2 border border-neutral-300 rounded bg-white text-neutral-900 placeholder-neutral-500"
                                 placeholder="Durée (ex: 45min)"
                                 value={itemDraft.duration || ''}
                                 onChange={(e) => setItemDraft(d => ({ ...d, duration: e.target.value }))}
+                                onBlur={(e) => setItemDraft(d => ({ ...d, duration: normalizeDuration(e.target.value) }))}
                               />
                               <textarea
-                                className="px-3 py-2 border border-neutral-300 rounded sm:col-span-2"
+                                className="px-3 py-2 border border-neutral-300 rounded sm:col-span-2 bg-white text-neutral-900 placeholder-neutral-500"
                                 placeholder="Description (optionnel)"
                                 rows={2}
                                 value={itemDraft.description || ''}
@@ -429,7 +445,7 @@ const Services: React.FC<ServicesProps> = ({ onNavigate }) => {
                                 </span>
                                 {item.duration && (
                                   <span className="px-2 py-0.5 bg-pink-50 text-pink-700 text-xs rounded-full font-medium border border-pink-200">
-                                    ⏱ {item.duration}
+                                    ⏱ {normalizeDuration(item.duration)}
                                   </span>
                                 )}
                               </div>
@@ -439,7 +455,7 @@ const Services: React.FC<ServicesProps> = ({ onNavigate }) => {
                             </div>
                             <div className="flex items-center gap-2">
                               <span className="font-bold text-neutral-900 text-lg md:text-xl tracking-tight whitespace-nowrap">
-                                {item.price}
+                                {formatPrice(item.price)}
                               </span>
                               {/* Badge décoratif retiré */}
                             </div>
@@ -450,7 +466,9 @@ const Services: React.FC<ServicesProps> = ({ onNavigate }) => {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            onNavigate('contact', item.label);
+                            try { localStorage.setItem('hc_preselected_service_id', item.id); } catch { /* ignore */ }
+                            setPreselectedService(item.label);
+                            setShowBookingModal(true);
                           }}
                           className="w-full sm:w-auto sm:ml-3 bg-neutral-900 text-white px-3 py-2 md:px-4 md:py-2.5 rounded-lg hover:bg-neutral-800 transition-all flex items-center justify-center gap-1.5 text-xs md:text-sm font-medium shadow-md hover:shadow-xl transform hover:scale-105"
                         >
@@ -499,25 +517,27 @@ const Services: React.FC<ServicesProps> = ({ onNavigate }) => {
                     <div className="mt-3 p-3 bg-green-50 rounded-xl border-2 border-green-200">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <input
-                          className="px-3 py-2 border border-neutral-300 rounded"
+                          className="px-3 py-2 border border-neutral-300 rounded bg-white"
                           placeholder="Nom du service"
                           value={itemDraft.label || ''}
                           onChange={(e) => setItemDraft(d => ({ ...d, label: e.target.value }))}
                         />
                         <input
-                          className="px-3 py-2 border border-neutral-300 rounded"
+                          className="px-3 py-2 border border-neutral-300 rounded bg-white"
                           placeholder="Prix (ex: 25€)"
                           value={itemDraft.price || ''}
                           onChange={(e) => setItemDraft(d => ({ ...d, price: e.target.value }))}
+                          onBlur={(e) => setItemDraft(d => ({ ...d, price: formatPrice(e.target.value) }))}
                         />
                         <input
-                          className="px-3 py-2 border border-neutral-300 rounded"
+                          className="px-3 py-2 border border-neutral-300 rounded bg-white"
                           placeholder="Durée (ex: 45min)"
                           value={itemDraft.duration || ''}
                           onChange={(e) => setItemDraft(d => ({ ...d, duration: e.target.value }))}
+                          onBlur={(e) => setItemDraft(d => ({ ...d, duration: normalizeDuration(e.target.value) }))}
                         />
                         <textarea
-                          className="px-3 py-2 border border-neutral-300 rounded sm:col-span-2"
+                          className="px-3 py-2 border border-neutral-300 rounded bg-white sm:col-span-2"
                           placeholder="Description (optionnel)"
                           rows={2}
                           value={itemDraft.description || ''}
@@ -551,7 +571,10 @@ const Services: React.FC<ServicesProps> = ({ onNavigate }) => {
             Prenez rendez-vous dès maintenant
           </p>
           <button
-            onClick={() => onNavigate('contact')}
+            onClick={() => {
+              setPreselectedService(null);
+              setShowBookingModal(true);
+            }}
             className="bg-white text-neutral-900 px-6 md:px-12 py-3 md:py-4 rounded-full font-semibold text-sm md:text-lg hover:bg-neutral-100 transition-all duration-300 hover:shadow-2xl hover:scale-105 shadow-lg inline-flex items-center gap-2"
           >
             Prendre rendez-vous
@@ -560,6 +583,12 @@ const Services: React.FC<ServicesProps> = ({ onNavigate }) => {
         </div>
       </div>
 
+      {showBookingModal && (
+        <BookingModal
+          onClose={() => setShowBookingModal(false)}
+          preselectedService={preselectedService || undefined}
+        />
+      )}
     </section>
   );
 };

@@ -75,6 +75,38 @@ const ServiceEditor: React.FC<ServiceEditorProps> = ({ onClose }) => {
     }
   };
 
+  // Helpers de formatage pour prix et durée
+  const formatPrice = (raw: string | undefined | null): string => {
+    const s = (raw || '').toString().trim();
+    if (!s) return '';
+    // Garder chiffres et un séparateur décimal (virgule OU point)
+    let cleaned = s
+      .replace(/[^0-9.,]/g, '')
+      .replace(/\./g, ','); // forcer la virgule en FR
+    // Empêcher plusieurs virgules
+    const parts = cleaned.split(',');
+    if (parts.length > 2) cleaned = parts[0] + ',' + parts.slice(1).join('').replace(/,/g, '');
+    cleaned = cleaned.replace(/^0+(\d)/, '$1');
+    // Espace insécable avant le symbole € pour une typographie FR correcte
+    return cleaned ? `${cleaned}\u00A0€` : '';
+  };
+
+  const normalizeDuration = (raw: string | undefined | null): string => {
+    const s = (raw || '').toString().trim();
+    if (!s) return '';
+    // Convertir 1:30 -> 1h30
+    if (/^\d{1,2}:\d{1,2}$/.test(s)) {
+      const [h, m] = s.split(':');
+      return `${parseInt(h, 10)}h${parseInt(m, 10)}`;
+    }
+    // Si déjà au format avec h ou min, normaliser 'mn'/'m' -> 'min'
+    if (/h/i.test(s)) return s.replace(/\s+/g, ' ').trim();
+    if (/\b(mn|m)\b/i.test(s)) return s.replace(/\b(mn|m)\b/gi, 'min');
+    // Si uniquement numérique -> minutes
+    if (/^\d+$/.test(s)) return `${s} min`;
+    return s;
+  };
+
   const handleSaveItem = async () => {
     if (!editingItem || !editingItem.label || !editingItem.price || !editingItem.service_id) {
       alert('Veuillez remplir tous les champs obligatoires');
@@ -83,14 +115,24 @@ const ServiceEditor: React.FC<ServiceEditorProps> = ({ onClose }) => {
 
     setLoading(true);
     try {
+      // Fallback: s'assurer que les champs sont formatés même si l'utilisateur n'a pas quitté le champ
+      const formattedPrice = formatPrice(editingItem.price);
+      const formattedDuration = normalizeDuration(editingItem.duration || '');
+
       if (editingItem.id) {
-        await updateServiceItem(editingItem.id, editingItem);
+        await updateServiceItem(editingItem.id, {
+          ...editingItem,
+          price: formattedPrice,
+          duration: formattedDuration,
+          // Ne jamais envoyer duration_minutes (colonne générée)
+          duration_minutes: undefined as unknown as never,
+        });
       } else {
         await createServiceItem({
           service_id: editingItem.service_id,
           label: editingItem.label,
-          price: editingItem.price,
-          duration: editingItem.duration || '',
+          price: formattedPrice,
+          duration: formattedDuration,
           description: editingItem.description || '',
           benefits: editingItem.benefits || [],
           order_index: editingItem.order_index || 0,
@@ -122,20 +164,21 @@ const ServiceEditor: React.FC<ServiceEditorProps> = ({ onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
-        <div className="p-6 border-b border-gray-200 flex justify-between items-center">
-          <h2 className="text-2xl font-bold text-gray-900">Gérer les Prestations</h2>
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 pt-[env(safe-area-inset-top)]">
+      <div className="bg-white w-full sm:max-w-6xl sm:rounded-2xl rounded-t-2xl max-h-[92vh] sm:max-h-[90vh] overflow-hidden shadow-2xl">
+        {/* Header sticky pour une meilleure UX mobile */}
+        <div className="sticky top-0 z-10 bg-white flex items-center justify-between px-4 sm:px-6 py-4 border-b border-gray-200">
+          <h2 className="font-display text-lg sm:text-2xl font-bold text-gray-900">Gérer les Prestations</h2>
           <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg transition-colors" aria-label="Fermer l'éditeur" title="Fermer">
             <X size={24} />
           </button>
         </div>
 
-        <div className="p-6 overflow-y-auto max-h-[calc(90vh-80px)]">
+        <div className="p-4 sm:p-6 overflow-y-auto max-h-[calc(92vh-80px)] sm:max-h-[calc(90vh-80px)]">
           <div className="flex gap-4 mb-6">
             <button
               onClick={() => setEditingService({ title: '', icon: 'Eye', order_index: services.length })}
-              className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+              className="w-full sm:w-auto justify-center bg-blue-600 text-white px-5 py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
             >
               <Plus size={20} />
               Ajouter une catégorie
@@ -143,7 +186,7 @@ const ServiceEditor: React.FC<ServiceEditorProps> = ({ onClose }) => {
           </div>
 
           {editingService && (
-            <div className="mb-6 p-6 bg-blue-50 rounded-xl border-2 border-blue-300">
+            <div className="mb-6 p-4 sm:p-6 bg-blue-50 rounded-xl border-2 border-blue-300">
               <h3 className="text-lg font-semibold mb-4">
                 {editingService.id ? 'Modifier la catégorie' : 'Nouvelle catégorie'}
               </h3>
@@ -173,7 +216,7 @@ const ServiceEditor: React.FC<ServiceEditorProps> = ({ onClose }) => {
                     <option value="Sparkles">Sparkles</option>
                   </select>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex flex-col sm:flex-row gap-3">
                   <button
                     onClick={handleSaveService}
                     disabled={loading}
@@ -194,7 +237,7 @@ const ServiceEditor: React.FC<ServiceEditorProps> = ({ onClose }) => {
           )}
 
           {editingItem && (
-            <div className="mb-6 p-6 bg-green-50 rounded-xl border-2 border-green-300">
+            <div className="mb-6 p-4 sm:p-6 bg-green-50 rounded-xl border-2 border-green-300">
               <h3 className="text-lg font-semibold mb-4">
                 {editingItem.id ? 'Modifier le service' : 'Nouveau service'}
               </h3>
@@ -218,6 +261,7 @@ const ServiceEditor: React.FC<ServiceEditorProps> = ({ onClose }) => {
                     placeholder="Ex: 49€"
                     value={editingItem.price || ''}
                     onChange={(e) => setEditingItem({ ...editingItem, price: e.target.value })}
+                    onBlur={(e) => setEditingItem({ ...editingItem, price: formatPrice(e.target.value) })}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
                   />
                 </div>
@@ -229,6 +273,7 @@ const ServiceEditor: React.FC<ServiceEditorProps> = ({ onClose }) => {
                     placeholder="Ex: 1h30, 45min, 2h"
                     value={editingItem.duration || ''}
                     onChange={(e) => setEditingItem({ ...editingItem, duration: e.target.value })}
+                    onBlur={(e) => setEditingItem({ ...editingItem, duration: normalizeDuration(e.target.value) })}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
                   />
                 </div>
@@ -253,7 +298,7 @@ const ServiceEditor: React.FC<ServiceEditorProps> = ({ onClose }) => {
                   />
                   <p className="text-xs text-gray-500 mt-1">Séparez chaque avantage par un retour à la ligne</p>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex flex-col sm:flex-row gap-3">
                   <button
                     onClick={handleSaveItem}
                     disabled={loading}
@@ -303,7 +348,7 @@ const ServiceEditor: React.FC<ServiceEditorProps> = ({ onClose }) => {
 
                 <button
                   onClick={() => setEditingItem({ service_id: service.id, label: '', price: '', duration: '', description: '', benefits: [], order_index: serviceItems[service.id]?.length || 0 })}
-                  className="mb-3 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-sm flex items-center gap-2"
+                  className="mb-3 w-full sm:w-auto justify-center bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-sm flex items-center gap-2"
                 >
                   <Plus size={16} />
                   Ajouter un service
@@ -316,9 +361,9 @@ const ServiceEditor: React.FC<ServiceEditorProps> = ({ onClose }) => {
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
                             <span className="font-medium">{item.label}</span>
-                            <span className="text-blue-600 font-bold">{item.price}</span>
+                            <span className="text-blue-600 font-bold">{formatPrice(item.price)}</span>
                             {item.duration && (
-                              <span className="text-gray-500 text-sm">⏱️ {item.duration}</span>
+                              <span className="text-gray-500 text-sm">⏱️ {normalizeDuration(item.duration)}</span>
                             )}
                           </div>
                           {item.description && (

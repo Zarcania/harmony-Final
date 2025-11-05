@@ -1,21 +1,42 @@
 import React from 'react';
 import { ArrowRight, Eye } from 'lucide-react';
-import { useAdmin } from '../contexts/AdminContext';
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
+import { getPortfolioItems } from '../services/contentService';
 
 interface PortfolioPreviewProps {
   onNavigate: (page: string) => void;
 }
 
 const PortfolioPreview: React.FC<PortfolioPreviewProps> = ({ onNavigate }) => {
-  const { portfolioImages } = useAdmin();
   const { elementRef: titleRef, isVisible: titleVisible } = useScrollAnimation();
+  const [homeImages, setHomeImages] = React.useState<Array<{ id: string; url: string; alt: string; title: string }>>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
 
-  // Filtrer pour n'afficher que les images marquées pour l'accueil (max 6)
-  const homeImages = portfolioImages.filter(img => img.showOnHome).slice(0, 6);
+  React.useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        setLoading(true);
+        const items = await getPortfolioItems();
+        // Déja ordonnés par order_index via la requête; filtre Accueil et limite 6
+        const home = (items || [])
+          .filter((it) => !!it.show_on_home)
+          .slice(0, 6)
+          .map((it) => ({ id: it.id, url: it.url, alt: it.alt, title: it.title }));
+        if (active) setHomeImages(home);
+      } catch (e) {
+        console.error('PortfolioPreview load error', e);
+        if (active) setError('Impossible de charger le portfolio pour l\'accueil');
+      } finally {
+        if (active) setLoading(false);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
 
   return (
-    <section className="relative py-12 md:py-16 lg:py-20 bg-gradient-to-br from-white via-harmonie-50/30 to-harmonie-100/20 overflow-hidden">
+    <section className="relative py-12 md:py-16 lg:py-20 bg-gradient-to-br from-neutral-50 to-white overflow-hidden">
       <div className="container mx-auto px-4">
         {/* En-tête */}
         <div className="text-center mb-10 md:mb-12">
@@ -44,10 +65,21 @@ const PortfolioPreview: React.FC<PortfolioPreviewProps> = ({ onNavigate }) => {
         </div>
 
         {/* Galerie en grille simple */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 mb-12">
-          {homeImages.map((image, index) => (
+        {loading && (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 mb-12">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="bg-white rounded-2xl p-2 shadow animate-pulse">
+                <div className="aspect-[3/4] rounded-xl bg-harmonie-100/60" />
+              </div>
+            ))}
+          </div>
+        )}
+
+        {!loading && homeImages.length > 0 && (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 mb-12">
+          {homeImages.map((image) => (
             <div
-              key={index}
+              key={image.id}
               className="group cursor-pointer transition-all duration-300 hover:scale-105"
             >
               <div className="relative bg-white rounded-xl sm:rounded-2xl p-2 shadow-md hover:shadow-lg transition-all duration-300">
@@ -55,6 +87,7 @@ const PortfolioPreview: React.FC<PortfolioPreviewProps> = ({ onNavigate }) => {
                   <img
                     src={image.url}
                     alt={image.alt}
+                    loading="lazy"
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                   />
 
@@ -76,6 +109,14 @@ const PortfolioPreview: React.FC<PortfolioPreviewProps> = ({ onNavigate }) => {
             </div>
           ))}
         </div>
+        )}
+
+        {!loading && homeImages.length === 0 && !error && (
+          <div className="mb-12 text-center text-sm text-harmonie-600">Aucune image sélectionnée pour l'accueil.</div>
+        )}
+        {error && (
+          <div className="mb-12 text-center text-sm text-red-600">{error}</div>
+        )}
 
 
         {/* CTA pour voir plus */}

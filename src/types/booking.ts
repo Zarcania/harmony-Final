@@ -15,12 +15,15 @@ export interface Booking {
   clientEmail: string;
   status: 'confirmed' | 'pending' | 'cancelled';
   createdAt: string;
+  duration_minutes: number; // Durée de la prestation en minutes
 }
 
 export interface BookingFormData {
   // Nom affiché du service (item)
   service: string;
-  // Identifiant du service item pour disponibilité/durée
+  // Multi-sélection: identifiants des services (items) choisis
+  serviceIds?: string[];
+  // Compatibilité: ancien champ simple (sera ignoré si serviceIds est fourni)
   serviceId?: string;
   date: string;
   time: string;
@@ -28,4 +31,5 @@ export interface BookingFormData {
   clientFirstName: string;
   clientPhone: string;
   clientEmail: string;
+  status?: 'confirmed' | 'pending' | 'cancelled';
 }

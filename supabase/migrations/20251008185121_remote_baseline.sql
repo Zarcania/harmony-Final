@@ -1,3 +1,0 @@
--- Placeholder: migration déjà appliquée en remote (20251008185121)
--- Aucun changement. Sert uniquement à aligner l’historique local/remote.
--- Safe to keep.

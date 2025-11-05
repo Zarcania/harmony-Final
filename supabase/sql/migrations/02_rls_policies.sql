@@ -8,12 +8,13 @@ ALTER TABLE IF EXISTS public.admin_users ENABLE ROW LEVEL SECURITY;
 
 -- REVOKE baseline
 DO $$
+DECLARE role_name text;
 BEGIN
-  FOR r IN SELECT unnest(ARRAY['anon','authenticated']) AS rol LOOP
-    EXECUTE format('REVOKE ALL ON TABLE public.bookings FROM %I', r.rol);
-    EXECUTE format('REVOKE ALL ON TABLE public.service_items FROM %I', r.rol);
-    EXECUTE format('REVOKE ALL ON TABLE public.reviews FROM %I', r.rol);
-    EXECUTE format('REVOKE ALL ON TABLE public.admin_users FROM %I', r.rol);
+  FOR role_name IN SELECT unnest(ARRAY['anon','authenticated']) LOOP
+    EXECUTE format('REVOKE ALL ON TABLE public.bookings FROM %I', role_name);
+    EXECUTE format('REVOKE ALL ON TABLE public.service_items FROM %I', role_name);
+    EXECUTE format('REVOKE ALL ON TABLE public.reviews FROM %I', role_name);
+    EXECUTE format('REVOKE ALL ON TABLE public.admin_users FROM %I', role_name);
   END LOOP;
 END $$;
 

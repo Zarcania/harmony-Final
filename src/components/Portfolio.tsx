@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Camera, ExternalLink, CreditCard as Edit, Plus, Trash2, Eye, EyeOff, Settings, ArrowUp, ArrowDown } from 'lucide-react';
+import { Camera, ExternalLink, CreditCard as Edit, Plus, Trash2, Eye, EyeOff, Settings, ArrowUp, ArrowDown, X } from 'lucide-react';
 import { useAdmin } from '../contexts/AdminContext';
 import AdminEditModal from './AdminEditModal';
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
-import { getPortfolioCategories, createPortfolioCategory, updatePortfolioCategory, deletePortfolioCategory } from '../services/contentService';
+import { getPortfolioCategories, createPortfolioCategory, updatePortfolioCategory, deletePortfolioCategory, getPortfolioItems, createPortfolioItem, updatePortfolioItem, deletePortfolioItem } from '../services/contentService';
 
 interface Category {
   id: string;
@@ -15,9 +15,21 @@ interface PortfolioProps {
   onNavigate: (page: string) => void;
 }
 
+interface UIImage {
+  id: string;
+  url: string;
+  alt: string;
+  title: string;
+  description: string;
+  detailedDescription?: string;
+  category: string;
+  showOnHome: boolean;
+}
+
 const Portfolio: React.FC<PortfolioProps> = ({ onNavigate: _onNavigate }) => {
   void _onNavigate; // mark as used to satisfy no-unused-vars
-  const { isAdmin, portfolioImages, updatePortfolioImage, addPortfolioImage, deletePortfolioImage } = useAdmin();
+  const { isAdmin } = useAdmin();
+  const [images, setImages] = useState<UIImage[]>([]);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [editModal, setEditModal] = React.useState<{ type: string; data?: any } | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -27,45 +39,111 @@ const Portfolio: React.FC<PortfolioProps> = ({ onNavigate: _onNavigate }) => {
 
   useEffect(() => {
     loadCategories();
+    loadImages();
   }, []);
+  const loadImages = async () => {
+    try {
+      const data = await getPortfolioItems();
+      const mapped: UIImage[] = (data || []).map((it) => ({
+        id: it.id,
+        url: it.url,
+        alt: it.alt,
+        title: it.title,
+        description: it.description,
+        detailedDescription: it.detailed_description ?? undefined,
+        category: it.category,
+        showOnHome: !!it.show_on_home,
+      }));
+      setImages(mapped);
+    } catch (error) {
+      console.error('Error loading portfolio items:', error);
+    }
+  };
 
   const loadCategories = async () => {
     try {
       const data = await getPortfolioCategories();
-      setCategories(data);
+      const normalized = (data || []).map((c) => ({
+        ...c,
+        order_index: c.order_index ?? 0,
+      })) as unknown as Category[];
+      setCategories(normalized);
     } catch (error) {
       console.error('Error loading categories:', error);
     }
   };
 
   const filteredImages = selectedCategory === 'all'
-    ? portfolioImages
-    : portfolioImages.filter(img => img.category === selectedCategory);
+    ? images
+    : images.filter(img => img.category === selectedCategory);
 
-  const handleToggleHome = (id: string, currentStatus: boolean) => {
-    const homeImages = portfolioImages.filter(img => img.showOnHome);
-    
+  const handleToggleHome = async (id: string, currentStatus: boolean) => {
+    const homeImages = images.filter(img => img.showOnHome);
+
     if (!currentStatus && homeImages.length >= 6) {
       alert('Maximum 6 images peuvent être affichées sur la page d\'accueil');
       return;
     }
-    
-    updatePortfolioImage(id, { showOnHome: !currentStatus });
+    try {
+      await updatePortfolioItem(id, { show_on_home: !currentStatus });
+      await loadImages();
+    } catch (error) {
+      console.error('Error toggling home status:', error);
+    }
   };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleSaveImage = (data: any) => {
-    if (data.id) {
-      updatePortfolioImage(data.id, data);
-    } else {
-      addPortfolioImage(data);
+  const handleSaveImage = async (data: any) => {
+    try {
+      // Enforce quota Accueil = 6 au moment de la sauvegarde
+      const currentHomeCount = images.filter(img => img.showOnHome).length;
+      const wantsHome = !!data.showOnHome;
+      if (data.id) {
+        const existing = images.find(i => i.id === data.id);
+        const wasHome = existing?.showOnHome ?? false;
+        const countIfSave = currentHomeCount + (wantsHome && !wasHome ? 1 : 0) - (!wantsHome && wasHome ? 1 : 0);
+        if (countIfSave > 6) {
+          alert('Maximum 6 images peuvent être affichées sur la page d\'accueil');
+          return;
+        }
+      } else if (wantsHome && currentHomeCount >= 6) {
+        alert('Maximum 6 images peuvent être affichées sur la page d\'accueil');
+        return;
+      }
+
+      if (data.id) {
+        await updatePortfolioItem(data.id, {
+          url: data.url,
+          title: data.title,
+          description: data.description,
+          detailed_description: data.detailedDescription ?? null,
+          alt: data.alt ?? '',
+          category: data.category ?? '',
+          show_on_home: !!data.showOnHome,
+        });
+      } else {
+        await createPortfolioItem({
+          url: data.url,
+          title: data.title,
+          description: data.description ?? '',
+          detailed_description: data.detailedDescription ?? null,
+          alt: data.alt ?? data.title ?? '',
+          category: data.category ?? '',
+          show_on_home: !!data.showOnHome,
+          order_index: images.length,
+        } as Parameters<typeof createPortfolioItem>[0]);
+      }
+      await loadImages();
+    } catch (error) {
+      console.error('Error saving portfolio image:', error);
+      alert('Erreur lors de l\'enregistrement de l\'image');
     }
   };
 
   const handleAddCategory = async (name: string) => {
     try {
       const newCategory = await createPortfolioCategory(name, categories.length);
-      setCategories([...categories, newCategory]);
+      setCategories([...categories, { ...newCategory, order_index: newCategory.order_index ?? categories.length } as Category]);
     } catch (error) {
       console.error('Error adding category:', error);
       alert('Erreur lors de l\'ajout de la catégorie');
@@ -115,8 +193,21 @@ const Portfolio: React.FC<PortfolioProps> = ({ onNavigate: _onNavigate }) => {
     }
   };
 
+  const handleSaveAllCategories = async () => {
+    try {
+      await Promise.all(
+        categories.map((cat, i) => updatePortfolioCategory(cat.id, cat.name, i))
+      );
+      await loadCategories();
+      alert('Catégories enregistrées');
+    } catch (e) {
+      console.error('Error saving categories:', e);
+      alert('Erreur lors de l\'enregistrement des catégories');
+    }
+  };
+
   return (
-    <section id="portfolio" className="relative py-24 bg-gradient-to-b from-white via-harmonie-50/30 to-white overflow-hidden">
+    <section id="portfolio" className="relative py-24 bg-gradient-to-br from-neutral-50 to-white overflow-hidden">
       {/* Éléments décoratifs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-40 -right-20 w-96 h-96 bg-harmonie-200/20 rounded-full blur-3xl"></div>
@@ -207,6 +298,9 @@ const Portfolio: React.FC<PortfolioProps> = ({ onNavigate: _onNavigate }) => {
                 <img
                   src={image.url}
                   alt={image.alt}
+                  loading="lazy"
+                  decoding="async"
+                  sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
                 />
 
@@ -250,7 +344,16 @@ const Portfolio: React.FC<PortfolioProps> = ({ onNavigate: _onNavigate }) => {
                       {image.showOnHome ? <Eye size={16} /> : <EyeOff size={16} />}
                     </button>
                     <button
-                      onClick={() => deletePortfolioImage(image.id)}
+                      onClick={async () => {
+                        if (!confirm('Supprimer cette image ?')) return;
+                        try {
+                          await deletePortfolioItem(image.id);
+                          await loadImages();
+                        } catch (error) {
+                          console.error('Error deleting portfolio item:', error);
+                          alert('Erreur lors de la suppression');
+                        }
+                      }}
                       className="bg-red-600 text-white p-2 rounded-lg hover:bg-red-700 transition-colors"
                       title="Supprimer"
                     >
@@ -285,24 +388,19 @@ const Portfolio: React.FC<PortfolioProps> = ({ onNavigate: _onNavigate }) => {
           ))}
         </div>
 
-        {/* CTA Section moderne */}
+        {/* CTA Section (fond clair pour cohérence visuelle) */}
         <div className="max-w-4xl mx-auto">
-            <div className="relative bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900 rounded-2xl md:rounded-3xl p-8 md:p-12 overflow-hidden shadow-2xl">
-            {/* Pattern de fond */}
-            <div className="absolute inset-0 opacity-10">
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_2px_2px,white_1px,transparent_0)] bg-[length:40px_40px]"></div>
-            </div>
-
+          <div className="relative bg-white border border-neutral-200 rounded-2xl md:rounded-3xl p-8 md:p-12 overflow-hidden shadow-2xl">
             <div className="relative z-10 text-center">
-              <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-3 py-1.5 mb-4">
-                <Camera className="w-3 h-3 text-harmonie-300" />
-                <span className="text-white/80 text-xs font-medium">Instagram</span>
+              <div className="inline-flex items-center gap-2 bg-harmonie-100 text-harmonie-700 rounded-full px-3 py-1.5 mb-4">
+                <Camera className="w-3 h-3" />
+                <span className="text-xs font-medium">Instagram</span>
               </div>
 
-              <h3 className="font-display text-2xl md:text-3xl font-bold text-white mb-3">
+              <h3 className="font-display text-2xl md:text-3xl font-bold text-neutral-900 mb-3">
                 Suivez nos créations
               </h3>
-              <p className="text-white/70 text-sm md:text-base mb-6 max-w-xl mx-auto leading-snug">
+              <p className="text-neutral-600 text-sm md:text-base mb-6 max-w-xl mx-auto leading-snug">
                 Retrouvez nos réalisations du jour sur Instagram
               </p>
 
@@ -310,7 +408,7 @@ const Portfolio: React.FC<PortfolioProps> = ({ onNavigate: _onNavigate }) => {
                 href="https://instagram.com/harmoniecils"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 bg-white text-neutral-900 px-6 py-3 rounded-full font-medium text-sm hover:bg-neutral-100 transition-all duration-300 hover:shadow-2xl hover:scale-105 shadow-lg"
+                className="inline-flex items-center gap-2 bg-white text-neutral-900 px-6 py-3 rounded-full font-medium text-sm hover:bg-neutral-100 transition-all duration-300 hover:shadow-2xl hover:scale-105 shadow-lg border border-neutral-200"
               >
                 <Camera size={18} />
                 <span>Suivre sur Instagram</span>
@@ -337,16 +435,17 @@ const Portfolio: React.FC<PortfolioProps> = ({ onNavigate: _onNavigate }) => {
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl max-h-[80vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="font-display text-2xl font-bold text-harmonie-800">
-                Gérer les catégories
-              </h3>
+              <div>
+                <h3 className="font-display text-2xl font-bold text-harmonie-800">Gérer les catégories</h3>
+                <p className="mt-1 text-sm text-harmonie-600">Les modifications sont enregistrées automatiquement.</p>
+              </div>
               <button
                 onClick={() => setShowCategoryManager(false)}
                 className="p-2 text-harmonie-400 hover:text-harmonie-600 hover:bg-harmonie-50 rounded-lg transition-colors"
                 aria-label="Fermer la gestion des catégories"
                 title="Fermer"
               >
-                <Trash2 size={20} />
+                <X size={20} />
               </button>
             </div>
 
@@ -424,6 +523,21 @@ const Portfolio: React.FC<PortfolioProps> = ({ onNavigate: _onNavigate }) => {
                   </button>
                 </div>
               ))}
+            </div>
+
+            <div className="mt-6 flex items-center justify-end gap-2">
+              <button
+                onClick={handleSaveAllCategories}
+                className="px-4 py-2 bg-harmonie-700 text-white rounded-lg shadow hover:bg-harmonie-800"
+              >
+                Enregistrer
+              </button>
+              <button
+                onClick={() => setShowCategoryManager(false)}
+                className="px-4 py-2 bg-white border border-harmonie-200 rounded-lg hover:bg-harmonie-50"
+              >
+                Fermer
+              </button>
             </div>
           </div>
         </div>

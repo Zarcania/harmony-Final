@@ -1,0 +1,6 @@
+﻿"id","service_id","label","price","description","duration","benefits","order_index","created_at","updated_at","duration_minutes"
+"17322e94-f581-4c7e-8d66-7f2a40ecb485","c189791c-2488-4b5d-8535-bf3ee6205442","Sourcils","12€","Épilation précise des sourcils au fil","15 min",,"0","2025-10-22T00:36:20.928812+00:00","2025-10-22T00:36:20.928812+00:00","15"
+"f2d46b4f-7d71-47c0-bb75-57f45c84a8ff","c189791c-2488-4b5d-8535-bf3ee6205442","Lèvre","8€","Épilation au fil de la lèvre supérieure","10 min",,"1","2025-10-22T00:36:20.928812+00:00","2025-10-22T00:36:20.928812+00:00","10"
+"815fd399-9436-4073-bcce-5885a9d29920","425c8c18-cea3-4e68-ad8c-a54f72dc8a8e","Pose cil à cil","55€","Pose naturelle pour un regard sublimé","1h30",,"0","2025-10-22T00:36:20.928812+00:00","2025-10-22T00:36:20.928812+00:00","90"
+"71aeb277-dc04-4a03-a15e-b65b040e7189","425c8c18-cea3-4e68-ad8c-a54f72dc8a8e","Volume russe","75€","Volume intense pour un effet glamour","2h",,"1","2025-10-22T00:36:20.928812+00:00","2025-10-22T00:36:20.928812+00:00","120"
+"0e5d0bea-4f61-46ff-a836-b85eb604f3e7","68a39709-938f-4d5f-ab6a-664f7e971a02","Rehaussement de cils","40€","Courbure naturelle et durable des cils","45 min",,"0","2025-10-22T00:36:20.928812+00:00","2025-10-22T00:36:20.928812+00:00","45"

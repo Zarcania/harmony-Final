@@ -10,13 +10,14 @@ Ce projet utilise des variables `VITE_*` injectées à la compilation par Vite. 
   - Clé Anon (publique) de Supabase. Elle est sûre à exposer côté front (droits limités par RLS).
 - `VITE_PUBLIC_SITE_URL` (recommandée)
   - URL publique du site (ex: `https://harmoniecils.com`). Sert pour construire des liens absolus. Si absente, on utilise `window.location.origin`.
+- `VITE_ADMIN_EMAILS` (optionnelle)
+  - Liste d’emails administrateurs autorisés côté front en secours (séparés par des virgules). Exemple: `admin@example.com,owner@example.com`.
 
 ## Fichiers .env
 
 - `.env.local` (dev, non versionné)
 - `.env.production` (build prod local/CI, non versionné)
-- `.env.example` (exemple générique)
-- `.env.production.example` (exemple prod)
+
 
 Ajoutez toujours vos valeurs réelles uniquement dans les fichiers non versionnés (`.env.local`, `.env.production`).
 
@@ -41,6 +42,8 @@ VITE_PUBLIC_SITE_URL=https://harmoniecils.com
 VITE_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
 VITE_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
 VITE_PUBLIC_SITE_URL=https://localhost:5173
+# Optionnel
+VITE_ADMIN_EMAILS=admin@example.com,owner@example.com
 ```
 
 ## Intégration dans le code

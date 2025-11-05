@@ -21,9 +21,9 @@ const Hero: React.FC<HeroProps> = ({ onNavigate }) => {
           {/* Contenu textuel */}
           <div className="text-center lg:text-left max-w-full">
             {/* Titre principal */}
-            <h1 className="font-display text-4xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-bold text-black mb-4 md:mb-6 lg:mb-8 leading-[1.05] tracking-[-0.02em] animate-slide-up">
+            <h1 className="font-display text-3xl sm:text-5xl md:text-6xl font-bold text-black mb-4 md:mb-6 lg:mb-8 leading-tight tracking-[-0.02em] animate-slide-up whitespace-normal break-words">
               <span className="inline-block text-transparent bg-gradient-to-r from-gray-800 via-black to-gray-900 bg-clip-text animate-gradient bg-[length:200%_200%]">
-                Harmonie'Cils
+                Harmonie Cils
               </span>
             </h1>
 
@@ -41,7 +41,7 @@ const Hero: React.FC<HeroProps> = ({ onNavigate }) => {
                 Voir les prestations
               </button>
               <button
-                onClick={() => onNavigate('contact')}
+                onClick={() => onNavigate('prestations')}
                 className="border-2 border-black text-black px-5 sm:px-8 md:px-10 py-3 sm:py-4 md:py-5 rounded-full font-accent font-semibold text-sm sm:text-base md:text-lg hover:bg-black hover:text-white transition-all duration-300 hover:shadow-2xl hover:scale-105 w-full sm:w-auto sm:min-w-[200px] md:min-w-[220px] bg-white/10 backdrop-blur-sm"
               >
                 Réserver maintenant

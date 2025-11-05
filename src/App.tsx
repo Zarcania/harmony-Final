@@ -1,42 +1,43 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { AdminProvider } from './contexts/AdminContext';
 import { BookingProvider } from './contexts/BookingContext';
 import Header from './components/Header';
-import HomePage from './pages/HomePage';
-import PrestationsPage from './pages/PrestationsPage';
-import PortfolioPage from './pages/PortfolioPage';
-import AboutPage from './pages/AboutPage';
-import ContactPage from './pages/ContactPage';
-import CancelBookingPage from './pages/CancelBookingPage';
-import PromotionPopup from './components/PromotionPopup';
+const HomePage = lazy(() => import('./pages/HomePage'));
+const PrestationsPage = lazy(() => import('./pages/PrestationsPage'));
+const PortfolioPage = lazy(() => import('./pages/PortfolioPage'));
+const AboutPage = lazy(() => import('./pages/AboutPage'));
+const ContactPage = lazy(() => import('./pages/ContactPage'));
+const CancelBookingPage = lazy(() => import('./pages/CancelBookingPage'));
+// PromotionPopup retiré sur demande
 import Footer from './components/Footer';
 import AdminWelcome from './components/AdminWelcome';
-import AdminPlanning from './components/AdminPlanning';
-import AdminPanel from './components/admin/AdminPanel';
-import PromotionEditor from './components/admin/PromotionEditor';
-import AdminLogin from './components/AdminLogin';
+const AdminPlanning = lazy(() => import('./components/AdminPlanning'));
+const AdminPanel = lazy(() => import('./components/admin/AdminPanel'));
+// Ancien éditeur de promotions retiré au profit de l'UI consolidée dans le Planning
+const AdminLogin = lazy(() => import('./components/AdminLogin'));
 import { useAdmin } from './contexts/AdminContext';
 import { HttpProvider, ErrorBanner } from './contexts/HttpContext';
 import { ToastProvider } from './contexts/ToastContext';
+import { ConsentProvider, useConsentContext } from './contexts/ConsentContext';
+import CookieBanner from './components/CookieBanner';
+import CookiePreferencesModal from './components/CookiePreferencesModal';
+import LegalPage from './pages/LegalPage';
 import { useSupabaseSession } from './hooks/useSupabaseSession';
+import { HelmetProvider } from 'react-helmet-async';
 
 const AppContent: React.FC = () => {
   const { isAdmin, setIsAdmin } = useAdmin();
   const { session } = useSupabaseSession();
-  const [showPopup, setShowPopup] = useState(false);
+  const { openPreferences } = useConsentContext();
+  // Plus d'overlay/onglet de promotion à l'entrée
   const [currentPage, setCurrentPage] = useState('accueil');
   const [preselectedService, setPreselectedService] = useState<string | null>(null);
   const [showPlanning, setShowPlanning] = useState(false);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
-  const [showPromotionEditor, setShowPromotionEditor] = useState(false);
+  // Ancien éditeur de promotions retiré
   const [showAdminLogin, setShowAdminLogin] = useState(false);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowPopup(true);
-    }, 3000);
-    return () => clearTimeout(timer);
-  }, []);
+  // Suppression de l'ouverture automatique du popup promotionnel
 
   const handleAdminToggle = () => {
     if (isAdmin) {
@@ -60,6 +61,8 @@ const AppContent: React.FC = () => {
         return '/contact';
       case 'cancel-booking':
         return '/cancel-booking';
+      case 'legal':
+        return '/mentions-legales';
       default:
         return '/';
     }
@@ -72,6 +75,7 @@ const AppContent: React.FC = () => {
     if (path.startsWith('/about') || path.startsWith('/a-propos')) return 'about';
     if (path.startsWith('/contact')) return 'contact';
     if (path.startsWith('/cancel-booking')) return 'cancel-booking';
+    if (path.startsWith('/mentions-legales')) return 'legal';
     return 'accueil';
   };
 
@@ -132,6 +136,8 @@ const AppContent: React.FC = () => {
         return <ContactPage onNavigate={handleNavigate} preselectedService={preselectedService} />;
       case 'cancel-booking':
         return <CancelBookingPage onNavigate={handleNavigate} />;
+      case 'legal':
+        return <LegalPage />;
       default:
         return <HomePage onNavigate={handleNavigate} />;
     }
@@ -143,45 +149,53 @@ const AppContent: React.FC = () => {
         <AdminWelcome
           onDisableAdmin={() => setIsAdmin(false)}
           onShowPlanning={() => setShowPlanning(true)}
-          onShowPromotions={() => setShowPromotionEditor(true)}
         />
       )}
-      <Header currentPage={currentPage} onNavigate={handleNavigate} />
+  <Header currentPage={currentPage} onNavigate={handleNavigate} onAdminOpen={() => setShowAdminLogin(true)} />
       <main className="relative z-10 pt-14 md:pt-20">
-        {renderCurrentPage()}
+        <Suspense fallback={<div className="p-6 text-center text-neutral-600">Chargement…</div>}>
+          {renderCurrentPage()}
+        </Suspense>
       </main>
-      <Footer onNavigate={handleNavigate} onAdminToggle={handleAdminToggle} />
-      {showPopup && (
-        <PromotionPopup onClose={() => setShowPopup(false)} onNavigate={handleNavigate} />
-      )}
-      {showPlanning && (
-        <AdminPlanning onClose={() => setShowPlanning(false)} />
-      )}
-      {showAdminPanel && (
-        <AdminPanel onClose={() => setShowAdminPanel(false)} />
-      )}
-      {showPromotionEditor && (
-        <PromotionEditor onClose={() => setShowPromotionEditor(false)} />
-      )}
-      {showAdminLogin && (
-        <AdminLogin onClose={() => setShowAdminLogin(false)} />
-      )}
+  <Footer onNavigate={handleNavigate} onAdminToggle={handleAdminToggle} onOpenCookies={openPreferences} />
+      {/* Overlay promotion supprimé */}
+      <Suspense fallback={null}>
+        {showPlanning && (
+          <AdminPlanning onClose={() => setShowPlanning(false)} />
+        )}
+        {showAdminPanel && (
+          <AdminPanel onClose={() => setShowAdminPanel(false)} />
+        )}
+      </Suspense>
+      {/* Ancien éditeur de promotions supprimé */}
+      <Suspense fallback={null}>
+        {showAdminLogin && (
+          <AdminLogin onClose={() => setShowAdminLogin(false)} />
+        )}
+      </Suspense>
     </div>
   );
 };
 
 function App() {
   return (
-    <HttpProvider>
-      <ToastProvider>
-        <ErrorBanner />
-        <BookingProvider>
-          <AdminProvider>
-            <AppContent />
-          </AdminProvider>
-        </BookingProvider>
-      </ToastProvider>
-    </HttpProvider>
+    <HelmetProvider>
+      <HttpProvider>
+        <ToastProvider>
+          <ConsentProvider>
+          <ErrorBanner />
+          <BookingProvider>
+            <AdminProvider>
+              <AppContent />
+            </AdminProvider>
+          </BookingProvider>
+          {/* CNIL cookies */}
+          <CookieBanner />
+          <CookiePreferencesModal />
+          </ConsentProvider>
+        </ToastProvider>
+      </HttpProvider>
+    </HelmetProvider>
   );
 }
 

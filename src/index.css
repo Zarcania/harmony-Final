@@ -9,8 +9,39 @@ html, body {
   position: relative;
 }
 
+/* Couleur de texte par défaut sur fonds clairs
+   Objectif: éviter le texte blanc non intentionnel sur des backgrounds clairs (cf. AdminPlanning)
+   Les composants foncés utilisent déjà des classes Tailwind explicites (text-white, text-white/80, etc.)
+   donc cette règle ne les impactera pas. */
+body {
+  color: #111827; /* tailwind gray-900 */
+}
+
 * {
   box-sizing: border-box;
+}
+
+/* Forcer un rendu clair des champs natifs (évite les contrôles noirs en mode dark auto) */
+select,
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+input[type="number"],
+input[type="date"],
+input[type="time"],
+input[type="password"],
+textarea {
+  background-color: #ffffff;
+  color: #111827; /* gray-900 */
+}
+
+/* Respecte la préférence d'accessibilité: réduit les animations si demandé */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* Mobile specific styles */

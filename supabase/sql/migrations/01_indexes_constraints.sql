@@ -86,7 +86,7 @@ BEGIN
     IF NOT EXISTS (
       SELECT 1 FROM pg_constraint WHERE conrelid='public.email_logs'::regclass AND conname='email_logs_email_type_check'
     ) THEN
-      EXECUTE $$ALTER TABLE public.email_logs ADD CONSTRAINT email_logs_email_type_check CHECK (email_type IN ('confirmation','reminder','cancellation'))$$;
+      EXECUTE 'ALTER TABLE public.email_logs ADD CONSTRAINT email_logs_email_type_check CHECK (email_type IN (''confirmation'',''reminder'',''cancellation''))';
     END IF;
   END IF;
 END $$;

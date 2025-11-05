@@ -94,26 +94,27 @@ const ReviewEditor: React.FC<ReviewEditorProps> = ({ onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
-        <div className="p-6 border-b border-gray-200 flex justify-between items-center">
-          <h2 className="text-2xl font-bold text-gray-900">Gérer les Avis</h2>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 pt-[env(safe-area-inset-top)]">
+      <div className="bg-white w-full sm:max-w-6xl sm:rounded-2xl rounded-t-2xl max-h-[92vh] sm:max-h-[90vh] overflow-hidden shadow-2xl">
+        {/* Header sticky */}
+        <div className="sticky top-0 z-10 bg-white flex items-center justify-between px-4 sm:px-6 py-4 border-b border-gray-200">
+          <h2 className="font-display text-lg sm:text-2xl font-bold text-gray-900">Gérer les Avis</h2>
+          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg transition-colors" aria-label="Fermer">
             <X size={24} />
           </button>
         </div>
 
-        <div className="p-6 overflow-y-auto max-h-[calc(90vh-80px)]">
+        <div className="p-4 sm:p-6 overflow-y-auto max-h-[calc(92vh-80px)] sm:max-h-[calc(90vh-80px)]">
           <button
             onClick={() => setEditingReview({ client_name: '', rating: 5, comment: '', service_type: '', is_published: false, order_index: reviews.length })}
-            className="mb-6 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+            className="mb-6 w-full sm:w-auto justify-center bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
           >
             <Plus size={20} />
             Ajouter un avis
           </button>
 
           {editingReview && (
-            <div className="mb-6 p-6 bg-blue-50 rounded-xl border-2 border-blue-300">
+            <div className="mb-6 p-4 sm:p-6 bg-blue-50 rounded-xl border-2 border-blue-300">
               <h3 className="text-lg font-semibold mb-4">
                 {editingReview.id ? 'Modifier l\'avis' : 'Nouvel avis'}
               </h3>
@@ -176,7 +177,7 @@ const ReviewEditor: React.FC<ReviewEditorProps> = ({ onClose }) => {
                     Publier l'avis
                   </label>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex flex-col sm:flex-row gap-3">
                   <button
                     onClick={handleSave}
                     disabled={loading}

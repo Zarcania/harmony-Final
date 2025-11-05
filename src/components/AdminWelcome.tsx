@@ -1,14 +1,13 @@
 import React from 'react';
-import { Crown, Settings, LogOut, Calendar, Gift } from 'lucide-react';
+import { Crown, Settings, LogOut, Calendar } from 'lucide-react';
 import { useAdmin } from '../contexts/AdminContext';
 
 interface AdminWelcomeProps {
   onDisableAdmin: () => void;
   onShowPlanning: () => void;
-  onShowPromotions: () => void;
 }
 
-const AdminWelcome: React.FC<AdminWelcomeProps> = ({ onDisableAdmin, onShowPlanning, onShowPromotions }) => {
+const AdminWelcome: React.FC<AdminWelcomeProps> = ({ onDisableAdmin, onShowPlanning }) => {
   const { logout } = useAdmin();
 
   const handleDisableAdmin = async () => {
@@ -53,14 +52,7 @@ const AdminWelcome: React.FC<AdminWelcomeProps> = ({ onDisableAdmin, onShowPlann
               <span className="">Planning</span>
             </button>
 
-            <button
-              onClick={onShowPromotions}
-              className="flex items-center gap-1.5 sm:gap-2 bg-gradient-to-r from-harmonie-600 to-harmonie-700 hover:from-harmonie-700 hover:to-harmonie-800 text-white rounded-lg px-3 py-1.5 sm:px-5 sm:py-2 transition-all duration-300 font-medium text-[13px] sm:text-sm shadow-sm hover:shadow-md hover:scale-105"
-            >
-              <Gift size={13} className="sm:hidden" />
-              <Gift size={16} className="hidden sm:block" />
-              <span>Promotions</span>
-            </button>
+            {/* Bouton Promotions retiré (UI centralisée dans le Planning) */}
 
             <div className="hidden lg:flex items-center gap-2 bg-emerald-50 rounded-lg px-3.5 py-1.5 border border-emerald-200">
               <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
