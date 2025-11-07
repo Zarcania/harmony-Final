@@ -35,3 +35,10 @@ supabase/.temp/
 
 # Local dev scripts (non versionnÃ©s)
 scripts/dev/*
+
+# Fichiers SQL contenant des données sensibles
+*.sql
+local_data.sql
+remote_data.sql
+temp_*.sql
+query.sql
