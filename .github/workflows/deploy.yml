@@ -20,16 +20,13 @@ jobs:
 
       - run: npm ci
 
-      # Force les variables Vite depuis les secrets
-      - name: Create .env.production
-        run: |
-          cat > .env.production <<EOF
-          VITE_SUPABASE_URL=${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY=${{ secrets.VITE_SUPABASE_ANON_KEY }}
-          VITE_PUBLIC_SITE_URL=${{ secrets.VITE_PUBLIC_SITE_URL }}
-          EOF
-
-      - run: npm run build -- --mode=production
+      # Build avec les variables Vite injectées depuis les secrets
+      - name: Build production
+        run: npm run build -- --mode production
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_PUBLIC_SITE_URL: ${{ secrets.VITE_PUBLIC_SITE_URL }}
 
       # Garde-fou: bonne URL présente et ancienne absente
       - name: Validate Supabase target
