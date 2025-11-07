@@ -1,9 +1,10 @@
 // @ts-nocheck
 // booking-canceled-email
 // Sends cancel notification
+const FROM_SECRET = Deno.env.get('RESEND_FROM');
 const DEFAULTS = {
-  FROM_NAME: 'Harmonie Cils Studio',
-  FROM_EMAIL: 'contact@harmoniecils.com',
+  FROM_NAME: FROM_SECRET?.match(/^([^<]+)</)?.[1].trim() || 'Harmonie Cils Studio',
+  FROM_EMAIL: FROM_SECRET?.match(/<(.+?)>/)?.[1] || FROM_SECRET || 'contact@harmoniecils.com',
   SALON_EMAIL: 'contact@harmoniecils.com',
   SALON_PHONE: '07 70 16 65 71'
 };

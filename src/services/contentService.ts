@@ -174,12 +174,8 @@ export const updateService = async (id: string, service: Partial<Service>) => {
 };
 
 export const deleteService = async (id: string) => {
-  const { error } = await supabase
-    .from('services')
-    .delete()
-    .eq('id', id);
-
-  if (error) throw error;
+  // Suppression sécurisée via RPC (vérifie catégorie vide et admin)
+  await callRpc('delete_service', { p_id: id });
   cache.del('services:*');
 };
 
@@ -235,12 +231,8 @@ export const updateServiceItem = async (id: string, item: Partial<ServiceItem>) 
 };
 
 export const deleteServiceItem = async (id: string) => {
-  const { error } = await supabase
-    .from('service_items')
-    .delete()
-    .eq('id', id);
-
-  if (error) throw error;
+  // Suppression sécurisée via RPC (vérifie RDV confirmés à venir et admin)
+  await callRpc('delete_service_item', { p_id: id });
   cache.del('service_items:*');
 };
 

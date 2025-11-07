@@ -2,9 +2,11 @@
 // booking-reminder-email (SMTP transport)
 // Cron-invocable function to send reminders H-24 (attend une liste en POST).
 import { reminderTemplate } from '../utils/emailTemplates.ts'
+// Support de RESEND_FROM pour harmoniser l'adresse expéditeur (si présent, on parse "Nom <email>")
+const FROM_SECRET = Deno.env.get('RESEND_FROM');
 const DEFAULTS = {
-  FROM_NAME: 'Harmonie Cils Studio',
-  FROM_EMAIL: 'contact@harmoniecils.com',
+  FROM_NAME: FROM_SECRET?.match(/^([^<]+)</)?.[1].trim() || 'Harmonie Cils Studio',
+  FROM_EMAIL: FROM_SECRET?.match(/<(.+?)>/)?.[1] || FROM_SECRET || 'contact@harmoniecils.com',
   SALON_EMAIL: 'contact@harmoniecils.com',
   SALON_PHONE: '07 70 16 65 71'
 };

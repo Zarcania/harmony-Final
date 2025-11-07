@@ -146,6 +146,19 @@ Deno.serve(async (req)=>{
           }
         });
       }
+      if (msg.includes('booking_window_exceeded') || msg.includes('window') && msg.includes('exceed')) {
+        return new Response(JSON.stringify({
+          error: 'date_too_far',
+          details: 'La date demandée dépasse la fenêtre de réservation autorisée.',
+          request_id: reqId
+        }), {
+          status: 409,
+          headers: {
+            ...cors,
+            'Content-Type': 'application/json'
+          }
+        });
+      }
       if (msg.includes('uniq_bookings_start_active') || msg.includes('unique') && msg.includes('preferred_date') && msg.includes('preferred_time')) {
         return new Response(JSON.stringify({
           error: 'slot_unavailable',

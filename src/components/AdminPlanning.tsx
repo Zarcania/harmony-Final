@@ -7,7 +7,7 @@ import { Booking } from '../types/booking';
 // Code-splitting: charge les modales à la demande pour accélérer l'ouverture du planning
 const BookingEditModal = lazy(() => import('./BookingEditModal'));
 import { supabase } from '../lib/supabase';
-import { invokeFunction, invokeRawFunction } from '../api/supa';
+import { invokeFunction, invokeRawFunction, callRpc } from '../api/supa';
 import { useToast } from '../contexts/ToastContext';
 const AdminPromotions = lazy(() => import('./AdminPromotions'));
 
@@ -61,6 +61,46 @@ const AdminPlanning: React.FC<AdminPlanningProps> = ({ onClose }) => {
     const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     return () => { document.body.style.overflow = prev; };
+  }, []);
+
+  // Fenêtre maximale de réservation (par défaut: today + 30, ajustable via sélecteur)
+  const today = useMemo(() => new Date(), []);
+  const [serverLimitDays, setServerLimitDays] = useState<number>(30);
+  const serverUntil = useMemo(() => {
+    const d = new Date(today);
+    d.setDate(d.getDate() + serverLimitDays);
+    return format(d, 'yyyy-MM-dd');
+  }, [today, serverLimitDays]);
+  const [bookableUntil, setBookableUntil] = useState<string>(serverUntil);
+  const maxBookingDate = useMemo(() => {
+    try { return new Date(`${bookableUntil}T00:00:00`); } catch { return new Date(today); }
+  }, [bookableUntil, today]);
+  const maxWindowDays = useMemo(() => {
+    const a = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const b = new Date(maxBookingDate.getFullYear(), maxBookingDate.getMonth(), maxBookingDate.getDate());
+    return Math.max(0, Math.round((b.getTime() - a.getTime()) / 86400000));
+  }, [today, maxBookingDate]);
+  const isBeyondLimit = useCallback((d: Date) => {
+    const a = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    const b = new Date(maxBookingDate.getFullYear(), maxBookingDate.getMonth(), maxBookingDate.getDate());
+    return a > b;
+  }, [maxBookingDate]);
+
+  // Charger la limite serveur (RPC) au montage
+  useEffect(() => {
+    const loadMaxDays = async () => {
+      try {
+        const days = await callRpc<number>('get_booking_max_days', {});
+        if (typeof days === 'number' && Number.isFinite(days)) {
+          setServerLimitDays(days);
+          // si l'utilisateur n'a pas encore modifié la valeur locale, aligner l'UI
+          setBookableUntil(format(addDays(new Date(), Math.max(0, days)), 'yyyy-MM-dd'));
+        }
+      } catch (e) {
+        console.warn('RPC get_booking_max_days failed; using default 30', e);
+      }
+    };
+    loadMaxDays();
   }, []);
 
   // Observer de taille pour ajuster la hauteur des slots et éviter le scroll
@@ -704,6 +744,7 @@ const AdminPlanning: React.FC<AdminPlanningProps> = ({ onClose }) => {
                 <h4 className="text-center font-semibold text-harmonie-800 text-xs sm:text-base truncate">Semaine du {format(weekDays[0], 'd MMMM', { locale: fr })} au {format(weekDays[6], 'd MMMM yyyy', { locale: fr })}</h4>
                 <button aria-label="Semaine suivante" onClick={nextWeek} className="h-9 w-9 flex items-center justify-center rounded-full bg-white border border-harmonie-200 hover:bg-harmonie-50 text-sm">→</button>
               </div>
+              <div className="mt-1 text-center text-[11px] text-harmonie-600">Réservable jusqu'au {format(maxBookingDate, 'd MMMM yyyy', { locale: fr })}</div>
               <div className="mt-2 flex items-center justify-center">
                 <div className="inline-flex rounded-full border border-harmonie-200 bg-white p-0.5 shadow-sm">
                   <button onClick={() => { setViewMode('day'); if (!selectedDate) setSelectedDate(format(new Date(), 'yyyy-MM-dd')); }} className="px-3 py-1.5 rounded-full text-sm text-harmonie-700 hover:bg-harmonie-50">Jour</button>
@@ -728,6 +769,7 @@ const AdminPlanning: React.FC<AdminPlanningProps> = ({ onClose }) => {
                 <h4 className="text-center font-semibold text-harmonie-800 text-xs sm:text-base truncate">{format(currentMonth, 'MMMM yyyy', { locale: fr })}</h4>
                 <button aria-label="Mois suivant" onClick={nextMonth} className="h-9 w-9 flex items-center justify-center rounded-full bg-white border border-harmonie-200 hover:bg-harmonie-50 text-sm">→</button>
               </div>
+              <div className="mt-1 text-center text-[11px] text-harmonie-600">Réservable jusqu'au {format(maxBookingDate, 'd MMMM yyyy', { locale: fr })}</div>
               <div className="mt-2 flex items-center justify-center">
                 <div className="inline-flex rounded-full border border-harmonie-200 bg-white p-0.5 shadow-sm">
                   <button onClick={() => { setViewMode('day'); if (!selectedDate) setSelectedDate(format(new Date(), 'yyyy-MM-dd')); }} className="px-3 py-1.5 rounded-full text-sm text-harmonie-700 hover:bg-harmonie-50">Jour</button>
@@ -752,6 +794,7 @@ const AdminPlanning: React.FC<AdminPlanningProps> = ({ onClose }) => {
                 <h4 className="text-center font-semibold text-harmonie-800 text-xs sm:text-base truncate">{format(selectedDate ? new Date(selectedDate) : new Date(), 'EEEE d MMMM yyyy', { locale: fr })}</h4>
                 <button aria-label="Jour suivant" onClick={nextDay} className="h-9 w-9 flex items-center justify-center rounded-full bg-white border border-harmonie-200 hover:bg-harmonie-50 text-sm">→</button>
               </div>
+              <div className="mt-1 text-center text-[11px] text-harmonie-600">Réservable jusqu'au {format(maxBookingDate, 'd MMMM yyyy', { locale: fr })}</div>
               <div className="mt-2 flex items-center justify-center">
                 <div className="inline-flex rounded-full border border-harmonie-200 bg-white p-0.5 shadow-sm">
                   <button onClick={() => { setViewMode('day'); if (!selectedDate) setSelectedDate(format(new Date(), 'yyyy-MM-dd')); }} className="px-3 py-1.5 rounded-full text-sm bg-harmonie-600 text-white">Jour</button>
@@ -912,6 +955,69 @@ const AdminPlanning: React.FC<AdminPlanningProps> = ({ onClose }) => {
                   </button>
                   {/* Espace réservé supprimé pour l'envoi test d'email */}
                 </div>
+                {/* Limite de réservation */}
+                <div className="mt-6 p-3 rounded-lg border border-harmonie-200 bg-harmonie-50 space-y-2">
+                  <h5 className="text-sm font-semibold text-harmonie-700">Limite de réservation</h5>
+                  <p className="text-xs text-harmonie-600 leading-relaxed">
+                    Les rendez-vous peuvent être enregistrés jusqu'au <strong>{format(maxBookingDate, 'd MMMM yyyy', { locale: fr })}</strong>.
+                    Au-delà de cette date, le planning est grisé et les créneaux sont marqués "Non réservable".
+                  </p>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <label htmlFor="bookable-days" className="text-xs text-harmonie-700">Délai (jours)</label>
+                    <input
+                      id="bookable-days"
+                      type="number"
+                      min={0}
+                      max={90}
+                      step={1}
+                      value={maxWindowDays}
+                      onChange={(e) => {
+                        const raw = Math.max(0, Math.min(90, parseInt(e.target.value || '0', 10)));
+                        const d = new Date(today);
+                        d.setDate(d.getDate() + raw);
+                        const iso = format(d, 'yyyy-MM-dd');
+                        setBookableUntil(iso);
+                      }}
+                      className="w-20 border border-harmonie-200 rounded px-2 py-1 text-sm"
+                    />
+                    <label htmlFor="bookable-until" className="text-xs text-harmonie-700">Dernier jour réservable</label>
+                    <input
+                      id="bookable-until"
+                      type="date"
+                      value={bookableUntil}
+                      min={todayISO}
+                      max={format(addDays(new Date(), 90), 'yyyy-MM-dd')}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        // Clamp à [todayISO, today+90]
+                        const maxIso = format(addDays(new Date(), 90), 'yyyy-MM-dd');
+                        const clamped = v < todayISO ? todayISO : (v > maxIso ? maxIso : v);
+                        setBookableUntil(clamped);
+                      }}
+                      className="border border-harmonie-200 rounded px-2 py-1 text-sm"
+                    />
+                    <span className="text-[11px] text-harmonie-500">limite serveur actuelle: {serverLimitDays} j (max: {format(new Date(`${serverUntil}T00:00:00`), 'd MMM yyyy', { locale: fr })})</span>
+                    <button
+                      onClick={async () => {
+                        try {
+                          const res = await invokeRawFunction<{ key: string; value: number }>('set-booking-window', { days: maxWindowDays });
+                          setServerLimitDays(res?.value ?? maxWindowDays);
+                          showToast('Limite de réservation enregistrée', 'success');
+                        } catch (e: unknown) {
+                          let msg = 'Échec de l\'enregistrement';
+                          if (e && typeof e === 'object') {
+                            const det = (e as { details?: unknown; message?: string }).details as { error?: string; message?: string } | undefined;
+                            msg = (det?.error || det?.message || (e as { message?: string }).message || msg);
+                          }
+                          showToast(msg, 'error');
+                        }
+                      }}
+                      className="ml-2 px-3 py-1.5 bg-harmonie-600 text-white rounded hover:bg-harmonie-700 text-xs"
+                    >
+                      Enregistrer
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -951,11 +1057,13 @@ const AdminPlanning: React.FC<AdminPlanningProps> = ({ onClose }) => {
                         {weekDays.map((d, di) => {
                           const isToday = isSameDay(d, new Date());
                           const closedInfo = isDateClosedUI(d);
+                          const overLimit = isBeyondLimit(d);
                           return (
                             <div key={`hd-${di}`} className={`text-center text-[11px] sm:text-xs font-medium ${isToday ? 'text-harmonie-800' : 'text-harmonie-700'}`}>
                               <div className={`inline-flex items-center gap-2 px-2 py-1 rounded-full ${isToday ? 'bg-harmonie-100 border border-harmonie-200' : 'bg-white border border-harmonie-100'}`}>
                                 <span>{format(d, 'EEE d', { locale: fr })}</span>
                                 {closedInfo.closed && <span className="text-[10px] text-red-700">Fermé</span>}
+                                {overLimit && <span className="text-[10px] text-harmonie-500">Non réservable</span>}
                               </div>
                             </div>
                           );
@@ -977,9 +1085,10 @@ const AdminPlanning: React.FC<AdminPlanningProps> = ({ onClose }) => {
                         const isToday = isSameDay(d, new Date());
                         const isPast = isBefore(startOfDay(d), startOfDay(new Date()));
                         const closedInfo = isDateClosedUI(d);
+                        const overLimit = isBeyondLimit(d);
                         
                         return (
-                          <div key={di} className={`relative border border-harmonie-200 rounded bg-white overflow-hidden ${isPast ? 'opacity-70' : ''}`}>
+                          <div key={di} className={`relative border border-harmonie-200 rounded bg-white overflow-hidden ${isPast ? 'opacity-70' : ''} ${overLimit ? 'opacity-60' : ''}`}>
                             {/* Titres */}
                             <div className={`absolute top-1 left-1 z-10 text-[11px] ${isToday ? 'text-harmonie-700 font-semibold' : 'text-harmonie-500'}`}>
                               {format(d, 'EEE d', { locale: fr })}
@@ -1002,13 +1111,19 @@ const AdminPlanning: React.FC<AdminPlanningProps> = ({ onClose }) => {
                             })()}
                             {/* Overlay pause déjeuner supprimée */}
                             {/* Overlay fermeture (hebdo ou exceptionnelle) */}
-                            {closedInfo.closed && (
+                            {(closedInfo.closed || overLimit) && (
                               <>
-                                <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'repeating-linear-gradient(45deg, rgba(220,38,38,0.10) 0 10px, rgba(220,38,38,0.05) 10px 20px)' }} />
+                                <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: overLimit ? 'repeating-linear-gradient(45deg, rgba(2,6,23,0.05) 0 10px, rgba(2,6,23,0.03) 10px 20px)' : 'repeating-linear-gradient(45deg, rgba(220,38,38,0.10) 0 10px, rgba(220,38,38,0.05) 10px 20px)' }} />
                                 <div className="absolute top-5 left-1 right-1 z-10">
-                                  <div className="text-center text-[11px] text-red-700 font-semibold bg-white/70 backdrop-blur-sm border border-red-200 rounded px-1 py-0.5">
-                                    Fermé{closedInfo.reason ? ` — ${closedInfo.reason}` : ''}
-                                  </div>
+                                  {closedInfo.closed ? (
+                                    <div className="text-center text-[11px] text-red-700 font-semibold bg-white/70 backdrop-blur-sm border border-red-200 rounded px-1 py-0.5">
+                                      Fermé{closedInfo.reason ? ` — ${closedInfo.reason}` : ''}
+                                    </div>
+                                  ) : (
+                                    <div className="text-center text-[11px] text-harmonie-600 font-medium bg-white/70 backdrop-blur-sm border border-harmonie-200 rounded px-1 py-0.5">
+                                      Non réservable (&gt;{maxWindowDays} j)
+                                    </div>
+                                  )}
                                 </div>
                               </>
                             )}
@@ -1080,14 +1195,23 @@ const AdminPlanning: React.FC<AdminPlanningProps> = ({ onClose }) => {
                     const dayBookings = (bookingsByDate[dateStr] || []);
                     const isToday = isSameDay(d, new Date());
                     const closedInfo = isDateClosedUI(d);
+                    const overLimit = isBeyondLimit(d);
                     return (
-                        <div key={idx} data-today={isToday ? 'true' : undefined} className={`relative min-h-[120px] p-2 ${closedInfo.closed ? 'bg-red-50' : 'bg-white'} ${!inMonth ? 'opacity-40' : ''} ${isPast ? 'opacity-60' : ''}`} onClick={() => setSelectedDate(dateStr)}>
+                        <div
+                          key={idx}
+                          data-today={isToday ? 'true' : undefined}
+                          className={`relative min-h-[120px] p-2 ${closedInfo.closed ? 'bg-red-50' : overLimit ? 'bg-harmonie-50' : 'bg-white'} ${!inMonth ? 'opacity-40' : ''} ${isPast ? 'opacity-60' : ''} ${overLimit ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                          onClick={() => { if (!overLimit) setSelectedDate(dateStr); else showToast('Au-delà de la fenêtre de réservation.', 'error'); }}
+                        >
                         <div className={`flex items-center justify-between mb-1 ${isToday ? 'text-harmonie-600 font-bold' : 'text-harmonie-700'}`}>
                           <span className="text-xs">{format(d, 'EEE', { locale: fr })}</span>
                           <span className={`text-sm ${isToday ? 'bg-harmonie-600 text-white rounded-full w-6 h-6 flex items-center justify-center' : ''}`}>{format(d, 'd')}</span>
                         </div>
                         {closedInfo.closed && (
                           <div className="absolute top-1 right-1 text-[10px] text-red-700 bg-white/80 border border-red-200 rounded px-1 py-[1px]">Fermé</div>
+                        )}
+                        {!closedInfo.closed && overLimit && (
+                          <div className="absolute top-1 right-1 text-[10px] text-harmonie-600 bg-white/80 border border-harmonie-200 rounded px-1 py-[1px]">Non réservable</div>
                         )}
                         <div className="space-y-1">
                           {dayBookings.slice(0,3).map((b) => (
@@ -1106,6 +1230,7 @@ const AdminPlanning: React.FC<AdminPlanningProps> = ({ onClose }) => {
               // Vue jour avec repère toutes les 30 minutes
               (() => {
                 const dayIso = selectedDate || format(new Date(), 'yyyy-MM-dd');
+                const overLimit = (() => { try { return isBeyondLimit(new Date(dayIso)); } catch { return false; } })();
                 const dayBookings = (bookingsByDate[dayIso] || []);
                 const { start: startMin, end: endMin } = getDayRange();
                 const stepMin = 30;
@@ -1134,7 +1259,7 @@ const AdminPlanning: React.FC<AdminPlanningProps> = ({ onClose }) => {
                       })}
                     </div>
                     {/* Colonne planning jour */}
-                    <div className="relative border border-harmonie-200 rounded bg-white overflow-hidden">
+                    <div className={`relative border border-harmonie-200 rounded overflow-hidden ${overLimit ? 'bg-harmonie-50 opacity-70' : 'bg-white'}`}>
                       {/* Lignes de demi-heure */}
                       {Array.from({ length: rows + 1 }).map((_, i) => (
                         <div key={i} className={`absolute left-0 right-0 border-t ${i % 2 === 0 ? 'border-harmonie-200' : 'border-harmonie-100'}`} style={{ top: `${i*slotPx}px` }} />
@@ -1181,8 +1306,17 @@ const AdminPlanning: React.FC<AdminPlanningProps> = ({ onClose }) => {
                           );
                         });
                       })()}
+                      {/* Indication hors fenêtre */}
+                      {overLimit && (
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                          <div className="text-center text-harmonie-600 text-sm font-medium bg-white/80 backdrop-blur-sm border border-harmonie-200 rounded px-3 py-2 shadow-sm">
+                            Date au-delà de la fenêtre ({maxWindowDays} jours)<br/>
+                            Non réservable
+                          </div>
+                        </div>
+                      )}
                       {/* Bookings positionnés */}
-                      {laid.map((e) => {
+                      {!overLimit && laid.map((e) => {
                         const top = Math.max(0, ((e.startMin - startMin) / stepMin) * slotPx);
                         const h = Math.max(slotPx, ((e.endMin - e.startMin) / stepMin) * slotPx);
                         const widthPct = 100 / e.lanes; const leftPct = e.lane * widthPct; const gapPx = 8;

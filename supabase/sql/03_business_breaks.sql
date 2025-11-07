@@ -10,9 +10,15 @@ create table if not exists public.business_breaks (
 -- RLS: allow read to anon, write restricted to service role
 alter table public.business_breaks enable row level security;
 
-create policy if not exists business_breaks_select_public
-on public.business_breaks for select
-using (true);
+do $$
+begin
+  if not exists (
+    select 1 from pg_policies
+    where schemaname='public' and tablename='business_breaks' and policyname='business_breaks_select_public'
+  ) then
+    execute 'create policy business_breaks_select_public on public.business_breaks for select using (true)';
+  end if;
+end $$;
 
 -- Upsert seed rows if empty (0..6)
 insert into public.business_breaks (day_of_week, enabled)

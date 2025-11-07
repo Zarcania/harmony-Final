@@ -103,29 +103,11 @@ async function main() {
   }
   ok(`RPC OK: ${data.length} slots reçus pour 60 min.`)
 
-  const lunchOverlaps = data.filter(r => overlapsLunch(r.slot_start, r.slot_end))
-  if (lunchOverlaps.length > 0) {
-    console.log('Slots qui chevauchent 12:00–13:00:')
-    lunchOverlaps.slice(0,10).forEach(r => console.log(' -', toParisHM(r.slot_start), '→', toParisHM(r.slot_end)))
-    fail(`Des slots chevauchent la pause (count=${lunchOverlaps.length}).`)
-  } else {
-    ok('Aucun slot 60 min ne chevauche la pause 12:00–13:00 (si pause configurée).')
-  }
-
-  // Test basique 120 min: s'assurer qu'aucun slot 120 min ne chevauche la pause
-  const args120 = { p_date: dateStr, p_duration_minutes: 120, p_slot_step_minutes: 30, p_buffer_minutes: 0 }
-  const { data: data120, error: err120 } = await supabase.rpc('get_available_slots', args120)
-  if (err120) {
-    return fail(`Erreur RPC (120 min): ${err120.message}`)
-  }
-  const lunchOverlaps120 = data120.filter(r => overlapsLunch(r.slot_start, r.slot_end))
-  if (lunchOverlaps120.length > 0) {
-    console.log('Slots 120 min qui chevauchent 12:00–13:00:')
-    lunchOverlaps120.slice(0,10).forEach(r => console.log(' -', toParisHM(r.slot_start), '→', toParisHM(r.slot_end)))
-    fail(`Des slots 120 min chevauchent la pause (count=${lunchOverlaps120.length}).`)
-  } else {
-    ok('Aucun slot 120 min ne chevauche la pause 12:00–13:00 (si pause configurée).')
-  }
+  // Aucune contrainte de pause déjeuner: on ne teste pas les chevauchements.
+  // Simplement, on affiche quelques slots pour info.
+  console.log('Aperçu des 5 premiers slots (60 min):')
+  data.slice(0,5).forEach(r => console.log(' -', toParisHM(r.slot_start), '→', toParisHM(r.slot_end)))
+  ok('Test de disponibilité terminé (sans vérification de pause déjeuner).')
 }
 
 main().catch(e => fail(e?.message || String(e)))

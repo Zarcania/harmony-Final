@@ -1,7 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase, checkIsAdmin } from '../lib/supabase';
 import { invokeFunction } from '../api/supa';
-import { getServices, getServiceItems, createService, updateService, createServiceItem as csCreateServiceItem, updateServiceItem as csUpdateServiceItem, deleteServiceItem as csDeleteServiceItem } from '../services/contentService';
+import { getServices, getServiceItems, createService, updateService, createServiceItem as csCreateServiceItem, updateServiceItem as csUpdateServiceItem, deleteServiceItem as csDeleteServiceItem, deleteService } from '../services/contentService';
+import { useToast } from './ToastContext';
 
 interface PortfolioImage {
   id: string;
@@ -45,6 +46,7 @@ interface AdminContextType {
   addServiceItem: (sectionId: string, item: Omit<ServiceItem, 'id'>) => void;
   deleteServiceItem: (sectionId: string, itemId: string) => void;
   addServiceSection: (section: { title: string; icon: string }) => void;
+  deleteServiceSection: (id: string) => void;
   moveServiceSection: (id: string, direction: 'up' | 'down') => void;
   prestationsBackgroundImage: string;
   setPrestationsBackgroundImage: (url: string) => void;
@@ -66,6 +68,7 @@ export const useAdmin = () => {
 };
 
 export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { showToast } = useToast();
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   // État d'erreur auth optionnel (peut être exposé au besoin)
@@ -233,8 +236,11 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     try {
       await updateService(id, { title: updates.title, icon: updates.icon });
       await reloadServices();
+      showToast('Section enregistrée.', 'success');
     } catch (e) {
       console.error('updateServiceSection failed', e);
+      const msg = (e as { message?: string })?.message || 'Échec de l’enregistrement de la section';
+      showToast(msg, 'error');
       // fallback UI local pour ne pas perdre la saisie immédiate
       setServiceSections(prev => prev.map(section => 
         section.id === id ? { ...section, ...updates } : section
@@ -252,8 +258,11 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         description: updates.description,
       });
       await reloadServices();
+      showToast('Prestation enregistrée.', 'success');
     } catch (e) {
       console.error('updateServiceItem failed', e);
+       const msg = (e as { message?: string })?.message || 'Échec de l’enregistrement de la prestation';
+      showToast(msg, 'error');
       // fallback local pour retour instantané (non persistant)
       setServiceSections(prev => prev.map(section => 
         section.id === sectionId 
@@ -283,8 +292,11 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         benefits: null,
       } as unknown as Parameters<typeof csCreateServiceItem>[0]);
       await reloadServices();
+      showToast('Prestation ajoutée.', 'success');
     } catch (e) {
       console.error('addServiceItem failed', e);
+      const msg = (e as { message?: string })?.message || 'Échec de l’ajout de la prestation';
+      showToast(msg, 'error');
       // fallback local non persistant
       const newItem = { ...item, id: `${sectionId}-${Date.now()}` } as ServiceItem;
       setServiceSections(prev => prev.map(section => 
@@ -295,18 +307,16 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
-  const deleteServiceItem = async (sectionId: string, itemId: string) => {
+  const deleteServiceItem = async (_sectionId: string, itemId: string) => {
     try {
       await csDeleteServiceItem(itemId);
       await reloadServices();
+      showToast('Prestation supprimée.', 'success');
     } catch (e) {
       console.error('deleteServiceItem failed', e);
-      // fallback local
-      setServiceSections(prev => prev.map(section => 
-        section.id === sectionId 
-          ? { ...section, items: section.items.filter(item => item.id !== itemId) }
-          : section
-      ));
+      // Ne pas faire de fallback local si la base refuse (règles: RDV futur ou RLS)
+      const msg = (e as { message?: string })?.message || 'Suppression impossible (règles métier)';
+      showToast(msg, 'error');
     }
   };
 
@@ -315,8 +325,11 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const orderIndex = serviceSections.length;
       await createService({ title: section.title, icon: section.icon, order_index: orderIndex } as unknown as Parameters<typeof createService>[0]);
       await reloadServices();
+      showToast('Section ajoutée.', 'success');
     } catch (e) {
       console.error('addServiceSection failed', e);
+      const msg = (e as { message?: string })?.message || 'Échec de l’ajout de la section';
+      showToast(msg, 'error');
       // fallback local non persistant
       const newSection: ServiceSection = {
         id: `${Date.now()}`,
@@ -325,6 +338,18 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         items: []
       };
       setServiceSections(prev => [...prev, newSection]);
+    }
+  };
+
+  const deleteServiceSection = async (id: string) => {
+    try {
+      await deleteService(id as unknown as string);
+      await reloadServices();
+      showToast('Catégorie supprimée.', 'success');
+    } catch (e) {
+      console.error('deleteServiceSection failed', e);
+      const msg = (e as { message?: string })?.message || 'Suppression de la catégorie impossible (catégorie non vide ou droits)';
+      showToast(msg, 'error');
     }
   };
 
@@ -499,6 +524,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       addServiceItem,
       deleteServiceItem,
       addServiceSection,
+  deleteServiceSection,
       moveServiceSection,
       prestationsBackgroundImage,
       setPrestationsBackgroundImage,

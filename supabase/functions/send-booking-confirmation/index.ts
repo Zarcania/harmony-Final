@@ -2,6 +2,8 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.58.0';
 import { buildCors, handleOptions } from '../utils/cors.ts';
 import { confirmationTemplate } from '../utils/emailTemplates.ts';
+// Expéditeur centralisé (RESEND_FROM)
+const FROM = Deno.env.get('RESEND_FROM') || 'Harmonie Cils <noreply@harmoniecils.com>';
 Deno.serve(async (req)=>{
   const origin = req.headers.get('Origin') || undefined;
   const corsHeaders = buildCors(origin);
@@ -92,7 +94,7 @@ Deno.serve(async (req)=>{
           Authorization: `Bearer ${resendKey}`
         },
         body: JSON.stringify({
-          from: 'Harmonie Cils <noreply@harmoniecils.com>',
+          from: FROM,
           to: booking.client_email,
           subject,
           html: emailHtml

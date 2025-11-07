@@ -379,7 +379,6 @@ CREATE TABLE IF NOT EXISTS "public"."bookings" (
     "ts" "tstzrange",
     "period" "tstzrange",
     "slot" "tstzrange",
-    CONSTRAINT "bookings_start_not_past_active" CHECK ((("start_at" >= "now"()) OR ("status" = ANY (ARRAY['cancelled'::"text", 'completed'::"text"])))),
     CONSTRAINT "bookings_status_allowed" CHECK (("status" = ANY (ARRAY['confirmed'::"text", 'completed'::"text", 'cancelled'::"text"]))),
     CONSTRAINT "bookings_status_check" CHECK (("status" = ANY (ARRAY['pending'::"text", 'confirmed'::"text", 'cancelled'::"text", 'completed'::"text"])))
 );

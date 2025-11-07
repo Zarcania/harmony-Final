@@ -32,6 +32,7 @@ const Services: React.FC<ServicesProps> = () => {
     addServiceItem,
     deleteServiceItem,
     addServiceSection,
+    deleteServiceSection,
     moveServiceSection,
     servicesError,
     reloadServices
@@ -315,7 +316,7 @@ const Services: React.FC<ServicesProps> = () => {
                       {section.title}
                     </h3>
                     {isAdmin && (
-                      <div className="flex gap-1 mt-2">
+                      <div className="flex gap-1 mt-2 items-center">
                         <button
                           onClick={() => moveServiceSection(section.id, 'up')}
                           className="p-1 text-neutral-600 hover:bg-neutral-100 rounded"
@@ -329,6 +330,20 @@ const Services: React.FC<ServicesProps> = () => {
                           title="Descendre la section"
                         >
                           <ArrowDown size={14} />
+                        </button>
+                        {/* Supprimer la catégorie (désactivé si items présents) */}
+                        <button
+                          onClick={() => {
+                            if (section.items && section.items.length > 0) return;
+                            const ok = window.confirm('Supprimer cette catégorie ?\nCondition: aucune prestation ne doit rester dans la catégorie.');
+                            if (!ok) return;
+                            deleteServiceSection(section.id);
+                          }}
+                          className={`p-1 rounded ${section.items && section.items.length > 0 ? 'text-neutral-300 cursor-not-allowed' : 'text-red-600 hover:text-red-800 hover:bg-red-100'}`}
+                          title={section.items && section.items.length > 0 ? 'Supprimer (désactivé: la catégorie contient encore des prestations)' : 'Supprimer la catégorie'}
+                          disabled={section.items && section.items.length > 0}
+                        >
+                          <Trash2 size={14} />
                         </button>
                       </div>
                     )}

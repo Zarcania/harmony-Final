@@ -1,6 +1,8 @@
 // @ts-nocheck
 import { createClient } from 'npm:@supabase/supabase-js@2.58.0';
 import { buildCors, handleOptions } from '../utils/cors.ts';
+// Expéditeur Resend (secret RESEND_FROM)
+const FROM = Deno.env.get('RESEND_FROM') || 'Harmonie Cils <noreply@harmoniecils.com>';
 Deno.serve(async (req)=>{
   const origin = req.headers.get('Origin') ?? undefined;
   const corsHeaders = buildCors(origin);
@@ -67,7 +69,7 @@ Deno.serve(async (req)=>{
             'Authorization': `Bearer ${Deno.env.get('RESEND_API_KEY')}`
           },
           body: JSON.stringify({
-            from: 'Harmonie Cils <noreply@harmoniecils.com>',
+            from: FROM,
             ...emailData
           })
         });

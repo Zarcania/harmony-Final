@@ -1,5 +1,7 @@
 // @ts-nocheck
 import { buildCors, handleOptions } from '../utils/cors.ts';
+// Centralisation de l'adresse d'expéditeur via la variable d'environnement RESEND_FROM
+const FROM = Deno.env.get('RESEND_FROM') || 'Harmonie Cils <noreply@harmoniecils.com>';
 Deno.serve(async (req)=>{
   const origin = req.headers.get('Origin') || undefined;
   const cors = buildCors(origin);
@@ -64,7 +66,7 @@ Deno.serve(async (req)=>{
         Authorization: `Bearer ${apiKey}`
       },
       body: JSON.stringify({
-        from: 'Harmonie Cils <noreply@harmoniecils.com>',
+        from: FROM,
         to,
         subject,
         html

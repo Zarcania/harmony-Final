@@ -8,3 +8,7 @@ console.error = (...args: unknown[]) => {
   if (typeof args[0] === 'string' && args[0].includes('Warning:')) return;
   origError(...args);
 };
+
+// Provide minimal env for modules using Supabase client during tests
+process.env.VITE_SUPABASE_URL = process.env.VITE_SUPABASE_URL || 'http://localhost:54321';
+process.env.VITE_SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY || 'test_anon_key';
