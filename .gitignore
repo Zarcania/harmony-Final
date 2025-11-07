@@ -36,9 +36,9 @@ supabase/.temp/
 # Local dev scripts (non versionnés)
 scripts/dev/*
 
-# Fichiers SQL contenant des donn�es sensibles
-*.sql
+# Fichiers SQL contenant des données sensibles (mais pas les migrations)
 local_data.sql
 remote_data.sql
 temp_*.sql
 query.sql
+*_dump.sql

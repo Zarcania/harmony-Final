@@ -407,14 +407,11 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, []);
   const reloadServices = React.useCallback(async () => {
     try {
-      console.log('[AdminContext] Début chargement des services...');
       setServicesError(null);
       const services = await getServices();
-      console.log('[AdminContext] Services récupérés:', services.length, services);
       const sectionsWithItems: ServiceSection[] = await Promise.all(
         services.map(async (service) => {
           const items = await getServiceItems(service.id);
-          console.log(`[AdminContext] Service "${service.title}": ${items.length} items`);
           return {
             id: service.id,
             title: service.title,
@@ -429,18 +426,13 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           };
         })
       );
-      console.log('[AdminContext] Sections avec items:', sectionsWithItems.length);
-      // Toujours mettre à jour si on a des services (même sans items)
       if (sectionsWithItems.length > 0) {
-        console.log('[AdminContext] Services chargés depuis Supabase:', sectionsWithItems.length);
         setServiceSections(sectionsWithItems);
       } else {
-        console.warn('[AdminContext] Aucun service trouvé, tentative Edge Function...');
         // Fallback: Edge Function publique (bypass RLS), garantit l'affichage complet pour les visiteurs
         try {
           const res = await invokeFunction<{ sections: Array<{ id: string; title: string; icon: string; items: Array<{ id: string; label: string; price: string; description?: string | null; duration?: string | null }> }> }>('get-services', undefined, { timeoutMs: 7000 });
           if (res && Array.isArray(res.sections) && res.sections.length) {
-            console.log('[AdminContext] Services chargés depuis Edge Function:', res.sections.length);
             const mapped: ServiceSection[] = res.sections.map((s) => ({
               id: s.id,
               title: s.title,
@@ -448,11 +440,9 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
               items: s.items.map((it) => ({ id: it.id, label: it.label, price: it.price, duration: it.duration ?? undefined, description: it.description ?? undefined }))
             }));
             setServiceSections(mapped);
-          } else {
-            console.warn('[AdminContext] Edge Function retournée vide, garde les données hardcodées');
           }
         } catch (e) {
-          console.warn('[AdminContext] Fallback get-services failed', e);
+          console.warn('Fallback get-services failed', e);
         }
       }
     } catch (error) {
