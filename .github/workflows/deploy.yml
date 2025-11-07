@@ -20,13 +20,16 @@ jobs:
 
       - run: npm ci
 
-      # Build production avec variables directement dans l'environnement
+      # Créer .env.production temporaire pour le build
+      - name: Create .env.production
+        run: |
+          echo "VITE_SUPABASE_URL=${{ secrets.VITE_SUPABASE_URL }}" > .env.production
+          echo "VITE_SUPABASE_ANON_KEY=${{ secrets.VITE_SUPABASE_ANON_KEY }}" >> .env.production
+          echo "VITE_PUBLIC_SITE_URL=${{ secrets.VITE_PUBLIC_SITE_URL }}" >> .env.production
+
+      # Build production
       - name: Build production
         run: npm run build
-        env:
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
-          VITE_PUBLIC_SITE_URL: ${{ secrets.VITE_PUBLIC_SITE_URL }}
 
       # Garde-fou: bonne URL présente et ancienne absente
       - name: Validate Supabase target
