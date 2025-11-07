@@ -30,14 +30,23 @@ jobs:
       # Build production
       - name: Build production
         run: npm run build
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_PUBLIC_SITE_URL: ${{ secrets.VITE_PUBLIC_SITE_URL }}
 
-      # Garde-fou: bonne URL présente et ancienne absente
+      # Garde-fou: bonne URL présente et ancienne absente + clé anon présente
       - name: Validate Supabase target
         run: |
-          grep -R "lmpfrrkqdevxkgimvnfw\.supabase\.co" dist || (echo "URL Supabase absente du bundle" && exit 1)
+          grep -R "lmpfrrkqdevxkgimvnfw\.supabase\.co" dist || (echo "❌ URL Supabase absente du bundle" && exit 1)
           if grep -R "cbelpqfkxvxwrrbxiyww\.supabase\.co" dist; then
-            echo "Ancienne URL Supabase détectée" && exit 1
+            echo "❌ Ancienne URL Supabase détectée" && exit 1
           fi
+          # Vérifier que la clé anon est présente (commence par eyJ)
+          if ! grep -R "eyJ[a-zA-Z0-9_-]*\.[a-zA-Z0-9_-]*\.[a-zA-Z0-9_-]*" dist; then
+            echo "❌ Clé Supabase anon absente du bundle" && exit 1
+          fi
+          echo "✅ Validation réussie: URL et clé anon présentes"
 
       - name: Upload via FTPS
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
