@@ -1,6 +1,45 @@
 -- Restore missing core tables (services, promotions, portfolio, content, booking infra)
 -- Idempotent: uses IF NOT EXISTS
 
+-- Ensure helper function exists for generated column
+create or replace function public.parse_duration_to_minutes(p_text text)
+ returns integer
+ language sql
+ immutable
+ set search_path to 'public', 'extensions'
+as $$
+with norm as (
+  select lower(trim(p_text)) as t
+), t1 as (
+  select regexp_replace(
+           replace(replace(replace(replace(replace(replace(t,'minutes','min'),'minute','min'),'mins','min'),'mns','min'),'hours','h'),'hour','h'),
+           '\\s+', ' ', 'g'
+         ) as t
+  from norm
+), hms as (
+  select t,
+         case when t ~ '^[0-9]+:[0-9]{1,2}$' then split_part(t, ':', 1)::int else null end as hh_colon,
+         case when t ~ '^[0-9]+:[0-9]{1,2}$' then split_part(t, ':', 2)::int else null end as mm_colon
+  from t1
+), parsed as (
+  select t,
+    coalesce(
+      case when hh_colon is not null then hh_colon*60 + mm_colon end,
+      case when t ~ '^[0-9]+\\s*h\\s*[0-9]{1,2}\\s*min?$' then
+        (regexp_replace(t, '^.*?([0-9]+)\\s*h.*$', '\\1'))::int*60 + (regexp_replace(t, '^.*?([0-9]{1,2})\\s*min.*$', '\\1'))::int
+      end,
+      case when t ~ '^[0-9]+h[0-9]{1,2}$' then
+        (regexp_replace(t, '^([0-9]+)h[0-9]{1,2}$', '\\1'))::int*60 + (regexp_replace(t, '^[0-9]+h([0-9]{1,2})$', '\\1'))::int
+      end,
+      case when t ~ '^[0-9]+\\s*h\\s*$' or t ~ '^[0-9]+h$' then (regexp_replace(t, '[^0-9]', '', 'g'))::int * 60 end,
+      case when t ~ '^[0-9]+\\s*min$' or t ~ '^[0-9]+m$' or t ~ '^[0-9]+$' then (regexp_replace(t, '[^0-9]', '', 'g'))::int end,
+      nullif(regexp_replace(t, '[^0-9]', '', 'g'), '')::int
+    ) as minutes
+  from hms
+)
+select minutes from parsed;
+$$;
+
 create table if not exists public.services (
   id uuid primary key default gen_random_uuid(),
   title text not null,

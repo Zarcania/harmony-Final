@@ -10,6 +10,10 @@ BEGIN
     'services', 'service_items', 'promotions', 'portfolio_items', 'portfolio_categories',
     'about_content', 'reviews', 'business_hours', 'business_breaks', 'closures'
   ]) AS tbl LOOP
+    -- Skip if table does not exist on the target database
+    IF to_regclass('public.' || rec.tbl) IS NULL THEN
+      CONTINUE;
+    END IF;
     -- Enable RLS if not already (safe)
     EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', rec.tbl);
     -- (Optional) do NOT FORCE row level security to allow service_role bypass
