@@ -15,7 +15,7 @@ export const getAllowedOrigins = (): string[] => {
 export const buildCors = (origin?: string): CorsHeaders => {
   const allowed = getAllowedOrigins()
   const o = origin && allowed.includes(origin) ? origin : allowed[0]
-  const allow = 'authorization, content-type, x-client-info, x-client-name, apikey';
+  const allow = 'authorization, content-type, x-client-info, x-client-name, x-debug, apikey';
   return {
     'Access-Control-Allow-Origin': o,
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
