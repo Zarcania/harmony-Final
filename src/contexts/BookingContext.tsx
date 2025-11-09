@@ -573,10 +573,12 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
           }
 
           if (uniq.length) {
-            // La fonction SQL get_available_slots retourne déjà les créneaux filtrés
-            // en tenant compte de la durée (p_duration_minutes) et des réservations existantes.
-            // Pas besoin de re-filtrer côté client - on utilise directement les résultats.
+            // La fonction SQL get_available_slots gère déjà correctement
+            // la durée (p_duration_minutes) et les chevauchements.
+            // Elle retourne uniquement les heures de DÉBUT valides.
             let filtered = uniq;
+            
+            // Calculer stepsNeeded pour le second filtre (verification réservations)
             const stepsNeeded = Math.max(1, Math.ceil(selectedDurationMin / 30));
 
             // 2) Renforcer côté public: retirer toute heure qui chevauche un créneau déjà réservé (RPC get_booked_slots)
