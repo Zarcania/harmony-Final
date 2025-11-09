@@ -573,31 +573,11 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
           }
 
           if (uniq.length) {
-            // Appliquer un filtre conservateur avec les fenêtres horaires chargées côté client
-            const dObjRpc = new Date(date);
-            const dowRpc = getDbDow(dObjRpc);
-            const bhRpc = businessHours.find(b => b.day_of_week === dowRpc);
-            if (bhRpc && bhRpc.closed) return [];
-            const windowsRpc = (() => {
-              // Si pas d'horaires configurés (null), considérer jour fermé
-              if (!bhRpc?.open_time || !bhRpc?.close_time) return [];
-              const open = bhRpc.open_time;
-              const close = bhRpc.close_time;
-              if (!open || !close) return [];
-              return [{ o: open, c: close }];
-            })();
+            // La fonction SQL get_available_slots retourne déjà les créneaux filtrés
+            // en tenant compte de la durée (p_duration_minutes) et des réservations existantes.
+            // Pas besoin de re-filtrer côté client - on utilise directement les résultats.
+            let filtered = uniq;
             const stepsNeeded = Math.max(1, Math.ceil(selectedDurationMin / 30));
-            const setList = new Set(uniq);
-            const inWindow = (tt: string) => windowsRpc.some(w => tt >= w.o && tt < w.c);
-            // 1) si les horaires ne sont pas encore chargés côté client, on ne filtre pas par fenêtre
-            let filtered = windowsRpc.length ? uniq.filter((t) => {
-              for (let k = 0; k < stepsNeeded; k++) {
-                const tt = addMinutesToTime(date, t, k * 30);
-                if (!setList.has(tt)) return false;
-                if (!inWindow(tt)) return false;
-              }
-              return true;
-            }) : uniq.slice();
 
             // 2) Renforcer côté public: retirer toute heure qui chevauche un créneau déjà réservé (RPC get_booked_slots)
             if (!isAuthenticated && filtered.length) {
