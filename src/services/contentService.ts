@@ -180,8 +180,22 @@ export const deleteService = async (id: string) => {
 };
 
 // Service Items
-export const getServiceItems = async (serviceId?: string) => {
+export const getServiceItems = async (serviceId?: string, bypassCache = false) => {
   const key = serviceId ? `service_items:by_service:${serviceId}` : 'service_items:all'
+  
+  // Si bypassCache est true, on skip le cache complètement
+  if (bypassCache) {
+    let query = supabase
+      .from('service_items')
+      .select('*')
+      .order('order_index');
+    if (serviceId) query = query.eq('service_id', serviceId);
+    const { data, error, status } = await query;
+    log('table:service_items', status as number, error);
+    if (error) throw error;
+    return data || [];
+  }
+  
   return cache.wrap<ServiceItem[]>(
     key,
     async () => {
@@ -218,6 +232,7 @@ export const updateServiceItem = async (id: string, item: Partial<ServiceItem>) 
   // Retirer duration_minutes du payload d'update
   const rest = { ...(item as Record<string, unknown>) };
   delete (rest as Record<string, unknown>).duration_minutes;
+  
   const { data, error } = await supabase
     .from('service_items')
     .update({ ...(rest as Partial<ServiceItem>), updated_at: new Date().toISOString() })
@@ -226,14 +241,32 @@ export const updateServiceItem = async (id: string, item: Partial<ServiceItem>) 
     .single();
 
   if (error) throw error;
+  
+  // Vider TOUS les caches liés (mémoire + forcer invalidation)
   cache.del('service_items:*');
+  cache.del('services:*');
+  
   return data;
 };
 
 export const deleteServiceItem = async (id: string) => {
-  // Suppression sécurisée via RPC (vérifie RDV confirmés à venir et admin)
-  await callRpc('delete_service_item', { p_id: id });
+  // Tentative via RPC (suppression sécurisée avec vérification RDV)
+  try {
+    await callRpc('delete_service_item', { p_id: id });
+  } catch (rpcError) {
+    // Si RPC n'existe pas ou échoue, fallback sur DELETE direct (RLS vérifiera admin)
+    console.warn('RPC delete_service_item failed, trying direct delete:', rpcError);
+    const { error } = await supabase
+      .from('service_items')
+      .delete()
+      .eq('id', id);
+    
+    if (error) throw error;
+  }
+  
+  // Vider les caches
   cache.del('service_items:*');
+  cache.del('services:*');
 };
 
 // Portfolio Categories

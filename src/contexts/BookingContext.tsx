@@ -75,9 +75,9 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
     map: new Map<string, { ts: number; rows: Array<{ preferred_time: string; duration_minutes?: number }> }>(),
     inflight: new Map<string, Promise<Array<{ preferred_time: string; duration_minutes?: number }>>>(),
   });
-  // TTL augmenté de 5s à 15s pour réduire les rafales tout en conservant une fraîcheur acceptable
-  // Compromis: moins de requêtes serveur vs risque de créneaux obsolètes (protégé par contrainte EXCLUDE sur ts)
-  const RPC_CACHE_TTL_MS = 15_000;
+  // TTL réduit à 2s pour éviter les doubles réservations (balance entre fraîcheur et charge serveur)
+  // La contrainte DB EXCLUDE sur ts protège en dernier recours
+  const RPC_CACHE_TTL_MS = 2_000;
 
   // Helpers durée/prestations
   const parseDurationMinutes = (raw?: string | null): number => {
@@ -745,9 +745,16 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
                       if (inner.endsWith(']') || inner.endsWith(')')) inner = inner.slice(0, -1);
                       const parts = inner.split(',');
                       if (parts.length >= 2) {
-                        const start = new Date(parts[0].trim());
-                        const end = new Date(parts[1].trim());
+                        // FIX: Parser correctement les timestamps UTC et convertir en heure locale
+                        const startStr = parts[0].trim();
+                        const endStr = parts[1].trim();
+                        
+                        // Créer un Date object et forcer l'interprétation UTC
+                        const start = new Date(startStr.includes('+') || startStr.includes('Z') ? startStr : startStr + 'Z');
+                        const end = new Date(endStr.includes('+') || endStr.includes('Z') ? endStr : endStr + 'Z');
+                        
                         if (!isNaN(+start) && !isNaN(+end)) {
+                          // Utiliser toLocaleTimeString pour obtenir l'heure locale (Europe/Paris)
                           const hh = String(start.getHours()).padStart(2,'0');
                           const mm = String(start.getMinutes()).padStart(2,'0');
                           const mins = Math.max(30, Math.round((+end - +start) / 60000));
@@ -985,14 +992,13 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
           for (let k = 0; k < steps; k++) tset.add(addMinutesToTime(date, b.time, k * 30));
         }
       } else {
-        // Réutilise le même cache RPC que getAvailableSlots
+        // IMPORTANT: Bypass du cache pour vérification finale avant soumission
+        // On force un appel RPC frais pour éviter les doubles réservations
         const key = `slots:${date}`;
-        const now = Date.now();
-        const cached = rpcSlotsCacheRef.current.map.get(key);
         let rpcData: Array<{ preferred_time: string; duration_minutes?: number }> | null = null;
-        if (cached && now - cached.ts < RPC_CACHE_TTL_MS) {
-          rpcData = cached.rows;
-        } else {
+        
+        // Ne pas utiliser le cache, toujours faire un appel frais
+        {
           let p = rpcSlotsCacheRef.current.inflight.get(key);
           if (!p) {
             p = (async () => {
@@ -1022,13 +1028,11 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
                   }
                 }
               }
-              rpcSlotsCacheRef.current.map.set(key, { ts: Date.now(), rows });
+              // Ne pas mettre en cache pour checkSlotAvailable - toujours frais
               return rows;
             })();
-            rpcSlotsCacheRef.current.inflight.set(key, p);
           }
           rpcData = await p;
-          rpcSlotsCacheRef.current.inflight.delete(key);
         }
         if (rpcData) {
           for (const r of rpcData as Array<{ preferred_time: string; duration_minutes?: number }>) {

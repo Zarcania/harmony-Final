@@ -53,7 +53,7 @@ interface AdminContextType {
   showPrestationsBackground: boolean;
   setShowPrestationsBackground: (show: boolean) => void;
   servicesError?: string | null;
-  reloadServices: () => Promise<void>;
+  reloadServices: (bypassCache?: boolean) => Promise<void>;
 }
 
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
@@ -257,11 +257,12 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         duration: updates.duration,
         description: updates.description,
       });
-      await reloadServices();
+      // Force le rechargement avec bypass du cache pour voir immédiatement les changements
+      await reloadServices(true);
       showToast('Prestation enregistrée.', 'success');
     } catch (e) {
       console.error('updateServiceItem failed', e);
-       const msg = (e as { message?: string })?.message || 'Échec de l’enregistrement de la prestation';
+       const msg = (e as { message?: string })?.message || "Échec de l'enregistrement de la prestation";
       showToast(msg, 'error');
       // fallback local pour retour instantané (non persistant)
       setServiceSections(prev => prev.map(section => 
@@ -291,7 +292,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         duration_minutes: null,
         benefits: null,
       } as unknown as Parameters<typeof csCreateServiceItem>[0]);
-      await reloadServices();
+      await reloadServices(true);
       showToast('Prestation ajoutée.', 'success');
     } catch (e) {
       console.error('addServiceItem failed', e);
@@ -310,7 +311,8 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const deleteServiceItem = async (_sectionId: string, itemId: string) => {
     try {
       await csDeleteServiceItem(itemId);
-      await reloadServices();
+      // Force le rechargement avec bypass du cache
+      await reloadServices(true);
       showToast('Prestation supprimée.', 'success');
     } catch (e) {
       console.error('deleteServiceItem failed', e);
@@ -324,7 +326,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     try {
       const orderIndex = serviceSections.length;
       await createService({ title: section.title, icon: section.icon, order_index: orderIndex } as unknown as Parameters<typeof createService>[0]);
-      await reloadServices();
+      await reloadServices(true);
       showToast('Section ajoutée.', 'success');
     } catch (e) {
       console.error('addServiceSection failed', e);
@@ -344,7 +346,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const deleteServiceSection = async (id: string) => {
     try {
       await deleteService(id as unknown as string);
-      await reloadServices();
+      await reloadServices(true);
       showToast('Catégorie supprimée.', 'success');
     } catch (e) {
       console.error('deleteServiceSection failed', e);
@@ -365,11 +367,11 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     // persiste l'ordre
     try {
       await Promise.all(current.map((s, i) => updateService(s.id, { order_index: i })));
-      await reloadServices();
+      await reloadServices(true);
     } catch (e) {
       console.error('moveServiceSection persist failed', e);
       // pas de rollback complexe: proposer un reload
-      await reloadServices();
+      await reloadServices(true);
     }
   };
 
@@ -405,13 +407,13 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       subscription.unsubscribe();
     };
   }, []);
-  const reloadServices = React.useCallback(async () => {
+  const reloadServices = React.useCallback(async (bypassCache = false) => {
     try {
       setServicesError(null);
       const services = await getServices();
       const sectionsWithItems: ServiceSection[] = await Promise.all(
         services.map(async (service) => {
-          const items = await getServiceItems(service.id);
+          const items = await getServiceItems(service.id, bypassCache);
           return {
             id: service.id,
             title: service.title,
