@@ -10,9 +10,10 @@ const Hero: React.FC<HeroProps> = ({ onNavigate }) => {
   return (
     <section id="hero" className="relative min-h-screen flex items-center justify-center overflow-hidden animate-fade-in">
       <div
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        className="absolute inset-0 bg-cover bg-no-repeat bg-center md:bg-center"
         style={{
-          backgroundImage: 'url(/b0247cde-f948-4236-bab0-3128ea1eaf2e.jpg)'
+          backgroundImage: 'url(/b0247cde-f948-4236-bab0-3128ea1eaf2e.jpg)',
+          backgroundPosition: 'left center'
         }}
       ></div>
       <div className="absolute inset-0 bg-gradient-to-r from-white/85 via-white/50 to-transparent"></div>

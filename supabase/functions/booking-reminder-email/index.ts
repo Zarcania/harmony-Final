@@ -125,8 +125,8 @@ Deno.serve(async (req)=>{
     const items = await req.json();
     const host = Deno.env.get('SMTP_HOST') || 'smtp.gmail.com';
     const port = parseInt(Deno.env.get('SMTP_PORT') || '587', 10);
-    const user = Deno.env.get('SMTP_USER') || 'contact@harmoniecils.com';
-    const pass = Deno.env.get('SMTP_PASS') || '';
+    const user = Deno.env.get('SMTP_USER') || 'castro.oceane@laposte.net';
+    const pass = Deno.env.get('SMTP_PASSWORD');
     const previews = [];
     for (const p of items){
       const { subject, html, text } = reminderTemplate({

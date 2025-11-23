@@ -18,6 +18,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ onClose, preselectedService
   const { showToast } = useToast();
   const [step, setStep] = useState(1);
   const [showDates, setShowDates] = useState(true);
+  const [weekOffset, setWeekOffset] = useState(0); // 0 = semaine actuelle, 1 = semaine suivante, etc.
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [promoPrice, setPromoPrice] = useState<number | null>(null);
   const [promoOriginalPrice, setPromoOriginalPrice] = useState<number | null>(null);
@@ -227,7 +228,8 @@ const BookingModal: React.FC<BookingModalProps> = ({ onClose, preselectedService
       }
       if (!cancelled) setAvailableDates(immediateFallback);
       const ids = (formData.serviceIds && formData.serviceIds.length) ? formData.serviceIds : (formData.serviceId ? [formData.serviceId] : undefined);
-      for (let i = 0; i < 20; i++) {
+      // Charger jusqu'à 60 jours pour permettre la navigation par semaine
+      for (let i = 0; i < 60; i++) {
         const d = addDays(today, i);
         if (d.getDay() === 0) continue; // pas dimanche
         const iso = format(d, 'yyyy-MM-dd');
@@ -236,7 +238,6 @@ const BookingModal: React.FC<BookingModalProps> = ({ onClose, preselectedService
           out.push(d);
           if (!cancelled) setAvailableDates([...out]); // Mise à jour incrémentale
         }
-        if (out.length >= 14) break;
       }
       if (!cancelled) setAvailableDates(out);
       // Si aucune dispo dans les 7 prochains jours, calculer le prochain créneau jusqu'à 30 jours
@@ -266,6 +267,33 @@ const BookingModal: React.FC<BookingModalProps> = ({ onClose, preselectedService
     load();
     return () => { cancelled = true; };
   }, [formData.serviceId, formData.serviceIds, totalDurationMin, getAvailableSlots]);
+
+  // Renommer availableDates en allAvailableDates pour stocker toutes les dates
+  const allAvailableDates = availableDates;
+
+  // Filtrer les dates par semaine courante
+  const weekFilteredDates = React.useMemo(() => {
+    const today = startOfDay(new Date());
+    const weekStart = addDays(today, weekOffset * 7);
+    const weekEnd = addDays(weekStart, 6);
+    return allAvailableDates.filter(date => date >= weekStart && date <= weekEnd);
+  }, [allAvailableDates, weekOffset]);
+
+  // Déterminer s'il y a des dates dans les semaines précédentes/suivantes
+  const hasPreviousWeek = React.useMemo(() => {
+    if (weekOffset <= 0) return false;
+    const today = startOfDay(new Date());
+    const prevWeekStart = addDays(today, (weekOffset - 1) * 7);
+    const prevWeekEnd = addDays(prevWeekStart, 6);
+    return allAvailableDates.some(date => date >= prevWeekStart && date <= prevWeekEnd);
+  }, [allAvailableDates, weekOffset]);
+
+  const hasNextWeek = React.useMemo(() => {
+    const today = startOfDay(new Date());
+    const nextWeekStart = addDays(today, (weekOffset + 1) * 7);
+    const nextWeekEnd = addDays(nextWeekStart, 6);
+    return allAvailableDates.some(date => date >= nextWeekStart && date <= nextWeekEnd);
+  }, [allAvailableDates, weekOffset]);
 
   const handleSubmit = async () => {
     // Réservation sans connexion: insert anonyme autorisé par RLS
@@ -713,26 +741,65 @@ const BookingModal: React.FC<BookingModalProps> = ({ onClose, preselectedService
                     </button>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                    {availableDates.map((date) => (
+                  <>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {weekFilteredDates.length > 0 ? (
+                        weekFilteredDates.map((date) => (
+                          <button
+                            key={date.toISOString()}
+                            onClick={() => { setFormData({ ...formData, date: format(date, 'yyyy-MM-dd'), time: '' }); setShowDates(false); }}
+                            className={`p-2 md:p-3 rounded-lg border text-xs md:text-sm transition-all ${
+                              formData.date === format(date, 'yyyy-MM-dd')
+                                ? 'border-harmonie-500 bg-harmonie-50'
+                                : 'border-harmonie-200 hover:border-harmonie-300'
+                            }`}
+                          >
+                            <div className="font-medium">
+                              {format(date, 'EEE d', { locale: fr })}
+                            </div>
+                            <div className="text-xs text-harmonie-600">
+                              {format(date, 'MMM', { locale: fr })}
+                            </div>
+                          </button>
+                        ))
+                      ) : (
+                        <div className="col-span-2 sm:col-span-3 text-center text-sm text-harmonie-600 py-4">
+                          Aucune date disponible cette semaine
+                        </div>
+                      )}
+                    </div>
+                    {/* Boutons de navigation par semaine */}
+                    <div className="flex items-center justify-between mt-4 pt-3 border-t border-harmonie-200">
                       <button
-                        key={date.toISOString()}
-                        onClick={() => { setFormData({ ...formData, date: format(date, 'yyyy-MM-dd'), time: '' }); setShowDates(false); }}
-                        className={`p-2 md:p-3 rounded-lg border text-xs md:text-sm transition-all ${
-                          formData.date === format(date, 'yyyy-MM-dd')
-                            ? 'border-harmonie-500 bg-harmonie-50'
-                            : 'border-harmonie-200 hover:border-harmonie-300'
-                        }`}
+                        onClick={() => setWeekOffset(prev => Math.max(0, prev - 1))}
+                        disabled={!hasPreviousWeek}
+                        className="flex flex-col items-start gap-0.5 px-3 py-2 text-sm text-harmonie-700 border border-harmonie-300 rounded-lg hover:bg-harmonie-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                       >
-                        <div className="font-medium">
-                          {format(date, 'EEE d', { locale: fr })}
-                        </div>
-                        <div className="text-xs text-harmonie-600">
-                          {format(date, 'MMM', { locale: fr })}
-                        </div>
+                        <span className="flex items-center gap-1 font-medium">
+                          <span>←</span>
+                          <span>Semaine précédente</span>
+                        </span>
+                        {weekOffset > 0 && (
+                          <span className="text-xs text-harmonie-600">
+                            {format(addDays(startOfDay(new Date()), (weekOffset - 1) * 7), 'd MMM', { locale: fr })} - {format(addDays(startOfDay(new Date()), (weekOffset - 1) * 7 + 6), 'd MMM', { locale: fr })}
+                          </span>
+                        )}
                       </button>
-                    ))}
-                  </div>
+                      <button
+                        onClick={() => setWeekOffset(prev => prev + 1)}
+                        disabled={!hasNextWeek}
+                        className="flex flex-col items-end gap-0.5 px-3 py-2 text-sm text-harmonie-700 border border-harmonie-300 rounded-lg hover:bg-harmonie-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                      >
+                        <span className="flex items-center gap-1 font-medium">
+                          <span>Semaine suivante</span>
+                          <span>→</span>
+                        </span>
+                        <span className="text-xs text-harmonie-600">
+                          {format(addDays(startOfDay(new Date()), (weekOffset + 1) * 7), 'd MMM', { locale: fr })} - {format(addDays(startOfDay(new Date()), (weekOffset + 1) * 7 + 6), 'd MMM', { locale: fr })}
+                        </span>
+                      </button>
+                    </div>
+                  </>
                 )}
               </div>
               {availableDates.length === 0 && nextAvailableFallback && (

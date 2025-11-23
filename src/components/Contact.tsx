@@ -119,10 +119,10 @@ const Contact: React.FC<ContactProps> = ({ preselectedService }) => {
                 <div className="pt-1">
                   <h4 className="font-semibold text-neutral-900 mb-2 text-lg">Email</h4>
                   <a
-                    href="mailto:contact@harmoniecils.com"
+                    href="mailto:castro.oceane@laposte.net"
                     className="text-neutral-700 hover:text-neutral-900 transition-colors font-medium break-all"
                   >
-                    contact@harmoniecils.com
+                    castro.oceane@laposte.net
                   </a>
                 </div>
               </div>

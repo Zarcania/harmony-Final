@@ -42,7 +42,7 @@ const LegalPage: React.FC = () => {
               <p><span className="font-medium">Éditeur du site</span>: Harmonie Cils</p>
               <p><span className="font-medium">Adresse</span>: 1 Rue des Moissons, 45300 Sermaises</p>
               <p className="flex items-center gap-2"><Mail size={16} className="text-neutral-500" />
-                <a href="mailto:contact@harmoniecils.com" className="hover:underline">contact@harmoniecils.com</a>
+                <a href="mailto:castro.oceane@laposte.net" className="hover:underline">castro.oceane@laposte.net</a>
               </p>
               <p><span className="font-medium">Directrice de la publication</span>: CASTRO Océane</p>
               <p className="flex items-center gap-2"><Server size={16} className="text-neutral-500" />
@@ -66,7 +66,7 @@ const LegalPage: React.FC = () => {
                 Nous collectons uniquement les données nécessaires à la gestion des rendez-vous (nom, coordonnées, informations de réservation). Ces données servent à confirmer, modifier ou annuler vos rendez-vous, et à vous contacter en cas de besoin.
               </p>
               <p>
-                Vous pouvez demander l'accès, la rectification ou la suppression de vos données à tout moment en nous écrivant à <a className="hover:underline" href="mailto:contact@harmoniecils.com">contact@harmoniecils.com</a>. Les données sont conservées pour la durée nécessaire à la prestation et conformément aux obligations légales.
+                Vous pouvez demander l'accès, la rectification ou la suppression de vos données à tout moment en nous écrivant à <a className="hover:underline" href="mailto:castro.oceane@laposte.net">castro.oceane@laposte.net</a>. Les données sont conservées pour la durée nécessaire à la prestation et conformément aux obligations légales.
               </p>
             </div>
           </div>
@@ -97,7 +97,7 @@ const LegalPage: React.FC = () => {
             </div>
             <div className="space-y-3 text-neutral-700">
               <p>
-                Conformément au RGPD, vous disposez des droits d'accès, rectification, effacement, limitation, opposition et portabilité. Pour exercer vos droits, contactez-nous à <a className="hover:underline" href="mailto:contact@harmoniecils.com">contact@harmoniecils.com</a>. Vous pouvez également introduire une réclamation auprès de la CNIL.
+                Conformément au RGPD, vous disposez des droits d'accès, rectification, effacement, limitation, opposition et portabilité. Pour exercer vos droits, contactez-nous à <a className="hover:underline" href="mailto:castro.oceane@laposte.net">castro.oceane@laposte.net</a>. Vous pouvez également introduire une réclamation auprès de la CNIL.
               </p>
               <p className="text-sm text-neutral-500">Dernière mise à jour: {updatedAt}</p>
             </div>
