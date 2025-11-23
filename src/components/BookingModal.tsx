@@ -19,6 +19,7 @@ const BookingModal: React.FC<BookingModalProps> = ({ onClose, preselectedService
   const [step, setStep] = useState(1);
   const [showDates, setShowDates] = useState(true);
   const [weekOffset, setWeekOffset] = useState(0); // 0 = semaine actuelle, 1 = semaine suivante, etc.
+  const [maxBookingDays, setMaxBookingDays] = useState<number>(30); // Limite par défaut
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [promoPrice, setPromoPrice] = useState<number | null>(null);
   const [promoOriginalPrice, setPromoOriginalPrice] = useState<number | null>(null);
@@ -42,6 +43,24 @@ const BookingModal: React.FC<BookingModalProps> = ({ onClose, preselectedService
     const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     return () => { document.body.style.overflow = prev; };
+  }, []);
+
+  // Charger la limite de réservation depuis l'admin
+  React.useEffect(() => {
+    const loadBookingLimit = async () => {
+      try {
+        const { data, error } = await supabase.rpc('get_booking_max_days');
+        if (!error && typeof data === 'number' && data > 0) {
+          setMaxBookingDays(data);
+          console.log('✅ Limite de réservation chargée:', data, 'jours');
+        } else {
+          console.warn('⚠️ Limite non trouvée, utilisation de la valeur par défaut (30 jours)');
+        }
+      } catch (e) {
+        console.warn('❌ Erreur chargement limite:', e);
+      }
+    };
+    loadBookingLimit();
   }, []);
 
   // Autofill depuis localStorage
@@ -228,8 +247,8 @@ const BookingModal: React.FC<BookingModalProps> = ({ onClose, preselectedService
       }
       if (!cancelled) setAvailableDates(immediateFallback);
       const ids = (formData.serviceIds && formData.serviceIds.length) ? formData.serviceIds : (formData.serviceId ? [formData.serviceId] : undefined);
-      // Charger jusqu'à 60 jours pour permettre la navigation par semaine
-      for (let i = 0; i < 60; i++) {
+      // Charger jusqu'à la limite admin (maxBookingDays) pour respecter la configuration
+      for (let i = 0; i < maxBookingDays; i++) {
         const d = addDays(today, i);
         if (d.getDay() === 0) continue; // pas dimanche
         const iso = format(d, 'yyyy-MM-dd');
@@ -266,18 +285,19 @@ const BookingModal: React.FC<BookingModalProps> = ({ onClose, preselectedService
     };
     load();
     return () => { cancelled = true; };
-  }, [formData.serviceId, formData.serviceIds, totalDurationMin, getAvailableSlots]);
+  }, [formData.serviceId, formData.serviceIds, totalDurationMin, getAvailableSlots, maxBookingDays]);
 
   // Renommer availableDates en allAvailableDates pour stocker toutes les dates
   const allAvailableDates = availableDates;
 
-  // Filtrer les dates par semaine courante
+  // Filtrer les dates par semaine courante (en respectant la limite maxBookingDays)
   const weekFilteredDates = React.useMemo(() => {
     const today = startOfDay(new Date());
     const weekStart = addDays(today, weekOffset * 7);
     const weekEnd = addDays(weekStart, 6);
-    return allAvailableDates.filter(date => date >= weekStart && date <= weekEnd);
-  }, [allAvailableDates, weekOffset]);
+    const maxDate = addDays(today, maxBookingDays - 1);
+    return allAvailableDates.filter(date => date >= weekStart && date <= weekEnd && date <= maxDate);
+  }, [allAvailableDates, weekOffset, maxBookingDays]);
 
   // Déterminer s'il y a des dates dans les semaines précédentes/suivantes
   const hasPreviousWeek = React.useMemo(() => {
@@ -292,8 +312,10 @@ const BookingModal: React.FC<BookingModalProps> = ({ onClose, preselectedService
     const today = startOfDay(new Date());
     const nextWeekStart = addDays(today, (weekOffset + 1) * 7);
     const nextWeekEnd = addDays(nextWeekStart, 6);
-    return allAvailableDates.some(date => date >= nextWeekStart && date <= nextWeekEnd);
-  }, [allAvailableDates, weekOffset]);
+    const maxDate = addDays(today, maxBookingDays - 1);
+    // Vérifier qu'il y a des dates dans la semaine suivante ET dans la limite autorisée
+    return allAvailableDates.some(date => date >= nextWeekStart && date <= nextWeekEnd && date <= maxDate);
+  }, [allAvailableDates, weekOffset, maxBookingDays]);
 
   const handleSubmit = async () => {
     // Réservation sans connexion: insert anonyme autorisé par RLS
