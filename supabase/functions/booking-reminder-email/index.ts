@@ -6,8 +6,8 @@ import { reminderTemplate } from '../utils/emailTemplates.ts'
 const FROM_SECRET = Deno.env.get('RESEND_FROM');
 const DEFAULTS = {
   FROM_NAME: FROM_SECRET?.match(/^([^<]+)</)?.[1].trim() || 'Harmonie Cils Studio',
-  FROM_EMAIL: FROM_SECRET?.match(/<(.+?)>/)?.[1] || FROM_SECRET || 'contact@harmoniecils.com',
-  SALON_EMAIL: 'contact@harmoniecils.com',
+  FROM_EMAIL: FROM_SECRET?.match(/<(.+?)>/)?.[1] || FROM_SECRET || 'Harmoniecilsstudio@gmail.com',
+  SALON_EMAIL: 'Harmoniecilsstudio@gmail.com',
   SALON_PHONE: '07 70 16 65 71'
 };
 async function sendSMTP({ host, port, user, pass, from, to, subject, html, text }) {

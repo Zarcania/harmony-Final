@@ -49,8 +49,20 @@ const Contact: React.FC<ContactProps> = ({ preselectedService }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Ici vous pourriez intégrer votre logique d'envoi d'email
-    console.log('Form data:', formData);
+    
+    // Construire l'email mailto avec les données du formulaire
+    const subject = encodeURIComponent(`Message de ${formData.nom}`);
+    const body = encodeURIComponent(
+      `Nom: ${formData.nom}\n` +
+      `Email: ${formData.email}\n` +
+      `Téléphone: ${formData.telephone || 'Non renseigné'}\n\n` +
+      `Message:\n${formData.message}`
+    );
+    
+    // Ouvrir le client email avec les données pré-remplies
+    window.location.href = `mailto:Harmoniecilsstudio@gmail.com?subject=${subject}&body=${body}`;
+    
+    // Afficher le message de confirmation
     setIsSubmitted(true);
     
     // Reset form after 3 seconds
@@ -119,10 +131,10 @@ const Contact: React.FC<ContactProps> = ({ preselectedService }) => {
                 <div className="pt-1">
                   <h4 className="font-semibold text-neutral-900 mb-2 text-lg">Email</h4>
                   <a
-                    href="mailto:castro.oceane@laposte.net"
+                    href="mailto:Harmoniecilsstudio@gmail.com"
                     className="text-neutral-700 hover:text-neutral-900 transition-colors font-medium break-all"
                   >
-                    castro.oceane@laposte.net
+                    Harmoniecilsstudio@gmail.com
                   </a>
                 </div>
               </div>

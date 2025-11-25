@@ -58,7 +58,7 @@ const Footer: React.FC<FooterProps> = ({ onNavigate, onAdminToggle, onOpenCookie
                 <Phone size={20} />
               </a>
               <a
-                href="mailto:contact@harmoniecils.com"
+                href="mailto:Harmoniecilsstudio@gmail.com"
                 className="p-3 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-xl transition-all duration-300 hover:scale-110 hover:rotate-6"
               >
                 <Mail size={20} />
@@ -119,8 +119,8 @@ const Footer: React.FC<FooterProps> = ({ onNavigate, onAdminToggle, onOpenCookie
               <div className="flex items-start gap-3 group justify-center md:justify-start">
                 <Mail size={18} className="mt-1 text-white/50 group-hover:text-white transition-colors" />
                 <div>
-                  <a href="mailto:contact@harmoniecils.com" className="hover:text-white transition-colors break-all">
-                    contact@harmoniecils.com
+                  <a href="mailto:Harmoniecilsstudio@gmail.com" className="hover:text-white transition-colors break-all">
+                    Harmoniecilsstudio@gmail.com
                   </a>
                 </div>
               </div>

@@ -2,8 +2,8 @@
 // Sends update notification when a booking changes.
 const DEFAULTS = {
   FROM_NAME: 'Harmonie Cils Studio',
-  FROM_EMAIL: 'contact@harmoniecils.com',
-  SALON_EMAIL: 'contact@harmoniecils.com',
+  FROM_EMAIL: 'Harmoniecilsstudio@gmail.com',
+  SALON_EMAIL: 'Harmoniecilsstudio@gmail.com',
   SALON_PHONE: '07 70 16 65 71'
 };
 async function sendSMTP({ host, port, user, pass, from, to, subject, html, text }) {
