@@ -1,6 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { Booking, BookingFormData } from '../types/booking';
+import { Booking, BookingFormData, BusinessBreak, BreakFormData } from '../types/booking';
 import { supabase } from '../lib/supabase';
 import { invokeFunction, invokeRawFunction } from '../api/supa';
 import { useToast } from './ToastContext';
@@ -22,6 +22,13 @@ interface BookingContextType {
   businessHours: Array<{ day_of_week: number; open_time: string | null; close_time: string | null; closed: boolean }>;
   closures: Array<{ id: string; start_date: string; end_date: string; reason?: string }>;
   reloadSettings: () => Promise<void>;
+  // Gestion des pauses (business breaks)
+  breaks: BusinessBreak[];
+  addBreak: (breakData: BreakFormData) => Promise<void>;
+  updateBreak: (id: string, breakData: Partial<BreakFormData>) => Promise<void>;
+  deleteBreak: (id: string) => Promise<void>;
+  fetchBreaks: () => Promise<void>;
+  checkBreakConflicts: (breakData: BreakFormData) => Promise<Array<{ date: string; time: string; clientName: string; service: string }>>;
 }
 
 const composeClientName = (first?: string, last?: string) => {
@@ -69,6 +76,7 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
   type Closure = { id: string; start_date: string; end_date: string; reason?: string };
   const [businessHours, setBusinessHours] = useState<BusinessHour[]>([]);
   const [closures, setClosures] = useState<Closure[]>([]);
+  const [breaks, setBreaks] = useState<BusinessBreak[]>([]);
   const serviceDurationCache = useRef(new Map<string, number>());
   // Cache pour RPC get_booked_slots afin d'éviter les rafales et coalescer les requêtes
   const rpcSlotsCacheRef = useRef({
@@ -168,6 +176,76 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
       // Plus de chargement des pauses déjeuner: logique supprimée
   }, []);
 
+  // Fonctions de gestion des pauses (business breaks)
+  const fetchBreaks = useCallback(async () => {
+    try {
+      const { data, error } = await supabase
+        .from('admin_breaks')
+        .select('*')
+        .order('start_date', { ascending: true });
+      
+      if (error) throw error;
+      setBreaks(data || []);
+    } catch (error) {
+      console.error('Error fetching breaks:', error);
+    }
+  }, []);
+
+  const addBreak = useCallback(async (breakData: BreakFormData) => {
+    try {
+      // Import dynamique pour éviter circular dependency
+      const { createBusinessBreak, checkBreakConflicts: checkConflicts } = await import('../services/contentService');
+      
+      // Vérifier les conflits avec rendez-vous existants
+      const conflicts = await checkConflicts(breakData);
+      if (conflicts.length > 0) {
+        const conflictMsg = `Conflit détecté avec ${conflicts.length} rendez-vous existant(s):\n` +
+          conflicts.map(c => `• ${c.date} à ${c.time} - ${c.clientName} (${c.service})`).join('\n');
+        throw new Error(conflictMsg);
+      }
+      
+      await createBusinessBreak(breakData);
+      await fetchBreaks();
+      showToast('Pause enregistrée avec succès', 'success');
+    } catch (error) {
+      console.error('Error adding break:', error);
+      const msg = (error as Error).message || 'Erreur lors de la création de la pause';
+      showToast(msg, 'error');
+      throw error;
+    }
+  }, [fetchBreaks, showToast]);
+
+  const updateBreak = useCallback(async (id: string, breakData: Partial<BreakFormData>) => {
+    try {
+      const { updateBusinessBreak } = await import('../services/contentService');
+      await updateBusinessBreak(id, breakData);
+      await fetchBreaks();
+      showToast('Pause mise à jour', 'success');
+    } catch (error) {
+      console.error('Error updating break:', error);
+      showToast('Erreur lors de la mise à jour de la pause', 'error');
+      throw error;
+    }
+  }, [fetchBreaks, showToast]);
+
+  const deleteBreak = useCallback(async (id: string) => {
+    try {
+      const { deleteBusinessBreak } = await import('../services/contentService');
+      await deleteBusinessBreak(id);
+      await fetchBreaks();
+      showToast('Pause supprimée', 'success');
+    } catch (error) {
+      console.error('Error deleting break:', error);
+      showToast('Erreur lors de la suppression de la pause', 'error');
+      throw error;
+    }
+  }, [fetchBreaks, showToast]);
+
+  const checkBreakConflicts = useCallback(async (breakData: BreakFormData) => {
+    const { checkBreakConflicts: check } = await import('../services/contentService');
+    return check(breakData);
+  }, []);
+
   // Charger horaires & fermetures au montage
   useEffect(() => {
     // Déterminer l'état d'authentification au montage (évite des getUser répétés)
@@ -179,7 +257,8 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
     })();
 
     reloadSettings();
-  }, [reloadSettings]);
+    fetchBreaks(); // Charger les pauses au montage
+  }, [reloadSettings, fetchBreaks]);
 
   // (abonnement auth déplacé plus bas)
 
@@ -1087,7 +1166,13 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
     refreshBookings,
     businessHours,
     closures,
-    reloadSettings
+    reloadSettings,
+    breaks,
+    addBreak,
+    updateBreak,
+    deleteBreak,
+    fetchBreaks,
+    checkBreakConflicts
   }), [
     bookings,
     addBooking,
@@ -1102,7 +1187,13 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
     refreshBookings,
     businessHours,
     closures,
-    reloadSettings
+    reloadSettings,
+    breaks,
+    addBreak,
+    updateBreak,
+    deleteBreak,
+    fetchBreaks,
+    checkBreakConflicts
   ]);
 
   return (

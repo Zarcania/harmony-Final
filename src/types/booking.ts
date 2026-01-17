@@ -33,3 +33,22 @@ export interface BookingFormData {
   clientEmail: string;
   status?: 'confirmed' | 'pending' | 'cancelled';
 }
+
+export interface BusinessBreak {
+  id: string;
+  start_date: string; // Format ISO: "2026-01-20"
+  end_date: string;   // Format ISO: "2026-01-20"
+  start_time?: string; // Format HH:MM: "12:00" ou undefined si journée complète
+  end_time?: string;   // Format HH:MM: "14:00" ou undefined si journée complète
+  reason?: string;
+  created_at: string;
+  created_by?: string;
+}
+
+export interface BreakFormData {
+  start_date: string;
+  end_date: string;
+  start_time?: string;
+  end_time?: string;
+  reason?: string;
+}

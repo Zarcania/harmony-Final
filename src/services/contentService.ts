@@ -1,6 +1,7 @@
 import { supabase } from '../lib/supabase';
 import { callRpc } from '../api/supa';
 import { cache } from '../lib/cache';
+import { BusinessBreak, BreakFormData } from '../types/booking';
 
 const log = (url: string, status: number, body?: unknown) => {
   const prefix = '[API]';
@@ -471,3 +472,129 @@ export const uploadImage = async (file: File, folder: string = 'portfolio') => {
 
   return publicUrl;
 };
+
+// ==================== Business Breaks (Pauses) ====================
+
+export const getBusinessBreaks = async (startDate?: string, endDate?: string): Promise<BusinessBreak[]> => {
+  let query = supabase
+    .from('admin_breaks')
+    .select('*')
+    .order('start_date', { ascending: true });
+  
+  if (startDate) query = query.gte('end_date', startDate);
+  if (endDate) query = query.lte('start_date', endDate);
+  
+  const { data, error } = await query;
+  if (error) {
+    console.error('Error fetching business breaks:', error);
+    throw error;
+  }
+  return data || [];
+};
+
+export const createBusinessBreak = async (breakData: BreakFormData): Promise<BusinessBreak> => {
+  const { data, error } = await supabase
+    .from('admin_breaks')
+    .insert({
+      start_date: breakData.start_date,
+      end_date: breakData.end_date,
+      start_time: breakData.start_time || null,
+      end_time: breakData.end_time || null,
+      reason: breakData.reason || null
+    })
+    .select()
+    .single();
+  
+  if (error) {
+    console.error('Error creating business break:', error);
+    throw error;
+  }
+  return data;
+};
+
+export const updateBusinessBreak = async (id: string, breakData: Partial<BreakFormData>): Promise<BusinessBreak> => {
+  const updateData: Record<string, unknown> = {};
+  if (breakData.start_date !== undefined) updateData.start_date = breakData.start_date;
+  if (breakData.end_date !== undefined) updateData.end_date = breakData.end_date;
+  if (breakData.start_time !== undefined) updateData.start_time = breakData.start_time || null;
+  if (breakData.end_time !== undefined) updateData.end_time = breakData.end_time || null;
+  if (breakData.reason !== undefined) updateData.reason = breakData.reason || null;
+
+  const { data, error } = await supabase
+    .from('admin_breaks')
+    .update(updateData)
+    .eq('id', id)
+    .select()
+    .single();
+  
+  if (error) {
+    console.error('Error updating business break:', error);
+    throw error;
+  }
+  return data;
+};
+
+export const deleteBusinessBreak = async (id: string): Promise<void> => {
+  const { error } = await supabase
+    .from('admin_breaks')
+    .delete()
+    .eq('id', id);
+  
+  if (error) {
+    console.error('Error deleting business break:', error);
+    throw error;
+  }
+};
+
+export const checkBreakConflicts = async (breakData: BreakFormData): Promise<Array<{ date: string; time: string; clientName: string; service: string }>> => {
+  // Récupère tous les rendez-vous dans la plage de dates de la pause
+  const { data: bookings, error } = await supabase
+    .from('bookings')
+    .select('preferred_date, preferred_time, client_name, service_name, duration_minutes')
+    .gte('preferred_date', breakData.start_date)
+    .lte('preferred_date', breakData.end_date)
+    .in('status', ['confirmed', 'pending']);
+
+  if (error) {
+    console.error('Error checking break conflicts:', error);
+    throw error;
+  }
+
+  if (!bookings || bookings.length === 0) return [];
+
+  // Si pas d'horaires spécifiés dans la pause, toute la journée est bloquée
+  if (!breakData.start_time || !breakData.end_time) {
+    return bookings.map(b => ({
+      date: b.preferred_date,
+      time: b.preferred_time,
+      clientName: b.client_name,
+      service: b.service_name
+    }));
+  }
+
+  // Fonction helper pour convertir HH:MM en minutes
+  const timeToMinutes = (time: string): number => {
+    const [h, m] = time.split(':').map(Number);
+    return h * 60 + m;
+  };
+
+  // Sinon, vérifier les chevauchements horaires
+  const breakStart = timeToMinutes(breakData.start_time);
+  const breakEnd = timeToMinutes(breakData.end_time);
+
+  const conflicts = bookings.filter(b => {
+    const bookingStart = timeToMinutes(b.preferred_time);
+    const bookingEnd = bookingStart + (b.duration_minutes || 60);
+    
+    // Vérifie si les plages horaires se chevauchent
+    return !(bookingEnd <= breakStart || bookingStart >= breakEnd);
+  });
+
+  return conflicts.map(b => ({
+    date: b.preferred_date,
+    time: b.preferred_time,
+    clientName: b.client_name,
+    service: b.service_name
+  }));
+};
+

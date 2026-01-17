@@ -1,11 +1,12 @@
 ﻿import React, { useEffect, useMemo, useRef, useState, lazy, Suspense, useCallback } from 'react';
-import { Calendar, Clock, User, Phone, Mail, Trash2, Plus, X, CreditCard as Edit, Tag } from 'lucide-react';
+import { Calendar, Clock, User, Phone, Mail, Trash2, Plus, X, CreditCard as Edit, Tag, Coffee } from 'lucide-react';
 import { useBooking } from '../contexts/BookingContext';
 import { format, addDays, startOfWeek, isSameDay, isBefore, startOfDay } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Booking } from '../types/booking';
 // Code-splitting: charge les modales à la demande pour accélérer l'ouverture du planning
 const BookingEditModal = lazy(() => import('./BookingEditModal'));
+const BreakModal = lazy(() => import('./BreakModal'));
 import { supabase } from '../lib/supabase';
 import { invokeFunction, invokeRawFunction, callRpc } from '../api/supa';
 import { useToast } from '../contexts/ToastContext';
@@ -16,7 +17,7 @@ interface AdminPlanningProps {
 }
 
 const AdminPlanning: React.FC<AdminPlanningProps> = ({ onClose }) => {
-  const { bookings, deleteBooking, updateBooking, addBooking, refreshBookings, reloadSettings } = useBooking();
+  const { bookings, deleteBooking, updateBooking, addBooking, refreshBookings, reloadSettings, breaks, addBreak, deleteBreak } = useBooking();
   const { showToast } = useToast();
   const [currentWeek, setCurrentWeek] = useState(new Date());
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -24,6 +25,7 @@ const AdminPlanning: React.FC<AdminPlanningProps> = ({ onClose }) => {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showBreakModal, setShowBreakModal] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showPromotions, setShowPromotions] = useState(false);
   // Références pour scroller un rendez-vous dans le panneau de droite
@@ -751,10 +753,17 @@ const AdminPlanning: React.FC<AdminPlanningProps> = ({ onClose }) => {
                   <button onClick={() => setViewMode('week')} className="px-3 py-1.5 rounded-full text-sm bg-harmonie-600 text-white">Semaine</button>
                   <button onClick={() => setViewMode('month')} className="px-3 py-1.5 rounded-full text-sm text-harmonie-700 hover:bg-harmonie-50">Mois</button>
                 </div>
-                <div className="ml-auto hidden sm:block">
+                <div className="ml-auto hidden sm:flex gap-2">
+                  <button
+                    onClick={() => setShowBreakModal(true)}
+                    className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors shadow-md hover:shadow-lg"
+                  >
+                    <Coffee size={16} />
+                    Ajouter une pause
+                  </button>
                   <button
                     onClick={() => setShowAddModal(true)}
-                    className="ml-2 flex items-center gap-2 px-4 py-2 bg-harmonie-600 text-white rounded-lg hover:bg-harmonie-700 transition-colors shadow-md hover:shadow-lg"
+                    className="flex items-center gap-2 px-4 py-2 bg-harmonie-600 text-white rounded-lg hover:bg-harmonie-700 transition-colors shadow-md hover:shadow-lg"
                   >
                     <Plus size={16} />
                     Nouveau rendez-vous
@@ -1141,6 +1150,71 @@ const AdminPlanning: React.FC<AdminPlanningProps> = ({ onClose }) => {
                                 );
                               });
                             })()}
+                            {/* Pauses (admin_breaks) */}
+                            {(() => {
+                              const iso = format(d, 'yyyy-MM-dd');
+                              const dayBreaks = breaks.filter(brk => {
+                                return iso >= brk.start_date && iso <= brk.end_date;
+                              });
+                              
+                              return dayBreaks.map((brk) => {
+                                // Si pas d'horaires spécifiés, bloquer toute la journée
+                                if (!brk.start_time || !brk.end_time) {
+                                  return (
+                                    <div key={brk.id} className="absolute inset-0 pointer-events-auto cursor-pointer group"
+                                         style={{ backgroundImage: 'repeating-linear-gradient(45deg, #fef3c7 0 10px, #fde68a 10px 20px)' }}>
+                                      <div className="absolute inset-0 flex flex-col items-center justify-center text-amber-800">
+                                        <Coffee size={16} className="mb-1" />
+                                        <span className="text-[9px] font-semibold">Pauses</span>
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            if (confirm('Supprimer cette pause ?')) {
+                                              deleteBreak(brk.id);
+                                            }
+                                          }}
+                                          className="mt-1 px-2 py-0.5 bg-red-500 text-white rounded text-[8px] hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                                        >
+                                          Supprimer
+                                        </button>
+                                      </div>
+                                    </div>
+                                  );
+                                }
+                                
+                                // Sinon, bloquer seulement les horaires spécifiés
+                                const bStartMin = timeToMin(brk.start_time) ?? startMin;
+                                const bEndMin = timeToMin(brk.end_time) ?? endMin;
+                                const top = Math.max(0, ((bStartMin - startMin) / stepMin) * slotPx);
+                                const h = Math.max(0, ((bEndMin - bStartMin) / stepMin) * slotPx);
+                                
+                                if (h <= 0) return null;
+                                
+                                return (
+                                  <div key={brk.id} 
+                                       className="absolute left-0 right-0 border border-dashed border-orange-400 rounded pointer-events-auto cursor-pointer group flex flex-col items-center justify-center text-amber-800 font-semibold overflow-hidden hover:shadow-md transition-shadow"
+                                       style={{ 
+                                         top: `${top}px`, 
+                                         height: `${h}px`,
+                                         backgroundImage: 'repeating-linear-gradient(45deg, #fef3c7 0 10px, #fde68a 10px 20px)'
+                                       }}>
+                                    <Coffee size={12} />
+                                    <span className="text-[9px]">Pauses</span>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (confirm('Supprimer cette pause ?')) {
+                                          deleteBreak(brk.id);
+                                        }
+                                      }}
+                                      className="mt-1 px-1.5 py-0.5 bg-red-500 text-white rounded text-[8px] hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    >
+                                      ✕
+                                    </button>
+                                  </div>
+                                );
+                              });
+                            })()}
                             {/* Événements */}
                              {laidByDay[di].map((e) => {
                               const top = Math.max(0, ((e.startMin - startMin) / stepMin) * slotPx);
@@ -1293,6 +1367,73 @@ const AdminPlanning: React.FC<AdminPlanningProps> = ({ onClose }) => {
                           </div>
                         </>
                       ) : null; })()}
+                      {/* Pauses (business breaks) */}
+                      {(() => {
+                        const dayBreaks = breaks.filter(brk => {
+                          // Comparer les dates au format string ISO (plus fiable)
+                          return dayIso >= brk.start_date && dayIso <= brk.end_date;
+                        });
+                        
+                        return dayBreaks.map((brk) => {
+                          // Si pas d'horaires spécifiés, bloquer toute la journée
+                          if (!brk.start_time || !brk.end_time) {
+                            return (
+                              <div key={brk.id} className="absolute inset-0 pointer-events-auto cursor-pointer group"
+                                   style={{ backgroundImage: 'repeating-linear-gradient(45deg, #fef3c7 0 10px, #fde68a 10px 20px)' }}>
+                                <div className="absolute inset-0 flex flex-col items-center justify-center text-amber-800">
+                                  <Coffee size={32} className="mb-2" />
+                                  <span className="font-semibold">Pauses</span>
+                                  {brk.reason && <span className="text-sm mt-1">{brk.reason}</span>}
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      if (confirm('Supprimer cette pause ?')) {
+                                        deleteBreak(brk.id);
+                                      }
+                                    }}
+                                    className="mt-4 px-3 py-1 bg-red-500 text-white rounded text-xs hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                                  >
+                                    Supprimer
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          }
+                          
+                          // Sinon, bloquer seulement les horaires spécifiés
+                          const bStartMin = timeToMin(brk.start_time) ?? startMin;
+                          const bEndMin = timeToMin(brk.end_time) ?? endMin;
+                          const top = Math.max(0, ((bStartMin - startMin) / stepMin) * slotPx);
+                          const h = Math.max(0, ((bEndMin - bStartMin) / stepMin) * slotPx);
+                          
+                          if (h <= 0) return null;
+                          
+                          return (
+                            <div key={brk.id} 
+                                 className="absolute left-0 right-0 border-2 border-dashed border-orange-400 rounded pointer-events-auto cursor-pointer group flex flex-col items-center justify-center text-amber-800 font-semibold overflow-hidden hover:shadow-lg transition-shadow"
+                                 style={{ 
+                                   top: `${top}px`, 
+                                   height: `${h}px`,
+                                   backgroundImage: 'repeating-linear-gradient(45deg, #fef3c7 0 10px, #fde68a 10px 20px)'
+                                 }}>
+                              <Coffee size={20} className="mb-1" />
+                              <span className="text-sm">Pauses</span>
+                              {brk.reason && <span className="text-xs mt-1 px-2 text-center">{brk.reason}</span>}
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (confirm('Supprimer cette pause ?')) {
+                                    deleteBreak(brk.id);
+                                  }
+                                }}
+                                className="mt-2 px-2 py-1 bg-red-500 text-white rounded text-xs hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                Supprimer
+                              </button>
+                            </div>
+                          );
+                        });
+                      })()}
                       {/* Overlay des créneaux occupés (RPC) */}
                       {(() => {
                         const busy = busyByDate[dayIso] || [];
@@ -1574,6 +1715,26 @@ const AdminPlanning: React.FC<AdminPlanningProps> = ({ onClose }) => {
       {showPromotions && (
         <Suspense fallback={<div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/10"><div className="bg-white px-4 py-2 rounded shadow">Chargement…</div></div>}>
           <AdminPromotions onClose={() => setShowPromotions(false)} />
+        </Suspense>
+      )}
+
+      {showBreakModal && (
+        <Suspense fallback={<div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/10"><div className="bg-white px-4 py-2 rounded shadow">Chargement…</div></div>}>
+          <BreakModal
+            isOpen={showBreakModal}
+            onClose={() => setShowBreakModal(false)}
+            onSave={async (breakData) => {
+              await addBreak(breakData);
+              setShowBreakModal(false);
+              // Force un re-render après fermeture du modal
+              setCurrentWeek(new Date(currentWeek));
+            }}
+            existingBookings={bookings.map(b => ({
+              date: b.date,
+              time: b.time,
+              duration_minutes: b.duration_minutes
+            }))}
+          />
         </Suspense>
       )}
     </div>
