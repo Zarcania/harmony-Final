@@ -625,7 +625,15 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
           p_slot_step_minutes: 30,
           p_buffer_minutes: 0,
         });
-        if (!error && Array.isArray(data) && data.length) {
+        
+        // ✅ FIX: Si le RPC réussit (pas d'erreur), retourner le résultat même si vide
+        // Un tableau vide signifie qu'il n'y a aucun créneau disponible (pauses, fermetures, etc.)
+        if (!error && Array.isArray(data)) {
+          if (data.length === 0) {
+            console.log('[BookingContext] RPC returned 0 slots (pauses/closures) for', date);
+            return [];
+          }
+          
           // Convertir slot_start -> HH:mm Europe/Paris, tri croissant et unique
           const rawList = (data as Array<{ slot_start: string | null }>).
             map((r) => {

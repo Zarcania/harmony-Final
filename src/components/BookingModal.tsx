@@ -345,8 +345,13 @@ const BookingModal: React.FC<BookingModalProps> = ({ onClose, preselectedService
       try {
   const sid = formData.serviceIds && formData.serviceIds.length ? formData.serviceIds : (formData.serviceId ? [formData.serviceId] : undefined);
   let list = await getAvailableSlots(formData.date, sid, totalDurationMin);
-        // Sécurité UX: si aucune dispo n'est renvoyée (p.ex. lecture DB transitoire), on affiche un fallback local
-        if (!list || list.length === 0) {
+        console.log('[BookingModal] getAvailableSlots returned:', list?.length ?? 'null/undefined', 'slots for', formData.date);
+        // ✅ FIX: Ne pas utiliser le fallback si la liste est vide car cela signifie
+        // que la fonction SQL a correctement filtré les créneaux (pauses, fermetures, etc.)
+        // On ne garde le fallback que pour les cas d'erreur (list === null/undefined)
+        if (list === null || list === undefined) {
+          console.warn('[BookingModal] getAvailableSlots returned null/undefined, using fallback');
+
           // Tant que les horaires ne sont pas chargés, ne pas afficher de base 09:00–18:00 pour éviter des faux positifs (12:00/12:30)
           const bhReady = Array.isArray(businessHours) && businessHours.length > 0;
           if (!bhReady) { if (!cancelled) setSlots([]); return; }
@@ -426,9 +431,10 @@ const BookingModal: React.FC<BookingModalProps> = ({ onClose, preselectedService
           const nowStr = new Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date()).replace(/[^\d]/g, '').replace(/(\d{2})(\d{2})/, '$1:$2');
           list = formData.date !== today ? usable : usable.filter(t => t > nowStr);
         }
+        console.log('[BookingModal] Final slots to display:', list?.length, list);
         if (!cancelled) setSlots(list);
       } catch (e) {
-        console.warn('[Booking] getAvailableSlots failed, fallback to schedule-only filter', e);
+        console.error('[BookingModal] ❌ getAvailableSlots EXCEPTION, using fallback!', e);
         // Fallback minimal en cas d’erreur: génère localement et filtre par horaires
         const buildSlots = (open: string, close: string, stepMin = 30) => {
           const [oh, om] = open.split(':').map(n => parseInt(n, 10));
